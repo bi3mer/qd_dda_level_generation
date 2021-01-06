@@ -1,6 +1,6 @@
 from Utility.GridTools import columns_into_grid_string
 from MapElites import MapElites
-from Utility import 
+from Utility import *
 
 from subprocess import Popen
 from atexit import register
@@ -54,11 +54,11 @@ class GenerationPipeline():
         #######################################################################
         print('Storing MAP-Elites data...')
         f = open(os.path.join(self.data_dir, 'data.csv'), 'w')
-        writer = writer(f)
-        writer.writerow(self.feature_names + ['performance'])
+        w = writer(f)
+        w.writerow(self.feature_names + ['performance'])
 
         for i, key in enumerate(search.bins.keys()):
-            writer.writerow(list(key) + [search.bins[key][0]])
+            w.writerow(list(key) + [search.bins[key][0]])
 
             level_file = open(os.path.join(level_path, f'{i}.txt'), 'w')
             level_file.write(columns_into_grid_string(search.bins[key][1]))

@@ -11,7 +11,7 @@ class MapElites:
     __slots__ = [
         'start_population_size', 'feature_descriptors', 'feature_dimensions', 
         'resolution', 'fast_performance', 'slow_performance', 'minimize_performance', 
-        'population_generator', 'mutator', 'crossover', 'rng_seed']
+        'population_generator', 'mutator', 'crossover', 'rng_seed', 'bins', 'keys']
 
     def __init__(
         self, start_population_size, feature_descriptors, feature_dimensions, 
@@ -26,8 +26,8 @@ class MapElites:
         self.slow_performance = slow_performance
         self.start_population_size = start_population_size
         self.population_generator = population_generator
-        self.crossover = crossover
-        self.mutator = mutator
+        self.crossover = crossover.operate
+        self.mutator = mutator.mutate
         self.bins = None
 
         if seed != None:
@@ -38,7 +38,7 @@ class MapElites:
         self.keys = set()
         
         print('initializing population...')
-        for i, strand in enumerate(self.population_generator(self.start_population_size)):
+        for i, strand in enumerate(self.population_generator.generate(self.start_population_size)):
             self.__add_to_bins(strand, self.fast_performance)
             update_progress(i / fast_iterations)
 
