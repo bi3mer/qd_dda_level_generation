@@ -54,7 +54,7 @@ class MapElites:
         update_progress(1)
         
         # switch to slow performance function
-        print('\nSwitching performance functions...\n')
+        print('Switching performance functions...')
         for key in self.keys:
             _, strand = self.bins[key]
             self.bins[key][0] = self.slow_performance(strand) 

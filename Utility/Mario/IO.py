@@ -1,7 +1,7 @@
 from Utility.GridTools import rows_into_columns
 import os
 
-def get_levels(path):
+def get_levels():
     levels = []
     skip_levels = [
         'mario-1-2.txt', 'mario-1-3.txt', 'mario-2-1.txt', 'mario-3-3.txt', 
@@ -9,11 +9,11 @@ def get_levels(path):
         'mario-8-2.txt'
     ]
 
-    for file_name in os.listdir(path):
+    for file_name in os.listdir('MarioLevels'):
         if file_name in skip_levels:
             continue
             
-        f = open(os.path.join(path, file_name))
+        f = open(os.path.join('MarioLevels', file_name))
         levels.append(rows_into_columns(f.readlines()))
         f.close()
 
