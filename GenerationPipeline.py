@@ -1,4 +1,5 @@
 from Utility.GridTools import columns_into_grid_string
+from Utility.LinkerGeneration import generate_link
 from MapElites import MapElites
 from Utility import *
 
@@ -45,7 +46,7 @@ class GenerationPipeline():
         search.run(self.fast_iterations, self.slow_iterations)
 
         #######################################################################
-        print('Validating levels (this may take awhile)...')
+        print('Validating levels. This is somewhat time-consuming but it\'s not horrible...')
         f = open(join(self.data_dir, 'data.csv'), 'w')
         w = writer(f)
         w.writerow(self.feature_names + ['performance'])
@@ -72,37 +73,50 @@ class GenerationPipeline():
         print('Starting python process to graph MAP-Elites bins...')
 
         #######################################################################
-        # print('Building and validating MAP-Elites directed DDA graph...')
-        # DIRECTIONS = ((0,1), (0,-1), (1, 0), (-1, 0))
+        print('Building and validating MAP-Elites directed DDA graph. This takes some time...')
+        DIRECTIONS = ((0,1), (0,-1), (1, 0), (-1, 0))
 
-        # entry_is_valid = {}
-        # keys = set(search.bins.keys())
+        entry_is_valid = {}
+        keys = set(search.bins.keys())
 
-        # i = 0
-        # total = len(keys) * 4
-        # for entry in keys:
-        #     if
-        #     self.test_entry(entry, entry_is_valid)
+        i = 0
+        total = len(keys) * 4
+        for entry in keys:
+            for dir in DIRECTIONS:
+                neighbor = (entry[0] + dir[0], entry[1] + dir[1])
+                while neighbor not in search.bins:
+                    neighbor = (neighbor[0] + dir[0], neighbor[1] + dir[1])
+                    if not self.__in_bounds(neighbor):
+                        break
 
-        #     for dir in DIRECTIONS:
-        #         neighbor = (entry[0] + dir[0], entry[1] + dir[1])
-        #         while neighbor not in search.bins:
-        #             neighbor = (neighbor[0] + dir[0], neighbor[1] + dir[1])
-        #             if not self.__in_bounds(neighbor):
-        #                 break
+                if self.__in_bounds(neighbor) and neighbor in search.bins:
+                    str_entry_one = str(entry)
+                    str_entry_two = str(neighbor)
+                    
+                    if str_entry_one not in entry_is_valid:
+                        entry_is_valid[str_entry_one] = {}
+                        entry_is_valid[str_entry_one]['neighbors'] = {}
 
-        #         if self.__in_bounds(neighbor) and neighbor in search.bins:
-        #             self.test_entry(neighbor, entry_is_valid)
-        #             self.test_two_entries(entry, neighbor, entry_is_valid)
+                    level = generate_link(
+                        self.gram, 
+                        search.bins[entry][1], 
+                        search.bins[neighbor][1], 
+                        0)
 
-        #         i += 1
-        #         update_progress(i/total)
+                    if level == None:
+                        entry_is_valid[str_entry_one]['neighbors'][str_entry_two] = -1
+                    else:
+                        lvl = columns_into_grid_string(level)
+                        entry_is_valid[str_entry_one]['neighbors'][str_entry_two] = self.get_percent_playable(lvl)
+
+                i += 1
+                update_progress(i/total)
                 
-        # f = open(join(self.data_dir, 'dda_graph.json'), 'w')
-        # f.write(json_dumps(entry_is_valid, indent=2))
-        # f.close()
+        f = open(join(self.data_dir, 'dda_graph.json'), 'w')
+        f.write(json_dumps(entry_is_valid, indent=2))
+        f.close()
 
-        # update_progress(1)
+        update_progress(1)
 
         #######################################################################
         print('Starting python process to graph MAP-Elites DDA graph...')
@@ -110,8 +124,9 @@ class GenerationPipeline():
         #######################################################################
         print('Running validation on random set of links...')
 
-    def build_flawed_agents_links(self):
-        pass
+    def __in_bounds(self, coordinate):
+        return coordinate[0] >= 0 and coordinate[0] <= self.resolution and \
+               coordinate[1] >= 0 and coordinate[1] <= self.resolution
 
     def get_percent_playable(self, level):
         raise NotImplementedError()

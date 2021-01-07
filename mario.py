@@ -35,16 +35,16 @@ class Mario(GenerationPipeline):
         self.minimize_performance = False
         
         n = 3
-        gram = NGram(n)
+        self.gram = NGram(n)
         levels = get_levels()
         for level in levels:
-            gram.add_sequence(level)
+            self.gram.add_sequence(level)
 
         self.start_strand_size = 25
         self.max_strand_size = 30
-        self.population_generator = NGramPopulationGenerator(gram, levels[0][:n+1], self.start_strand_size)
-        self.mutator = NGramMutate(0.02, gram, self.max_strand_size)
-        self.crossover = NGramCrossover(gram, 0, self.max_strand_size)
+        self.population_generator = NGramPopulationGenerator(self.gram, levels[0][:n+1], self.start_strand_size)
+        self.mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
+        self.crossover = NGramCrossover(self.gram, 0, self.max_strand_size)
         self.seed = 0
 
         self.must_validate = True
@@ -52,7 +52,6 @@ class Mario(GenerationPipeline):
         # Necessary to evaluate with Robin Baumgarten agent
         print('Starting game process...')
         self.COMMUNICATION_DIR = 'TEMP_DIR'
-        rmtree(self.COMMUNICATION_DIR)
         self.output_dir = join(self.COMMUNICATION_DIR, 'toJava')
         self.input_dir = join(self.COMMUNICATION_DIR, 'toPython')
 
@@ -101,4 +100,3 @@ class Mario(GenerationPipeline):
 if __name__ == '__main__':
     pipeline = Mario()
     pipeline.run()
-    pipeline.build_flawed_agents_links()
