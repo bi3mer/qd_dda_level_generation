@@ -5,7 +5,7 @@ import json
 import sys
 import os
 
-print('Generating MAP-Elites graph...')
+print('Generating MAP-Elites graph...', sys.argv[1])
 
 f = open(sys.argv[1], 'r')
 config = json.load(f)
@@ -49,5 +49,5 @@ ax.set(title=config['title'])
 ax.invert_yaxis()
 
 plt.savefig(config['save_file'], bbox_inches="tight") 
-os.remove(sys.argv[1])
+# os.remove(sys.argv[1])
 print('Saved MAP-Elites graph and deleted configuration file.')

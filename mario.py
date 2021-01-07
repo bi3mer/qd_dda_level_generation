@@ -12,7 +12,6 @@ from atexit import register
 from shutil import rmtree
 from os.path import join
 from os import mkdir, remove, listdir
-from time import sleep
 
 class Mario(GenerationPipeline):
     def __init__(self):
@@ -22,7 +21,8 @@ class Mario(GenerationPipeline):
         self.fast_iterations = 10000000
         self.slow_iterations = 10000
 
-        self.fast_iterations = 1000
+        self.start_population_size = 200
+        self.fast_iterations = 100000
         self.slow_iterations = 10
         
         self.feature_names = ['linearity', 'leniency']
@@ -47,25 +47,33 @@ class Mario(GenerationPipeline):
         self.crossover = NGramCrossover(self.gram, 0, self.max_strand_size)
         self.seed = 0
 
+        self.map_elites_config = join(self.data_dir, 'config_map_elites.json')
+        self.data_file = join(self.data_dir, 'data.csv')
+        self.x_label = 'Linearity'
+        self.y_label = 'Leniency'
+        self.save_file = join(self.data_dir, 'map_elites.pdf')
+        self.title = ''
+
         self.must_validate = True
+        self.max_path_length = 10
 
         # Necessary to evaluate with Robin Baumgarten agent
         print('Starting game process...')
-        self.COMMUNICATION_DIR = 'TEMP_DIR'
-        self.output_dir = join(self.COMMUNICATION_DIR, 'toJava')
-        self.input_dir = join(self.COMMUNICATION_DIR, 'toPython')
+        self.TEMP_DIR = 'TEMP_DIR'
+        self.output_dir = join(self.TEMP_DIR, 'toJava')
+        self.input_dir = join(self.TEMP_DIR, 'toPython')
 
-        mkdir(self.COMMUNICATION_DIR)
+        mkdir(self.TEMP_DIR)
         mkdir(self.output_dir)
         mkdir(self.input_dir)
         
-        self.proc = Popen(['java', '-jar', 'mario_simulator.jar', self.COMMUNICATION_DIR])
+        self.proc = Popen(['java', '-jar', 'mario_simulator.jar', self.TEMP_DIR])
         register(self.on_exit)
 
     def on_exit(self):
         self.proc.kill()
         self.proc.terminate()
-        rmtree(self.COMMUNICATION_DIR)
+        rmtree(self.TEMP_DIR)
 
     def get_percent_playable(self, level):
         # send level file to java process. First we create a lock so Java won't 

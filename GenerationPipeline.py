@@ -3,10 +3,12 @@ from Utility.LinkerGeneration import generate_link
 from MapElites import MapElites
 from Utility import *
 
-from csv import writer
 from os.path import isdir, join, exists
 from os import mkdir, remove, listdir
 from json import dumps as json_dumps
+from subprocess import Popen
+from random import choice
+from csv import writer
 
 class GenerationPipeline():
     def run(self):
@@ -27,6 +29,19 @@ class GenerationPipeline():
                 
             for filename in listdir(level_path):
                 remove(join(level_path, filename))
+
+        #######################################################################
+        print('writing config files for graphing')
+        config = {
+            'data_file': self.data_file,
+            'x_label': self.x_label,
+            'y_label': self.y_label,
+            'save_file': self.save_file,
+            'title': self.title
+        }
+        f = open(self.map_elites_config, 'w')
+        f.write(json_dumps(config))
+        f.close()
 
         #######################################################################
         print('Running MAP-Elites...')
@@ -71,6 +86,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Starting python process to graph MAP-Elites bins...')
+        Popen(['python', join('Graphing', 'build_map_elites.py'), self.map_elites_config])
 
         #######################################################################
         print('Building and validating MAP-Elites directed DDA graph. This takes some time...')
@@ -112,17 +128,46 @@ class GenerationPipeline():
                 i += 1
                 update_progress(i/total)
                 
-        f = open(join(self.data_dir, 'dda_graph.json'), 'w')
+        dda_grid_path = join(self.data_dir, 'dda_graph.json')
+        f = open(dda_grid_path, 'w')
         f.write(json_dumps(entry_is_valid, indent=2))
         f.close()
 
-        update_progress(1)
-
         #######################################################################
         print('Starting python process to graph MAP-Elites DDA graph...')
+        Popen(['python', join('Graphing', 'build_dda_grid.py'), dda_grid_path, self.data_dir])
 
         #######################################################################
         print('Running validation on random set of links...')
+        iterations = 100
+        percent_completes = []
+        for i in range(iterations):
+            path_length = 0
+            point = tuple([0 for _ in range(len(self.feature_descriptors))]) # this has to change
+            path = search.bins[point][1].copy()
+
+            while path_length < self.max_path_length +5:
+                neighbor_keys = list(entry_is_valid[str(point)]['neighbors'].keys())
+
+                if len(neighbor_keys) == 0:
+                    break
+                
+                # get a random neighbor and convert it into a tuple
+                point = eval(choice(neighbor_keys))
+                path.extend(search.bins[point][1])
+                path_length += 1
+
+            percent_completes.append(self.get_percent_playable(path))
+            update_progress(i/iterations)
+
+        update_progress(1)
+
+        f = open(join(self.data_dir, 'random_walkthroughs.json'), 'w')
+        f.write(json_dumps(percent_completes))
+        f.close()
+
+        print(f'Average Percent Playable: {sum(percent_completes) / iterations}')
+        print('Done!')
 
     def __in_bounds(self, coordinate):
         return coordinate[0] >= 0 and coordinate[0] <= self.resolution and \
