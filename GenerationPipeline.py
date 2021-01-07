@@ -39,6 +39,7 @@ class GenerationPipeline():
             'save_file': self.save_file,
             'title': self.title
         }
+
         f = open(self.map_elites_config, 'w')
         f.write(json_dumps(config))
         f.close()
@@ -139,14 +140,15 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        iterations = 100
-        percent_completes = []
+        iterations = 1000
+        percent_completes = {}
         for i in range(iterations):
             path_length = 0
-            point = tuple([0 for _ in range(len(self.feature_descriptors))]) # this has to change
-            path = search.bins[point][1].copy()
+            point = choice(list(search.bins.keys()))
+            level = search.bins[point][1].copy()
+            path = [point]
 
-            while path_length < self.max_path_length +5:
+            while path_length < self.max_path_length:
                 neighbor_keys = list(entry_is_valid[str(point)]['neighbors'].keys())
 
                 if len(neighbor_keys) == 0:
@@ -154,19 +156,26 @@ class GenerationPipeline():
                 
                 # get a random neighbor and convert it into a tuple
                 point = eval(choice(neighbor_keys))
-                path.extend(search.bins[point][1])
+                level = generate_link(
+                    self.gram, 
+                    level, 
+                    search.bins[point][1], 
+                    0)
+
+                path.append(point)
                 path_length += 1
 
-            percent_completes.append(self.get_percent_playable(path))
+            percent_completes[str(path)] = self.get_percent_playable(level)
             update_progress(i/iterations)
 
         update_progress(1)
 
         f = open(join(self.data_dir, 'random_walkthroughs.json'), 'w')
-        f.write(json_dumps(percent_completes))
+        f.write(json_dumps(percent_completes, indent=2))
         f.close()
 
-        print(f'Average Percent Playable: {sum(percent_completes) / iterations}')
+        mean = sum([percent_completes[key] for key in percent_completes]) / iterations
+        print(f'Average Percent Playable: {mean}')
         print('Done!')
 
     def __in_bounds(self, coordinate):
