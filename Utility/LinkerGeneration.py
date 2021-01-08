@@ -1,4 +1,5 @@
 from collections import deque
+from itertools import repeat
 
 def generate_link(grammar, start, end, min_length, include_path_length=False):
     '''
@@ -51,8 +52,8 @@ def generate_link(grammar, start, end, min_length, include_path_length=False):
     while current != start_prior:
         path.insert(0, current.split(',')[-1])
         current = ','.join(came_from[current])
-    
-    full_map = min_path + path[:len(path) - min(len(path) - 1, grammar.n - 1)] + end
+
+    full_map = min_path + path + end[grammar.n - 1:]
     if include_path_length:
         return full_map, len(full_map) - len(start) - len(end)
     

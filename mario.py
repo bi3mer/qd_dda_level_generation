@@ -15,7 +15,7 @@ from os import mkdir, remove, listdir
 
 class Mario(GenerationPipeline):
     def __init__(self):
-        self.data_dir = 'mario_data'
+        self.data_dir = 'MarioData'
 
         self.start_population_size = 500
         self.fast_iterations = 10000000

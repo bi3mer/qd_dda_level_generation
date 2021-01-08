@@ -61,7 +61,7 @@ class GenerationPipeline():
         )
         search.run(self.fast_iterations, self.slow_iterations)
 
-        #######################################################################
+        # #######################################################################
         print('Validating levels. This is somewhat time-consuming but it\'s not horrible...')
         f = open(join(self.data_dir, 'data.csv'), 'w')
         w = writer(f)
