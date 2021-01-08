@@ -61,7 +61,7 @@ class GenerationPipeline():
         )
         search.run(self.fast_iterations, self.slow_iterations)
 
-        # #######################################################################
+        #######################################################################
         print('Validating levels. This is somewhat time-consuming but it\'s not horrible...')
         f = open(join(self.data_dir, 'data.csv'), 'w')
         w = writer(f)
@@ -149,13 +149,19 @@ class GenerationPipeline():
             path = [point]
 
             while path_length < self.max_path_length:
-                neighbor_keys = list(entry_is_valid[str(point)]['neighbors'].keys())
+                neighbors = entry_is_valid[str(point)]['neighbors']
+                valid_keys = []
 
-                if len(neighbor_keys) == 0:
+                for key in neighbors.keys():
+                    if neighbors[key] == 1.0:
+                        valid_keys.append(key)
+
+
+                if len(valid_keys) == 0:
                     break
                 
                 # get a random neighbor and convert it into a tuple
-                point = eval(choice(neighbor_keys))
+                point = eval(choice(valid_keys))
                 level = generate_link(
                     self.gram, 
                     level, 
