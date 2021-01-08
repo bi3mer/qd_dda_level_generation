@@ -142,7 +142,8 @@ class GenerationPipeline():
         print('Running validation on random set of links...')
         iterations = 1000
         percent_completes = {}
-        for i in range(iterations):
+        i = 0
+        while i < iterations:
             path_length = 0
             point = choice(list(search.bins.keys()))
             level = search.bins[point][1].copy()
@@ -155,7 +156,6 @@ class GenerationPipeline():
                 for key in neighbors.keys():
                     if neighbors[key] == 1.0:
                         valid_keys.append(key)
-
 
                 if len(valid_keys) == 0:
                     break
@@ -171,8 +171,12 @@ class GenerationPipeline():
                 path.append(point)
                 path_length += 1
 
-            percent_completes[str(path)] = self.get_percent_playable(level)
-            update_progress(i/iterations)
+            if path_length >= 2:
+                percent_completes[str(path)] = self.get_percent_playable(level)
+                i += 1
+                update_progress(i/iterations)
+            else:
+                print('skipped!')
 
         update_progress(1)
 
