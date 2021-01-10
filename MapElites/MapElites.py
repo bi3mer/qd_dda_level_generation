@@ -1,3 +1,4 @@
+from Utility.Mario.Fitness import slow_fitness
 from Utility.GridTools import columns_into_grid_string
 from Utility import update_progress
 
@@ -53,6 +54,10 @@ class MapElites:
                 update_progress(i / fast_iterations)
 
         update_progress(1)
+
+        # No need to force the user to have a slow function
+        if self.slow_performance == None:
+            return
         
         # switch to slow performance function
         print('Switching performance functions...')

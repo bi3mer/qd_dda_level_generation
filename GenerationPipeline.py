@@ -123,8 +123,7 @@ class GenerationPipeline():
                     if level == None:
                         entry_is_valid[str_entry_one]['neighbors'][str_entry_two] = -1
                     else:
-                        lvl = columns_into_grid_string(level)
-                        entry_is_valid[str_entry_one]['neighbors'][str_entry_two] = self.get_percent_playable(lvl)
+                        entry_is_valid[str_entry_one]['neighbors'][str_entry_two] = self.get_percent_playable(level)
 
                 i += 1
                 update_progress(i/total)
@@ -140,7 +139,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        iterations = 1000
+        iterations = 10
         percent_completes = {}
         i = 0
         while i < iterations:
