@@ -87,7 +87,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Starting python process to graph MAP-Elites bins...')
-        Popen(['python', join('Graphing', 'build_map_elites.py'), self.map_elites_config])
+        Popen(['python', join('Scripts', 'build_map_elites.py'), self.map_elites_config])
 
         #######################################################################
         print('Building and validating MAP-Elites directed DDA graph. This takes some time...')
@@ -136,7 +136,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Starting python process to graph MAP-Elites DDA graph...')
-        Popen(['python', join('Graphing', 'build_dda_grid.py'), dda_grid_path, self.data_dir])
+        Popen(['python', join('Scripts', 'build_dda_grid.py'), dda_grid_path, self.data_dir])
 
         #######################################################################
         print('Running validation on random set of links...')
