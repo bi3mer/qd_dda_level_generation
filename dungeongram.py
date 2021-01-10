@@ -5,7 +5,7 @@ from Utility.DungeonGram.IO import get_levels
 from Utility.DungeonGram.Behavior import *
 from Utility.DungeonGram.Fitness import *
 from Utility.NGram import NGram
-from Utility.GridTools import columns_into_grid_string, columns_into_rows
+from Utility.GridTools import columns_into_rows
 from dungeongrams import *
 
 from os.path import join
@@ -15,11 +15,7 @@ class DungeonGram(GenerationPipeline):
         self.data_dir = 'DungeonData'
 
         self.start_population_size = 500
-        self.fast_iterations = 10000000
-        self.slow_iterations = 10000
-
-        self.start_population_size = 5
-        self.fast_iterations = 10
+        self.fast_iterations = 1000000
         self.slow_iterations = 0
 
         self.feature_names = ['Density', 'leniency']
@@ -31,7 +27,7 @@ class DungeonGram(GenerationPipeline):
         self.slow_fitness = None
         self.minimize_performance = False
         
-        n = 2
+        n = 3
         self.gram = NGram(n)
         levels = get_levels()
         for level in levels:
