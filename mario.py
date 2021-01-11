@@ -51,7 +51,7 @@ class Mario(GenerationPipeline):
         self.title = ''
 
         self.must_validate = True
-        self.max_path_length = 10
+        self.max_path_length = 5
 
         # Necessary to evaluate with Robin Baumgarten agent
         print('Starting game process...')

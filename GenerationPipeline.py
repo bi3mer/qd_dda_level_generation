@@ -139,7 +139,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        iterations = 10
+        iterations = 1000
         percent_completes = {}
         while len(percent_completes) < iterations:
             path_length = 0
