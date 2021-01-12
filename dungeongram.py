@@ -48,10 +48,10 @@ class DungeonGram(GenerationPipeline):
         self.title = ''
 
         self.must_validate = False
-        self.max_path_length = 3
+        self.max_path_length = 5
 
     def get_percent_playable(self, level):
-        return percent_playable(columns_into_rows(level), True, FLAW_NO_FLAW, is_file=False)
+        return percent_playable(columns_into_rows(level), False, True, FLAW_NO_FLAW)
 
 if __name__ == '__main__':
     pipeline = DungeonGram()
