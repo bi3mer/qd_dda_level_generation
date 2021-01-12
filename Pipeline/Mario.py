@@ -1,4 +1,5 @@
-from GenerationPipeline import GenerationPipeline
+from .GenerationPipeline import GenerationPipeline
+
 from MapElites.Operators import *
 from Utility.Mario.IO import get_levels
 from Utility.Mario.Behavior import *

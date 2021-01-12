@@ -16,6 +16,6 @@ git submodule update
 I recommend using [PyPy](https://www.pypy.org/) otherwise it will take a pretty longtime to run.
 
 ```bash
-pypy3 mario.py
-pypy3 dungeongram.py
+pypy3 main.py --mario # run Mario pipeline
+pypy3 main.py --dungeongram # run DungeonGrams pipeline
 ```

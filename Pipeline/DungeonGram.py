@@ -1,5 +1,6 @@
+from .GenerationPipeline import GenerationPipeline
+
 from dungeongrams.dungeongrams import *
-from GenerationPipeline import GenerationPipeline
 from MapElites.Operators import *
 from Utility.DungeonGram.IO import get_levels
 from Utility.DungeonGram.Behavior import *
@@ -52,7 +53,3 @@ class DungeonGram(GenerationPipeline):
 
     def get_percent_playable(self, level):
         return percent_playable(columns_into_rows(level), False, True, FLAW_NO_FLAW)
-
-if __name__ == '__main__':
-    pipeline = DungeonGram()
-    pipeline.run()
