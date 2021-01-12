@@ -18,11 +18,11 @@ class NGramCrossover:
         could be improved by having this take in a selector
         '''
         strand_size = min(len(parent_1), len(parent_2))
-        paths = None
+        paths = [None, None]
         mid_normal_point = strand_size / 3
         attempts = 0
 
-        while paths == None and attempts < self.max_attempts:
+        while paths[0] == None and paths[1] == None and attempts < self.max_attempts:
             attempts += 1
             cross_over_point = floor(normalvariate(mid_normal_point, self.standard_deviation))
             cross_over_point = max(self.gram.n + 1, cross_over_point)
@@ -35,6 +35,8 @@ class NGramCrossover:
 
             if p_1 == None:
                 continue
+            else:
+                paths[0] = p_1
 
             p_2 = generate_link(
                 self.gram, 
@@ -44,10 +46,12 @@ class NGramCrossover:
             
             if p_2 == None:
                 continue
+            else:
+                paths[1] = p_2
 
-            paths = [p_1, p_2]
-
-        paths[0] = paths[0][:self.max_length]
-        paths[1] = paths[1][:self.max_length]
+        if paths[0] != None:
+            paths[0] = paths[0][:self.max_length]
+        if paths[1] != None:
+            paths[1] = paths[1][:self.max_length]
         
         return paths

@@ -39,6 +39,8 @@ class NGramMutate:
 
                 path = generate_link(self.gram, strand[:s], strand[e:], e-s)
 
+            if path == None:
+                return None
             return path[:self.max_length]
         
         return strand
