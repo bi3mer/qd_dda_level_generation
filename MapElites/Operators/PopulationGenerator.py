@@ -9,4 +9,4 @@ class PopulationGenerator:
         self.strand_size = strand_size
 
     def generate(self, n):
-        return [[choice(self.mutation_values[i]) for i in range(self.strand_size)] for _ in repeat(None, n)]
+        return [[choice(self.mutation_values) for i in repeat(None, self.strand_size)] for _ in repeat(None, n)]

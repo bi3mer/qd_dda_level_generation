@@ -14,7 +14,7 @@ f.close()
 color_bar_label = 'Percent Playable'
 resolution = 50
 
-cmap = 'Greens'
+cmap = 'coolwarm'
 
 f = open(config['data_file'])
 f.readline()
@@ -41,7 +41,9 @@ ax = sns.heatmap(
     square=True, 
     mask=mask,
     cmap=cmap,
-    cbar_kws={'label': color_bar_label})
+    cbar_kws={'label': color_bar_label},
+    vmin=0,
+    vmax=1)
 
 ax.set(xlabel=config['x_label'], ylabel=config['y_label'])
 ax.set(xticklabels=[], yticklabels=[])

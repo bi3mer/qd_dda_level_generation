@@ -36,7 +36,6 @@ class MapElites:
         self.bins = {} 
         self.keys = set()
         
-        print('initializing population...')
         for i, strand in enumerate(self.population_generator.generate(self.start_population_size)):
             self.__add_to_bins(strand, self.fast_performance)
             update_progress(i / fast_iterations)

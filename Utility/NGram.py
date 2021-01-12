@@ -1,6 +1,5 @@
 from collections import deque
 from random import choices
-from math import log, exp
 
 class NGram():
     __slots__ = ['input_size', 'n', 'grammar']

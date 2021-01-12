@@ -130,5 +130,7 @@ dmypy.json
 
 mario_data/
 dungeongram_data/
-MarioData/
-DungeonData/
+MarioData_False/
+MarioData_True/
+DungeonData_False/
+DungeonData_True/

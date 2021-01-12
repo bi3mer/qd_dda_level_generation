@@ -71,11 +71,11 @@ class GenerationPipeline():
         update_progress(0)
         for i, key in enumerate(search.bins.keys()):
             if self.must_validate:
-                is_valid = self.get_percent_playable(search.bins[key][1]) == 1
+                playability = self.get_percent_playable(search.bins[key][1]) 
             else: 
-                is_valid = search.bins[key][0] == 1
+                playability = search.bins[key][0]
 
-            w.writerow(list(key) + [search.bins[key][0], is_valid])
+            w.writerow(list(key) + [playability])
 
             level_file = open(join(level_path, f'{i}.txt'), 'w')
             level_file.write(columns_into_grid_string(search.bins[key][1]))
@@ -90,6 +90,9 @@ class GenerationPipeline():
         Popen(['python', join('Scripts', 'build_map_elites.py'), self.map_elites_config])
 
         #######################################################################
+        if self.skip_after_map_elites:
+            return
+
         print('Building and validating MAP-Elites directed DDA graph. This takes some time...')
         DIRECTIONS = ((0,1), (0,-1), (1, 0), (-1, 0))
 
