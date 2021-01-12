@@ -52,7 +52,7 @@ def generate_link(grammar, start, end, min_length, include_path_length=False):
         path.insert(0, current.split(',')[-1])
         current = ','.join(came_from[current])
 
-    full_map = min_path + path + end[grammar.n - 1:]
+    full_map = min_path + path + end[min(len(path), grammar.n - 1):]
     if include_path_length:
         return full_map, len(full_map) - len(start) - len(end)
     
