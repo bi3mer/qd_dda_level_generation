@@ -4,10 +4,11 @@ from random import normalvariate
 from math import floor
 
 class NGramCrossover:
-    __slots__ = ['gram', 'min_length', 'max_length', 'standard_deviation']
+    __slots__ = ['gram', 'min_length', 'max_length', 'standard_deviation', 'max_attempts']
 
-    def __init__(self, gram, min_length, max_length, standard_deviation=3):
+    def __init__(self, gram, min_length, max_length, standard_deviation=3, max_attempts=10):
         self.standard_deviation = standard_deviation
+        self.max_attempts = max_attempts
         self.max_length = max_length
         self.min_length = min_length
         self.gram = gram
@@ -19,7 +20,10 @@ class NGramCrossover:
         strand_size = min(len(parent_1), len(parent_2))
         paths = None
         mid_normal_point = strand_size / 3
-        while paths == None:
+        attempts = 0
+
+        while paths == None and attempts < self.max_attempts:
+            attempts += 1
             cross_over_point = floor(normalvariate(mid_normal_point, self.standard_deviation))
             cross_over_point = max(self.gram.n + 1, cross_over_point)
 

@@ -6,21 +6,28 @@ from math import ceil, floor
 class NGramMutate:
     __slots__ = [
         'standard_deviation', 'mutation_values', 'mutation_rate', 
-        'max_length', 'gram']
+        'max_length', 'gram', 'max_attempts']
 
-    def __init__(self, mutation_rate, gram, max_length, standard_deviation = 3):
+    def __init__(self, mutation_rate, gram, max_length, standard_deviation=3, max_attempts=10):
         '''
         max length should be longer than the original strand length.
         '''
         self.standard_deviation = standard_deviation
         self.mutation_rate = mutation_rate
         self.max_length = max_length
+        self.max_attempts = max_attempts
         self.gram = gram
 
     def mutate(self, strand):
+        if strand == None:
+            return None
+
         if random() < self.mutation_rate:
             path = None
-            while path == None:
+            attempts = 0
+            while path == None and attempts < self.max_attempts:
+                attempts += 1
+
                 mid_normal_point = len(strand) / 3
                 points = [
                     normalvariate(mid_normal_point, self.standard_deviation),

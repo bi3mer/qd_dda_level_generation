@@ -1,5 +1,4 @@
 from collections import deque
-from itertools import repeat
 
 def generate_link(grammar, start, end, min_length, include_path_length=False):
     '''

@@ -1,7 +1,4 @@
-from Utility.Mario.Fitness import slow_fitness
-from Utility.GridTools import columns_into_grid_string
 from Utility import update_progress
-
 from random import seed, sample
 from math import floor
 
@@ -91,6 +88,9 @@ class MapElites:
         Added extra functionality to allow for additional fitness if the main fitness
         is found to be equal to the current best fitness
         '''
+        if strand == None:
+            return
+
         fitness = performance(strand)
         feature_vector = [score(strand) for score in self.feature_descriptors]
         
