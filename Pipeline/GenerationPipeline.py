@@ -218,19 +218,21 @@ class GenerationPipeline():
                 new_neighbors = {}
 
                 for dst_str in neighbors:
-                    dst = eval(dst_str)
+                    if neighbors[dst_str] == 1.0:
+                        dst = eval(dst_str)
+                        level = generate_link(
+                            self.gram, 
+                            bins[src], 
+                            bins[dst], 
+                            0)
 
-                    level = generate_link(
-                        self.gram, 
-                        bins[src], 
-                        bins[dst], 
-                        0)
-
-                    if level == None:
-                        new_neighbors[dst_str] = -1
+                        if level == None:
+                            new_neighbors[dst_str] = -1
+                        else:
+                            playability = self.get_percent_playable(level, agent=flawed_agent)
+                            new_neighbors[dst_str] = playability
                     else:
-                        playability = self.get_percent_playable(level, agent=flawed_agent)
-                        new_neighbors[dst_str] = playability
+                        new_neighbors[dst_str] = -1
                 
                 result[src_str] = {}
                 result[src_str]['neighbors'] =  new_neighbors

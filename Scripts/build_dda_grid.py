@@ -4,8 +4,12 @@ import json
 import sys
 import os
 
-
-f = open(sys.argv[1], 'r')
+if len(sys.argv) == 2:
+    save_path = os.path.join(sys.argv[1], 'dda_grid.pdf')
+    f = open(os.path.join(sys.argv[1], 'dda_graph.json'), 'r')
+else:
+    save_path = os.path.join(sys.argv[1], f'dda_grid_{sys.argv[2]}.pdf')
+    f = open(os.path.join(sys.argv[1], f'dda_graph_{sys.argv[2]}.json'), 'r')
 data =json.load(f)
 f.close()
 
@@ -45,7 +49,7 @@ plt.xlim(min_cor, max_cor)
 plt.ylim(min_cor, max_cor)
 
 nx.draw(graph, pos, node_color=color_map, node_size=10, with_labels=False, arrowsize=5) 
-plt.savefig(os.path.join(sys.argv[2], 'dda_grid.pdf'), bbox_inches="tight") 
+plt.savefig(save_path, bbox_inches="tight") 
 
 nodes = set()
 for path in list(nx.bfs_edges(graph, '(0, 0)')):

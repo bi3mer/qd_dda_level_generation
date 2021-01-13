@@ -2,7 +2,11 @@ import json
 import sys
 import os
 
-f = open(os.path.join(sys.argv[1], 'dda_graph.json'), 'r')
+if len(sys.argv) == 2:
+    f = open(os.path.join(sys.argv[1], 'dda_graph.json'), 'r')
+else:
+    f = open(os.path.join(sys.argv[1], f'dda_graph_{sys.argv[2]}.json'), 'r')
+    
 graph = json.load(f)
 f.close()
 
