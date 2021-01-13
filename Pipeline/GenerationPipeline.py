@@ -5,7 +5,7 @@ from Utility import *
 
 from os.path import isdir, join, exists
 from os import mkdir, remove, listdir
-from json import dumps as json_dumps
+from json import load as json_load, dumps as json_dumps
 from subprocess import Popen
 from random import choice
 from csv import writer
@@ -192,5 +192,54 @@ class GenerationPipeline():
         return coordinate[0] >= 0 and coordinate[0] <= self.resolution and \
                coordinate[1] >= 0 and coordinate[1] <= self.resolution
 
-    def get_percent_playable(self, level):
+    def run_flawed_agents(self):
+        f = open(join(self.data_dir, 'dda_graph.json'), 'r')
+        grid = json_load(f)
+        f.close()
+
+        f = open(join(self.data_dir, 'data.csv'), 'r')
+        f.readline() # get rid of header
+        bins = {}
+        for i, line in enumerate(f.readlines()):
+            linearity, leniency, _ = line.split(',')
+
+            level_file = open(join(self.data_dir, 'levels', f'{i}.txt'))
+            bins[(int(linearity), int(leniency))] = rows_into_columns(level_file.readlines())
+            level_file.close()
+        f.close()
+
+        for flawed_agent in self.flawed_agents:
+            print(f'\nRunning agent: {flawed_agent}')
+            result = {}
+
+            for i, src_str in enumerate(grid):
+                neighbors = grid[src_str]['neighbors']
+                src = eval(src_str)
+                new_neighbors = {}
+
+                for dst_str in neighbors:
+                    dst = eval(dst_str)
+
+                    level = generate_link(
+                        self.gram, 
+                        bins[src], 
+                        bins[dst], 
+                        0)
+
+                    if level == None:
+                        new_neighbors[dst_str] = -1
+                    else:
+                        playability = self.get_percent_playable(level, agent=flawed_agent)
+                        new_neighbors[dst_str] = playability
+                
+                result[src_str] = {}
+                result[src_str]['neighbors'] =  new_neighbors
+                update_progress(i / len(grid))
+                    
+            dda_grid_path = join(self.data_dir, f'dda_graph_{flawed_agent}.json')
+            f = open(dda_grid_path, 'w')
+            f.write(json_dumps(result, indent=2))
+            f.close()
+
+    def get_percent_playable(self, level, agent=None):
         raise NotImplementedError()

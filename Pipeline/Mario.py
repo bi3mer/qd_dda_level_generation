@@ -19,6 +19,13 @@ class Mario(GenerationPipeline):
         self.data_dir = f'MarioData_{use_standard_operators}'
         self.skip_after_map_elites = skip_after_map_elites
 
+        self.flawed_agents = [
+            'NO_ENEMY',
+            'NO_HIGH_JUMP',
+            'NO_JUMP',
+            'NO_SPEED'
+        ]
+
         self.start_population_size = 500
         self.fast_iterations = 10000000
         self.slow_iterations = 10000
@@ -82,14 +89,17 @@ class Mario(GenerationPipeline):
         self.proc.terminate()
         rmtree(self.TEMP_DIR)
 
-    def get_percent_playable(self, level):
+    def get_percent_playable(self, level, agent=None):
         # send level file to java process. First we create a lock so Java won't 
         # read to early
         lock_file =join(self.output_dir, 'lock')
         Path(lock_file).touch()
 
         # write level file with the agent to be used
-        f = open(join(self.output_dir, 'NO_FLAW-level.txt'), 'w')
+        if agent == None:
+            f = open(join(self.output_dir, 'NO_FLAW-level.txt'), 'w')
+        else:
+            f = open(join(self.output_dir, f'{agent}-level.txt'), 'w')
         f.write(columns_into_grid_string(level))
         f.close()
 

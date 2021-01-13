@@ -15,6 +15,12 @@ class DungeonGram(GenerationPipeline):
     def __init__(self, use_standard_operators, skip_after_map_elites):
         self.data_dir = f'DungeonData_{use_standard_operators}'
         self.skip_after_map_elites = skip_after_map_elites
+
+        self.flawed_agents = [
+            'no_spike',
+            'no_hazard',
+            'no_speed'
+        ]
         
         self.start_population_size = 500
         self.fast_iterations = 100000
@@ -61,5 +67,8 @@ class DungeonGram(GenerationPipeline):
         self.must_validate = False
         self.max_path_length = 3
 
-    def get_percent_playable(self, level):
-        return percent_playable(columns_into_rows(level), False, True, FLAW_NO_FLAW)
+    def get_percent_playable(self, level, agent=None):
+        if agent == None:
+            agent = FLAW_NO_FLAW
+
+        return percent_playable(columns_into_rows(level), False, True, agent)
