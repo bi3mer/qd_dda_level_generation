@@ -11,7 +11,7 @@ for line in f.readlines():
     _, _, percent = line.strip().split(',')
     percents.append(float(percent))
 
-    if percent == 1.0:
+    if percents[-1] == 1.0:
         valid_levels += 1
     else:
         invalid_levels += 1
