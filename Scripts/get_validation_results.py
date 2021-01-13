@@ -8,10 +8,10 @@ percents = []
 f = open(os.path.join(sys.argv[1], 'data.csv'))
 f.readline() # get rid of header
 for line in f.readlines():
-    _, _, percent, isValid = line.strip().split(',')
+    _, _, percent = line.strip().split(',')
     percents.append(float(percent))
 
-    if isValid:
+    if percent == 1.0:
         valid_levels += 1
     else:
         invalid_levels += 1

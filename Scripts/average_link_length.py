@@ -9,7 +9,10 @@ import sys
 import os
 
 if sys.argv[1] == 'mario':
-    data_dir = 'MarioData'
+    if sys.argv[2] == 'false':
+        data_dir = 'MarioData_False'
+    else: 
+        data_dir = 'MarioData_True'
     grammar = NGram(3)
 
     levels = Mario.IO.get_levels()
@@ -17,7 +20,10 @@ if sys.argv[1] == 'mario':
         grammar.add_sequence(level)
 
 elif sys.argv[1] == 'dungeon':
-    data_dir = 'DungeonData'
+    if sys.argv[2] == 'false':
+        data_dir = 'DungeonData_False'
+    else:
+        data_dir = 'DungeonData_True'
 
     grammar = NGram(3)
 
@@ -38,7 +44,7 @@ f = open(os.path.join(data_dir, 'data.csv'), 'r')
 f.readline() # get rid of header
 bins = {}
 for i, line in enumerate(f.readlines()):
-    linearity, leniency, _, __ = line.split(',')
+    linearity, leniency, _ = line.split(',')
 
     level_file = open(os.path.join(data_dir, 'levels', f'{i}.txt'))
     bins[(int(linearity), int(leniency))] = rows_into_columns(level_file.readlines())
