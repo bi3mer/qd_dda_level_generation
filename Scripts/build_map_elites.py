@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.colors
 import seaborn as sns
 import numpy as np
 import json
@@ -14,7 +15,13 @@ f.close()
 color_bar_label = 'Percent Playable'
 resolution = 50
 
-cmap = 'coolwarm'
+norm = matplotlib.colors.Normalize(0,1)
+colors = [
+    [0.0, "#ff000011"],
+    [0.99, "#ff0000ff"],
+    [1.0, "green"]
+]
+cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
 
 f = open(config['data_file'])
 f.readline()
@@ -49,7 +56,7 @@ ax.set(xlabel=config['x_label'], ylabel=config['y_label'])
 ax.set(xticklabels=[], yticklabels=[])
 ax.set(title=config['title'])
 ax.invert_yaxis()
-
-plt.savefig(config['save_file'], bbox_inches="tight") 
+plt.show()
+# plt.savefig(config['save_file'], bbox_inches="tight") 
 # os.remove(sys.argv[1])
 print('Saved MAP-Elites graph and deleted configuration file.')
