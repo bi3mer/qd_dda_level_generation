@@ -217,6 +217,8 @@ class GenerationPipeline():
                 src = eval(src_str)
                 new_neighbors = {}
 
+                src_playability = self.get_percent_playable(bins[src], agent=flawed_agent)
+
                 for dst_str in neighbors:
                     if neighbors[dst_str] == 1.0:
                         dst = eval(dst_str)
@@ -228,9 +230,11 @@ class GenerationPipeline():
 
                         if level == None:
                             new_neighbors[dst_str] = -1
-                        else:
+                        elif src_playability == 1.0:
                             playability = self.get_percent_playable(level, agent=flawed_agent)
                             new_neighbors[dst_str] = playability
+                        else:
+                            new_neighbors[dst_str] = src_playability * len(bins[src]) / len(level)
                     else:
                         new_neighbors[dst_str] = -1
                 
