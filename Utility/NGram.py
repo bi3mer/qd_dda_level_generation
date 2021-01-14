@@ -60,3 +60,20 @@ class NGram():
             prior_val = ','.join(list(prior))
 
         return output
+
+    def sequence_is_possible(self, sequence):
+        prior = deque([], maxlen=self.n - 1)
+
+        for token in sequence:
+            key = ','.join(prior)
+            if len(prior) == prior.maxlen:
+                if key not in self.grammar:
+                    return False
+
+                if token not in self.grammar[key]:
+                    return False
+
+            prior.append(token)
+
+        return True
+        

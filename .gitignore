@@ -128,6 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+*.zip
 mario_data/
 dungeongram_data/
 MarioData_False/

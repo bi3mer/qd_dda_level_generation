@@ -62,7 +62,7 @@ class GenerationPipeline():
         search.run(self.fast_iterations, self.slow_iterations)
 
         #######################################################################
-        print('Validating levels. This is somewhat time-consuming but it\'s not horrible...')
+        print('Validating levels...')
         f = open(join(self.data_dir, 'data.csv'), 'w')
         w = writer(f)
         w.writerow(self.feature_names + ['performance'])
@@ -93,7 +93,7 @@ class GenerationPipeline():
         if self.skip_after_map_elites:
             return
 
-        print('Building and validating MAP-Elites directed DDA graph. This takes some time...')
+        print('Building and validating MAP-Elites directed DDA graph...')
         DIRECTIONS = ((0,1), (0,-1), (1, 0), (-1, 0))
 
         entry_is_valid = {}
