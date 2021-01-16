@@ -12,9 +12,11 @@ def density(columns):
 def leniency(columns):
     count = 0
     for col in columns:
-        if SPIKE in col or ENEMY in col:
-            count += 0.5
+        if SPIKE in col :
+            count += 1/3
+        if ENEMY in col:
+            count += 1/3
         if SWITCH in col:
-            count += 0.5
+            count += 1/3
 
     return min(0.5, count / len(columns))

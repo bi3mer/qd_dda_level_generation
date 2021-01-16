@@ -53,7 +53,7 @@ class DungeonGram(GenerationPipeline):
             self.mutator = Mutate(mutation_values, 0.02)
             self.crossover = TwoFoldCrossover()
         else:
-            self.population_generator = NGramPopulationGenerator(self.gram, levels[0][:n+1], self.start_strand_size)
+            self.population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
             self.mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
             self.crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
 
@@ -71,4 +71,10 @@ class DungeonGram(GenerationPipeline):
         if agent == None:
             agent = FLAW_NO_FLAW
 
-        return percent_playable(columns_into_rows(level), False, True, agent)
+        # 100 search depth per 11 columns
+        search_depth = int(100 * len(level) / 11)
+
+        playable = percent_playable(columns_into_rows(level), False, True, agent, search_depth)
+        bad_transitions = self.gram.count_bad_transitions(level)
+
+        return bad_transitions + 1 - playable

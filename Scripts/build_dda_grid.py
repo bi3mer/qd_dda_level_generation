@@ -14,19 +14,32 @@ data =json.load(f)
 f.close()
 
 graph = nx.DiGraph()
+valid_edges = 0
+edge_count = 0
 x_points = []
 y_points = []
 
 for src in data:
     x,y = src[1:-1].split(',')
-    x_points.append(int(x))
-    y_points.append(int(y))
-    graph.add_node(src, pos=(int(x), int(y)))
+    x = int(x)
+    y = int(y)
+
+    x_points.append(x)
+    y_points.append(y)
+    graph.add_node(src, pos=(x,y))
+
+    if x == 0 and y == 0:
+        edge_count += 2
+    elif x == 0 or y == 0:
+        edge_count += 3
+    else:
+        edge_count += 4
 
 for src in data:
     neighbors = data[src]['neighbors']
     for dst in data[src]['neighbors']:
         if neighbors[dst] == 1:
+            valid_edges += 1
             graph.add_edge(src, dst)
 
 color_map = []
@@ -38,7 +51,6 @@ for i, res in enumerate(graph.in_degree()):
         color_map.append('green')
     else:
         color_map.append('brown')
-
 
 min_cor = min(min(x_points), min(y_points)) - 1
 max_cor = max(max(x_points), max(y_points)) + 1
@@ -58,3 +70,5 @@ for path in list(nx.bfs_edges(graph, '(0, 0)')):
 
 print(f'Connected nodes: {len(nodes)}')
 print(f'total number of nodes: {len(graph.nodes)}')
+print(f'valid edges: {valid_edges}')
+print(f'edge count: {edge_count}')

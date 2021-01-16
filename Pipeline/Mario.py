@@ -30,14 +30,15 @@ class Mario(GenerationPipeline):
         self.fast_iterations = 10000000
         self.slow_iterations = 10000
 
+        self.start_population_size = 5
+        self.fast_iterations = 10
+        self.slow_iterations = 1
+
         self.feature_names = ['linearity', 'leniency']
         self.feature_descriptors = [percent_linearity, percent_leniency]
         self.feature_dimensions = [[0, 1], [0, 1]] 
 
         self.resolution = 40
-        self.fast_fitness = fast_fitness
-        self.slow_fitness = slow_fitness
-        self.minimize_performance = False
         
         n = 3
         self.gram = NGram(n)
@@ -47,6 +48,10 @@ class Mario(GenerationPipeline):
             self.gram.add_sequence(level)
             unigram.add_sequence(level)
 
+        self.fast_fitness = build_fast_fitness_function(self.gram)
+        self.slow_fitness = build_slow_fitness_function(self.gram)
+        self.minimize_performance = True
+        
         self.start_strand_size = 25
         self.max_strand_size = 30
         self.seed = 0
@@ -57,7 +62,7 @@ class Mario(GenerationPipeline):
             self.mutator = Mutate(mutation_values, 0.02)
             self.crossover = TwoFoldCrossover()
         else:
-            self.population_generator = NGramPopulationGenerator(self.gram, levels[0][:n+1], self.start_strand_size)
+            self.population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
             self.mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
             self.crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
 
@@ -119,8 +124,9 @@ class Mario(GenerationPipeline):
                     exit(-1)
 
                 remove(join(self.input_dir, files[0]))
-
-        return percent_complete
+        
+        bad_transitions = self.gram.count_bad_transitions(level)
+        return bad_transitions + 1 - percent_complete
 
 if __name__ == '__main__':
     pipeline = Mario()

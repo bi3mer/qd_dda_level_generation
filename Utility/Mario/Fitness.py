@@ -1,5 +1,6 @@
 from .Extractor import max_height, heights as col_heights
 from .SummervilleAgent import percent_completable
+    
 
 def percent_playable(columns, start_position):
     '''
@@ -46,20 +47,30 @@ def naive_percent_playable(columns):
 
     return i / len(columns)
 
-def slow_fitness(columns):
-    columns.insert(0, 'X-------------')
-    columns.insert(0, 'X-------------')
-    fitness = percent_playable(columns, (1, 1, -1),)
-    columns.pop(0)
-    columns.pop(0)
+def build_slow_fitness_function(grammar):
+    def slow_fitness(columns):
+        bad_transitions = grammar.count_bad_transitions(columns)
 
-    return fitness
+        columns.insert(0, 'X-------------')
+        columns.insert(0, 'X-------------')
+        fitness = percent_playable(columns, (1, 1, -1))
+        columns.pop(0)
+        columns.pop(0)
 
-def fast_fitness(columns):
-    columns.insert(0, 'X-------------')
-    columns.insert(0, 'X-------------')
-    fitness = naive_percent_playable(columns)
-    columns.pop(0)
-    columns.pop(0)
+        return bad_transitions + 1 - fitness
 
-    return fitness
+    return slow_fitness
+
+def build_fast_fitness_function(grammar):
+    def fast_fitness(columns):
+        bad_transitions = grammar.count_bad_transitions(columns)
+
+        columns.insert(0, 'X-------------')
+        columns.insert(0, 'X-------------')
+        fitness = naive_percent_playable(columns)
+        columns.pop(0)
+        columns.pop(0)
+
+        return bad_transitions + 1 -  fitness
+
+    return fast_fitness
