@@ -37,7 +37,8 @@ class GenerationPipeline():
             'x_label': self.x_label,
             'y_label': self.y_label,
             'save_file': self.save_file,
-            'title': self.title
+            'title': self.title,
+            'resolution': self.resolution
         }
 
         f = open(self.map_elites_config, 'w')

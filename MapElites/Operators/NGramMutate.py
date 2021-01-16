@@ -1,7 +1,5 @@
 from Utility import generate_link
-
-from random import normalvariate, random
-from math import ceil
+from random import randrange, random
 
 class NGramMutate:
     __slots__ = [
@@ -27,7 +25,7 @@ class NGramMutate:
             attempts = 0
             while path == None and attempts < self.max_attempts:
                 attempts += 1
-                point = ceil(normalvariate(len(strand) / 3, self.standard_deviation))
+                point = randrange(self.gram.n, len(strand) - self.gram.n)
                 path = generate_link(self.gram, strand[:point], strand[point + 1:], 1)
 
             if path == None:

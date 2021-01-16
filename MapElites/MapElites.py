@@ -35,7 +35,7 @@ class MapElites:
     def run(self, fast_iterations, slow_iterations):
         self.bins = {} 
         self.keys = set()
-        
+
         for i, strand in enumerate(self.population_generator.generate(self.start_population_size)):
             self.__add_to_bins(strand, self.fast_performance)
             update_progress(i / fast_iterations)
@@ -76,8 +76,8 @@ class MapElites:
         '''
         Resolution is the number of bins for each feature. Meaning if we have 2
         features and a resolution of 2, we we will have a 2x2 matrix. We have to
-        get take scores and map them to the indexes of the matrix. We get this 
-        by first dividing 100 by the resolution which will be used to get an index
+        get scores and map them to the indexes of the matrix. We get this by first
+        dividing 100 by the resolution which will be used to get an index
         for a mapping of a minimum of 0 and a max of 100. We are given a min and
         max for each dimension of the user. We take the given score and convert it
         from their mappings to a min of 0 and 100. We then use that and divide the
@@ -96,7 +96,7 @@ class MapElites:
         for i in range(len(self.feature_dimensions)):
             minimum, maximum = self.feature_dimensions[i]
             score = feature_vector[i]
-            score_in_range = (score - minimum) * 100 / maximum 
+            score_in_range = (score - minimum) * 100 / (maximum - minimum) 
             feature_vector[i] = floor(score_in_range / self.resolution)
 
         feature_vector = tuple(feature_vector)

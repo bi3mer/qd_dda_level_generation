@@ -7,7 +7,7 @@ def density(columns):
         num_solid_blocks += col.count(SOLID_BLOCK)
         total_number_of_blocks += len(col)
 
-    return num_solid_blocks / total_number_of_blocks
+    return min(0.5, num_solid_blocks / total_number_of_blocks)
 
 def leniency(columns):
     count = 0
@@ -17,4 +17,4 @@ def leniency(columns):
         if SWITCH in col:
             count += 0.5
 
-    return count / len(columns)
+    return min(0.5, count / len(columns))

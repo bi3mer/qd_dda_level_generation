@@ -28,9 +28,9 @@ class DungeonGram(GenerationPipeline):
 
         self.feature_names = ['Density', 'leniency']
         self.feature_descriptors = [density, leniency]
-        self.feature_dimensions = [[0, 1], [0, 1]] 
+        self.feature_dimensions = [[0, 1.0], [0, 0.5]] 
 
-        self.resolution = 50
+        self.resolution = 20
         self.fast_fitness = self.get_percent_playable
         self.slow_fitness = None
         self.minimize_performance = False
@@ -44,7 +44,7 @@ class DungeonGram(GenerationPipeline):
             unigram.add_sequence(level)
 
         self.start_strand_size = 11
-        self.max_strand_size = 12
+        self.max_strand_size = 11
         self.seed = 0
 
         if use_standard_operators:
@@ -55,7 +55,7 @@ class DungeonGram(GenerationPipeline):
         else:
             self.population_generator = NGramPopulationGenerator(self.gram, levels[0][:n+1], self.start_strand_size)
             self.mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
-            self.crossover = NGramCrossover(self.gram, 0, self.max_strand_size)
+            self.crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
 
         self.map_elites_config = join(self.data_dir, 'config_map_elites.json')
         self.data_file = join(self.data_dir, 'data.csv')

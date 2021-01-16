@@ -1,6 +1,6 @@
 from Utility.GridTools import rows_into_columns, columns_into_grid_string
 from Utility.LinkerGeneration import generate_link
-from Utility.Mario.IO import get_levels
+from Utility import Mario, DungeonGram
 from Utility.NGram import NGram
 import sys
 import os
@@ -9,7 +9,7 @@ f = open(os.path.join(sys.argv[1], 'data.csv'))
 f.readline() # remove header
 bins = {}
 for i, line in enumerate(f.readlines()):
-    linearity, leniency, _, __ = line.split(',')
+    linearity, leniency, _,  = line.split(',')
 
     level_file = open(os.path.join(sys.argv[1], 'levels', f'{i}.txt'))
     bins[(int(linearity), int(leniency))] = rows_into_columns(level_file.readlines())
@@ -18,9 +18,17 @@ for i, line in enumerate(f.readlines()):
 f.close()
 
 gram = NGram(3)
-levels = get_levels()
-for level in levels:
-    gram.add_sequence(level)
+
+if 'Dungeon' in sys.argv[1]:
+    levels = DungeonGram.IO.get_levels()
+    for level in levels:
+        gram.add_sequence(level)
+elif 'Mario' in sys.argv[1]:
+    levels = Mario.IO.get_levels()
+    for level in levels:
+        gram.add_sequence(level)
+else:
+    raise NameError(f'Unrecognized game: {sys.argv[1]}')
 
 path = eval(sys.argv[2])
 level = None

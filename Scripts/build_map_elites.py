@@ -13,12 +13,12 @@ config = json.load(f)
 f.close()
 
 color_bar_label = 'Percent Playable'
-resolution = 50
+resolution = config['resolution']
 
 norm = matplotlib.colors.Normalize(0,1)
 colors = [
     [0.0, "#ff000011"],
-    [0.99, "#ff0000ff"],
+    [0.999999999, "#ff0000ff"],
     [1.0, "green"]
 ]
 cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
@@ -28,7 +28,7 @@ f.readline()
 content = f.readlines()
 f.close()
 
-matrix = [[np.nan for _ in range(resolution)] for __ in range(resolution)]
+matrix = [[np.nan for _ in range(resolution + 1)] for __ in range(resolution + 1)]
 for row in content:
     split_line = row.strip().split(',')
     matrix[int(split_line[1])][int(split_line[0])] = float(split_line[2])
@@ -56,7 +56,4 @@ ax.set(xlabel=config['x_label'], ylabel=config['y_label'])
 ax.set(xticklabels=[], yticklabels=[])
 ax.set(title=config['title'])
 ax.invert_yaxis()
-plt.show()
-# plt.savefig(config['save_file'], bbox_inches="tight") 
-# os.remove(sys.argv[1])
-print('Saved MAP-Elites graph and deleted configuration file.')
+plt.savefig(config['save_file'], bbox_inches="tight") 

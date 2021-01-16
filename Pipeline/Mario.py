@@ -34,7 +34,7 @@ class Mario(GenerationPipeline):
         self.feature_descriptors = [percent_linearity, percent_leniency]
         self.feature_dimensions = [[0, 1], [0, 1]] 
 
-        self.resolution = 50
+        self.resolution = 40
         self.fast_fitness = fast_fitness
         self.slow_fitness = slow_fitness
         self.minimize_performance = False
@@ -59,7 +59,7 @@ class Mario(GenerationPipeline):
         else:
             self.population_generator = NGramPopulationGenerator(self.gram, levels[0][:n+1], self.start_strand_size)
             self.mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
-            self.crossover = NGramCrossover(self.gram, 0, self.max_strand_size)
+            self.crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
 
         self.map_elites_config = join(self.data_dir, 'config_map_elites.json')
         self.data_file = join(self.data_dir, 'data.csv')
