@@ -22,7 +22,8 @@ class DungeonGram(GenerationPipeline):
             'no_speed'
         ]
         
-        self.start_population_size = 500
+        print('TODO: update DG iterations =======================================================')
+        self.start_population_size = 50
         self.fast_iterations = 100000
         self.slow_iterations = 0
 
@@ -31,7 +32,7 @@ class DungeonGram(GenerationPipeline):
         self.feature_dimensions = [[0, 1.0], [0, 0.5]] 
 
         self.resolution = 20
-        self.fast_fitness = self.get_percent_playable
+        self.fast_fitness = lambda lvl: self.get_fitness(lvl, self.get_percent_playable(lvl))
         self.slow_fitness = None
         self.minimize_performance = False
         
@@ -64,7 +65,6 @@ class DungeonGram(GenerationPipeline):
         self.save_file = join(self.data_dir, 'map_elites.pdf')
         self.title = ''
 
-        self.must_validate = False
         self.max_path_length = 3
 
     def get_percent_playable(self, level, agent=None):
@@ -73,8 +73,8 @@ class DungeonGram(GenerationPipeline):
 
         # 100 search depth per 11 columns
         search_depth = int(100 * len(level) / 11)
+        return percent_playable(columns_into_rows(level), False, True, agent, search_depth)
 
-        playable = percent_playable(columns_into_rows(level), False, True, agent, search_depth)
+    def get_fitness(self, level, percent_playable, agent=None):
         bad_transitions = self.gram.count_bad_transitions(level)
-
-        return bad_transitions + 1 - playable
+        return bad_transitions + 1 - percent_playable

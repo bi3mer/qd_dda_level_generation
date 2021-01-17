@@ -69,7 +69,6 @@ class Mario(GenerationPipeline):
         self.save_file = join(self.data_dir, 'map_elites.pdf')
         self.title = ''
 
-        self.must_validate = True
         self.max_path_length = 5
 
         # Necessary to evaluate with Robin Baumgarten agent
@@ -121,9 +120,8 @@ class Mario(GenerationPipeline):
 
                 remove(join(self.input_dir, files[0]))
         
+        return percent_complete
+    
+    def get_fitness(self, level, percent_playable, agent=None):
         bad_transitions = self.gram.count_bad_transitions(level)
-        return bad_transitions + 1 - percent_complete
-
-if __name__ == '__main__':
-    pipeline = Mario()
-    pipeline.run()
+        return bad_transitions + 1 - percent_playable

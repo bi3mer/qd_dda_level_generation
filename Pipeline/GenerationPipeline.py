@@ -80,19 +80,15 @@ class GenerationPipeline():
         num_keys = len(search.bins.keys())
         update_progress(0)
         for i, key in enumerate(search.bins.keys()):
-            if self.must_validate:
-                playability = self.get_percent_playable(search.bins[key][1]) 
-            else: 
-                playability = search.bins[key][0]
-
+            playability = self.get_percent_playable(search.bins[key][1])
             scores.append(playability)
 
-            if playability == 0.0:
+            if playability == 1.0:
                 valid_levels += 1
             else:
                 invalid_levels += 1
 
-            w.writerow(list(key) + [playability])
+            w.writerow(list(key) + [self.get_fitness(search.bins[key][1], playability)])
 
             level_file = open(join(level_path, f'{i}.txt'), 'w')
             level_file.write(columns_into_grid_string(search.bins[key][1]))
@@ -104,7 +100,7 @@ class GenerationPipeline():
 
         output_data.append('\nValidation Results:')
         output_data.append(f'Valid Levels: {valid_levels}')
-        output_data.append(f'Invalid Levels:  {invalid_levels}')
+        output_data.append(f'Invalid Levels: {invalid_levels}')
         output_data.append(f'Total Levels: {invalid_levels + valid_levels}')
         output_data.append(f'Mean Scores: {sum(scores) / len(scores)}')
 
@@ -163,7 +159,7 @@ class GenerationPipeline():
                         playable_scores.append(playable)
                         entry_is_valid[str_entry_one][str_entry_two] = playable
 
-                        if playable == 0.0:
+                        if playable == 1.0:
                             link_lengths.append(length)
 
                 i += 1
@@ -207,7 +203,7 @@ class GenerationPipeline():
                 valid_keys = []
 
                 for key in neighbors.keys():
-                    if neighbors[key] == 0.0 and key not in path:
+                    if neighbors[key] == 1.0 and key not in path:
                         valid_keys.append(key)
 
                 if len(valid_keys) == 0:
@@ -230,12 +226,10 @@ class GenerationPipeline():
                 percent_completes[str(path)] = score
                 update_progress(len(percent_completes) / iterations)
 
-                if score == 0.0:
+                if score == 1.0:
                     valid_levels += 1
             else:
-                print('skipped!')
-
-        update_progress(1)
+                print('Unable to find valid level. Trying again.')
 
         output_data.append('\nWalkthrough Results')
         output_data.append(f'Result: {valid_levels} / {iterations}')
@@ -308,6 +302,9 @@ class GenerationPipeline():
             f.close()
 
     def get_percent_playable(self, level, agent=None):
+        raise NotImplementedError()
+
+    def get_fitness(self, level, percent_playable, agent=None):
         raise NotImplementedError()
 
     def write_info_file(self, output_data):

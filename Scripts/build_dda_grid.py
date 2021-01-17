@@ -38,7 +38,7 @@ for src in data:
 for src in data:
     neighbors = data[src]
     for dst in neighbors:
-        if neighbors[dst] == 0.0:
+        if neighbors[dst] == 1.0:
             valid_edges += 1
             graph.add_edge(src, dst)
 
