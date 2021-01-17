@@ -12,6 +12,8 @@ from csv import writer
 
 class GenerationPipeline():
     def run(self):
+        output_data = []
+
         #######################################################################
         print('Setting up data directory...')
         if not isdir(self.data_dir):
@@ -29,6 +31,9 @@ class GenerationPipeline():
                 
             for filename in listdir(level_path):
                 remove(join(level_path, filename))
+            
+            if exists(join(self.data_dir, 'info.txt')):
+                remove(join(self.data_dir, 'info.txt'))
 
         #######################################################################
         print('writing config files for graphing')
@@ -64,6 +69,10 @@ class GenerationPipeline():
 
         #######################################################################
         print('Validating levels...')
+        valid_levels = 0 
+        invalid_levels = 0
+        scores = []
+        
         f = open(join(self.data_dir, 'data.csv'), 'w')
         w = writer(f)
         w.writerow(self.feature_names + ['performance'])
@@ -76,6 +85,13 @@ class GenerationPipeline():
             else: 
                 playability = search.bins[key][0]
 
+            scores.append(playability)
+
+            if playability == 0.0:
+                valid_levels += 1
+            else:
+                invalid_levels += 1
+
             w.writerow(list(key) + [playability])
 
             level_file = open(join(level_path, f'{i}.txt'), 'w')
@@ -86,12 +102,19 @@ class GenerationPipeline():
 
         f.close()
 
+        output_data.append('\nValidation Results:')
+        output_data.append(f'Valid Levels: {valid_levels}')
+        output_data.append(f'Invalid Levels:  {invalid_levels}')
+        output_data.append(f'Total Levels: {invalid_levels + valid_levels}')
+        output_data.append(f'Mean Scores: {sum(scores) / len(scores)}')
+
         #######################################################################
         print('Starting python process to graph MAP-Elites bins...')
         Popen(['python', join('Scripts', 'build_map_elites.py'), self.map_elites_config])
 
         #######################################################################
         if self.skip_after_map_elites:
+            self.write_info_file(output_data)
             return
 
         print('Building and validating MAP-Elites directed DDA graph...')
@@ -102,7 +125,15 @@ class GenerationPipeline():
 
         i = 0
         total = len(keys) * 4
+        playable_scores = []
+        link_lengths = []
+        link_count = 0
+
         for entry in keys:
+            if search.bins[entry][0] != 0.0:
+                entry_is_valid[str(entry)] = {}
+                continue
+
             for dir in DIRECTIONS:
                 neighbor = (entry[0] + dir[0], entry[1] + dir[1])
                 while neighbor not in search.bins:
@@ -111,40 +142,60 @@ class GenerationPipeline():
                         break
 
                 if self.__in_bounds(neighbor) and neighbor in search.bins:
+                    link_count += 1
                     str_entry_one = str(entry)
                     str_entry_two = str(neighbor)
                     
                     if str_entry_one not in entry_is_valid:
                         entry_is_valid[str_entry_one] = {}
-                        entry_is_valid[str_entry_one]['neighbors'] = {}
 
-                    level = generate_link(
+                    level, length = generate_link(
                         self.gram, 
                         search.bins[entry][1], 
                         search.bins[neighbor][1], 
-                        0)
+                        0,
+                        include_path_length=True)
 
                     if level == None:
-                        entry_is_valid[str_entry_one]['neighbors'][str_entry_two] = -1
+                        entry_is_valid[str_entry_one][str_entry_two] = -1
                     else:
-                        entry_is_valid[str_entry_one]['neighbors'][str_entry_two] = self.get_percent_playable(level)
+                        playable = self.get_percent_playable(level)
+                        playable_scores.append(playable)
+                        entry_is_valid[str_entry_one][str_entry_two] = playable
+
+                        if playable == 0.0:
+                            link_lengths.append(length)
 
                 i += 1
                 update_progress(i/total)
                 
-        dda_grid_path = join(self.data_dir, 'dda_graph.json')
-        f = open(dda_grid_path, 'w')
+        f = open(join(self.data_dir, 'dda_graph.json'), 'w')
         f.write(json_dumps(entry_is_valid, indent=2))
         f.close()
 
+        output_data.append('\nLink Lengths')
+        output_data.append(f'min: {min(link_lengths)}')
+        output_data.append(f'mean: {sum(link_lengths) / len(link_lengths)}')
+        output_data.append(f'max: {max(link_lengths)}')
+
+        output_data.append('\nLink Counts')
+        output_data.append(f'# valid links: {len(link_lengths)}')
+        output_data.append(f'# links: {link_count}')
+
+        output_data.append(f'\nLink Playability: {sum(playable_scores) / len(playable_scores)}')
+
         #######################################################################
         print('Starting python process to graph MAP-Elites DDA graph...')
-        Popen(['python', join('Scripts', 'build_dda_grid.py'), dda_grid_path, self.data_dir])
+        Popen(['python', join('Scripts', 'build_dda_grid.py'), self.data_dir])
 
         #######################################################################
         print('Running validation on random set of links...')
         iterations = 1000
         percent_completes = {}
+
+        valid_levels= 0
+        scores = []
+
         while len(percent_completes) < iterations:
             path_length = 0
             point = eval(choice(list(entry_is_valid.keys())))
@@ -152,11 +203,11 @@ class GenerationPipeline():
             path = [point]
 
             while path_length < self.max_path_length:
-                neighbors = entry_is_valid[str(point)]['neighbors']
+                neighbors = entry_is_valid[str(point)]
                 valid_keys = []
 
                 for key in neighbors.keys():
-                    if neighbors[key] == 1.0 and key not in path:
+                    if neighbors[key] == 0.0 and key not in path:
                         valid_keys.append(key)
 
                 if len(valid_keys) == 0:
@@ -174,20 +225,29 @@ class GenerationPipeline():
                 path_length += 1
 
             if path_length >= 2:
-                percent_completes[str(path)] = self.get_percent_playable(level)
+                score = self.get_percent_playable(level)
+                scores.append(score)
+                percent_completes[str(path)] = score
                 update_progress(len(percent_completes) / iterations)
+
+                if score == 0.0:
+                    valid_levels += 1
             else:
                 print('skipped!')
 
         update_progress(1)
 
+        output_data.append('\nWalkthrough Results')
+        output_data.append(f'Result: {valid_levels} / {iterations}')
+        output_data.append(f'Min Scores: {sum(scores) / len(scores)}')
+        output_data.append(f'Mean Scores: {sum(scores) / len(scores)}')
+        output_data.append(f'Max Scores: {sum(scores) / len(scores)}')
+
         f = open(join(self.data_dir, 'random_walkthroughs.json'), 'w')
         f.write(json_dumps(percent_completes, indent=2))
         f.close()
 
-        mean = sum([percent_completes[key] for key in percent_completes]) / iterations
-        print(f'Average Percent Playable: {mean}')
-        print('Done!')
+        self.write_info_file(output_data)
 
     def __in_bounds(self, coordinate):
         return coordinate[0] >= 0 and coordinate[0] <= self.resolution and \
@@ -214,14 +274,14 @@ class GenerationPipeline():
             result = {}
 
             for i, src_str in enumerate(grid):
-                neighbors = grid[src_str]['neighbors']
+                neighbors = grid[src_str]
                 src = eval(src_str)
                 new_neighbors = {}
 
                 src_playability = self.get_percent_playable(bins[src], agent=flawed_agent)
 
                 for dst_str in neighbors:
-                    if neighbors[dst_str] == 1.0:
+                    if neighbors[dst_str] == 0.0:
                         dst = eval(dst_str)
                         level = generate_link(
                             self.gram, 
@@ -231,7 +291,7 @@ class GenerationPipeline():
 
                         if level == None:
                             new_neighbors[dst_str] = -1
-                        elif src_playability == 1.0:
+                        elif src_playability == 0.0:
                             playability = self.get_percent_playable(level, agent=flawed_agent)
                             new_neighbors[dst_str] = playability
                         else:
@@ -239,8 +299,7 @@ class GenerationPipeline():
                     else:
                         new_neighbors[dst_str] = -1
                 
-                result[src_str] = {}
-                result[src_str]['neighbors'] =  new_neighbors
+                result[src_str] = new_neighbors
                 update_progress(i / len(grid))
                     
             dda_grid_path = join(self.data_dir, f'dda_graph_{flawed_agent}.json')
@@ -250,3 +309,13 @@ class GenerationPipeline():
 
     def get_percent_playable(self, level, agent=None):
         raise NotImplementedError()
+
+    def write_info_file(self, output_data):
+        file_path = join(self.data_dir, 'info.txt')
+        if exists(file_path):
+            f = open(file_path, 'a')
+        else:
+            f = open(file_path, 'w')
+
+        f.write('\n'.join(output_data))
+        f.close()

@@ -8,8 +8,8 @@ if len(sys.argv) == 2:
     save_path = os.path.join(sys.argv[1], 'dda_grid.pdf')
     f = open(os.path.join(sys.argv[1], 'dda_graph.json'), 'r')
 else:
-    save_path = os.path.join(sys.argv[1], f'dda_grid_{sys.argv[2]}.pdf')
-    f = open(os.path.join(sys.argv[1], f'dda_graph_{sys.argv[2]}.json'), 'r')
+    save_path = os.path.join(sys.argv[1], f'dda_grid.pdf')
+    f = open(os.path.join(sys.argv[1], f'dda_graph.json'), 'r')
 data =json.load(f)
 f.close()
 
@@ -36,9 +36,9 @@ for src in data:
         edge_count += 4
 
 for src in data:
-    neighbors = data[src]['neighbors']
-    for dst in data[src]['neighbors']:
-        if neighbors[dst] == 1:
+    neighbors = data[src]
+    for dst in neighbors:
+        if neighbors[dst] == 0.0:
             valid_edges += 1
             graph.add_edge(src, dst)
 
@@ -68,7 +68,13 @@ for path in list(nx.bfs_edges(graph, '(0, 0)')):
     for n in path:
         nodes.add(n)
 
-print(f'Connected nodes: {len(nodes)}')
-print(f'total number of nodes: {len(graph.nodes)}')
-print(f'valid edges: {valid_edges}')
-print(f'edge count: {edge_count}')
+file_path = os.path.join(sys.argv[1], 'info.txt')
+if os.path.exists(file_path):
+    f = open(file_path, 'a')
+else:
+    f = open(file_path, 'w')
+
+f.write(f'\nConnected nodes: {len(nodes)}')
+f.write(f'\ntotal number of nodes: {len(graph.nodes)}\n')
+f.close()
+
