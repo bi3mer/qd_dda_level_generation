@@ -22,8 +22,7 @@ class DungeonGram(GenerationPipeline):
             'no_speed'
         ]
         
-        print('TODO: update DG iterations =======================================================')
-        self.start_population_size = 50
+        self.start_population_size = 500
         self.fast_iterations = 100000
         self.slow_iterations = 0
 
@@ -71,9 +70,7 @@ class DungeonGram(GenerationPipeline):
         if agent == None:
             agent = FLAW_NO_FLAW
 
-        # 100 search depth per 11 columns
-        search_depth = int(100 * len(level) / 11)
-        return percent_playable(columns_into_rows(level), False, True, agent, search_depth)
+        return percent_playable(columns_into_rows(level), False, True, agent)
 
     def get_fitness(self, level, percent_playable, agent=None):
         bad_transitions = self.gram.count_bad_transitions(level)
