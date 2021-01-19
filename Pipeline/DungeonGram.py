@@ -67,7 +67,6 @@ class DungeonGram(GenerationPipeline):
         self.max_path_length = 3
 
     def get_percent_playable(self, level, agent=None):
-        print('\n\n' + '\n'.join(columns_into_rows(level)))
         if agent == None:
             agent = FLAW_NO_FLAW
 
