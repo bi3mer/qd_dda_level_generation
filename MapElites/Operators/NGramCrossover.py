@@ -1,13 +1,12 @@
 from Utility import generate_link
 
-from random import normalvariate
+from random import randrange
 from math import floor
 
 class NGramCrossover:
-    __slots__ = ['gram', 'min_length', 'max_length', 'standard_deviation', 'max_attempts']
+    __slots__ = ['gram', 'min_length', 'max_length', 'max_attempts']
 
-    def __init__(self, gram, min_length, max_length, standard_deviation=3, max_attempts=10):
-        self.standard_deviation = standard_deviation
+    def __init__(self, gram, min_length, max_length, max_attempts=10):
         self.max_attempts = max_attempts
         self.max_length = max_length
         self.min_length = min_length
@@ -19,21 +18,16 @@ class NGramCrossover:
         '''
         strand_size = min(len(parent_1), len(parent_2))
         paths = [None, None]
-        mid_normal_point = strand_size / 3
         attempts = 0
 
         while paths[0] == None and paths[1] == None and attempts < self.max_attempts:
             attempts += 1
-            cross_over_point = floor(normalvariate(mid_normal_point, self.standard_deviation))
-            cross_over_point = max(self.gram.n + 1, cross_over_point)
+            cross_over_point = randrange(self.gram.n, strand_size - self.gram.n)
 
             start = parent_1[:cross_over_point]
             end = parent_2[cross_over_point:]
-            p_1 = generate_link(
-                self.gram, 
-                start, 
-                end, 
-                max(self.min_length, len(start) + len(end)))
+            required_new_columns = max(0, self.min_length - len(start) - len(end))
+            p_1 = generate_link(self.gram, start, end, required_new_columns)
 
             if p_1 == None:
                 continue
@@ -42,11 +36,8 @@ class NGramCrossover:
 
             start = parent_2[:cross_over_point]
             end = parent_1[cross_over_point:]
-            p_2 = generate_link(
-                self.gram, 
-                start, 
-                end, 
-                max(self.min_length, len(start) + len(end)))
+            required_new_columns = max(0, self.min_length - len(start) - len(end))
+            p_2 = generate_link(self.gram, start, end, required_new_columns)
             
             if p_2 == None:
                 continue

@@ -56,7 +56,7 @@ class Mario(GenerationPipeline):
             mutation_values = list(unigram.grammar[''].keys())
             self.population_generator = PopulationGenerator(mutation_values, self.start_strand_size)
             self.mutator = Mutate(mutation_values, 0.02)
-            self.crossover = TwoFoldCrossover()
+            self.crossover = SinglePointCrossover()
         else:
             self.population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
             self.mutator = NGramMutate(0.02, self.gram, self.max_strand_size)

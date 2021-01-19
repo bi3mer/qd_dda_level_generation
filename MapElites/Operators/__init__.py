@@ -1,5 +1,5 @@
 from .PopulationGenerator import PopulationGenerator
-from .TwoFoldCrossover import TwoFoldCrossover
+from .SinglePointCrossover import SinglePointCrossover
 from .Mutate import Mutate
 
 from .NGramPopulationGenerator import NGramPopulationGenerator

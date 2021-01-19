@@ -6,11 +6,10 @@ class NGramMutate:
         'standard_deviation', 'mutation_values', 'mutation_rate', 
         'max_length', 'gram', 'max_attempts']
 
-    def __init__(self, mutation_rate, gram, max_length, standard_deviation=3, max_attempts=10):
+    def __init__(self, mutation_rate, gram, max_length, max_attempts=10):
         '''
         max length should be longer than the original strand length.
         '''
-        self.standard_deviation = standard_deviation
         self.mutation_rate = mutation_rate
         self.max_length = max_length
         self.max_attempts = max_attempts

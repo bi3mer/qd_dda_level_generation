@@ -233,9 +233,9 @@ class GenerationPipeline():
 
         output_data.append('\nWalkthrough Results')
         output_data.append(f'Result: {valid_levels} / {iterations}')
-        output_data.append(f'Min Scores: {sum(scores) / len(scores)}')
+        output_data.append(f'Min Scores: {min(scores)}')
         output_data.append(f'Mean Scores: {sum(scores) / len(scores)}')
-        output_data.append(f'Max Scores: {sum(scores) / len(scores)}')
+        output_data.append(f'Max Scores: {max(scores)}')
 
         f = open(join(self.data_dir, 'random_walkthroughs.json'), 'w')
         f.write(json_dumps(percent_completes, indent=2))
