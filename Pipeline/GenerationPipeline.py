@@ -3,9 +3,9 @@ from Utility.LinkerGeneration import generate_link
 from MapElites import MapElites
 from Utility import *
 
-from os.path import isdir, join, exists
-from os import mkdir, remove, listdir
+from os.path import join, exists
 from json import load as json_load, dumps as json_dumps
+from random import random
 from subprocess import Popen
 from random import choice
 from csv import writer
@@ -16,43 +16,40 @@ class GenerationPipeline():
 
         #######################################################################
         print('Setting up data directory...')
-        if not isdir(self.data_dir):
-            mkdir(self.data_dir)
+        level_path_standard = join(self.data_dir, 'levels_standard')
+        level_path_genetic = join(self.data_dir, 'levels_genetic')
+        level_path_combined = join(self.data_dir, 'levels_combined')
 
-        level_path = join(self.data_dir, 'levels')
-        if not isdir(level_path):
-            mkdir(level_path)
-        else:
-            print('clearing old data...')
-            data_file = join(self.data_dir, 'data.csv')
-
-            if exists(data_file):
-                remove(data_file)
-                
-            for filename in listdir(level_path):
-                remove(join(level_path, filename))
-            
-            if exists(join(self.data_dir, 'info.txt')):
-                remove(join(self.data_dir, 'info.txt'))
+        clear_directory(self.data_dir)
+        clear_directory(level_path_standard)
+        clear_directory(level_path_genetic)
+        clear_directory(level_path_combined)
 
         #######################################################################
         print('writing config files for graphing')
-        config = {
-            'data_file': self.data_file,
-            'x_label': self.x_label,
-            'y_label': self.y_label,
-            'save_file': self.save_file,
-            'title': self.title,
-            'resolution': self.resolution
-        }
-
-        f = open(self.map_elites_config, 'w')
-        f.write(json_dumps(config))
-        f.close()
+        self.write_config_file('standard')
+        self.write_config_file('genetic')
+        self.write_config_file('combined')
 
         #######################################################################
-        print('Running MAP-Elites...')
-        search = MapElites(
+        print('Running MAP-Elites with n-gram operators...')
+        gram_search = MapElites(
+            self.start_population_size,
+            self.feature_descriptors,
+            self.feature_dimensions,
+            self.resolution,
+            self.fast_fitness,
+            self.slow_fitness,
+            self.minimize_performance,
+            self.population_generator,
+            self.n_mutator,
+            self.n_crossover,
+            rng_seed=self.seed
+        )
+        gram_search.run(self.fast_iterations, self.slow_iterations)
+
+        print('Running MAP-Elites with standard operators...')
+        standard_search = MapElites(
             self.start_population_size,
             self.feature_descriptors,
             self.feature_dimensions,
@@ -65,48 +62,141 @@ class GenerationPipeline():
             self.crossover,
             rng_seed=self.seed
         )
-        search.run(self.fast_iterations, self.slow_iterations)
+        standard_search.run(self.fast_iterations, self.slow_iterations)
 
         #######################################################################
         print('Validating levels...')
-        valid_levels = 0 
-        invalid_levels = 0
-        scores = []
-        
-        f = open(join(self.data_dir, 'data.csv'), 'w')
-        w = writer(f)
-        w.writerow(self.feature_names + ['performance'])
+        valid_levels_standard = 0 
+        invalid_levels_standard = 0
+        scores_standard = []
 
-        num_keys = len(search.bins.keys())
-        update_progress(0)
-        for i, key in enumerate(search.bins.keys()):
-            playability = self.get_percent_playable(search.bins[key][1])
-            scores.append(playability)
+        valid_levels_genetic = 0 
+        invalid_levels_genetic = 0
+        scores_genetic = []
 
-            if playability == 1.0:
-                valid_levels += 1
-            else:
-                invalid_levels += 1
+        valid_levels_combined = 0 
+        invalid_levels_combined = 0
 
-            w.writerow(list(key) + [self.get_fitness(search.bins[key][1], playability)])
+        bins_standard = standard_search.bins
+        bins_genetic = gram_search.bins
+        bins_combined = {}
 
-            level_file = open(join(level_path, f'{i}.txt'), 'w')
-            level_file.write(columns_into_grid_string(search.bins[key][1]))
-            level_file.close()
+        f_standard = open(join(self.data_dir, 'data_standard.csv'), 'w')
+        f_genetic = open(join(self.data_dir, 'data_genetic.csv'), 'w')
+        f_combined = open(join(self.data_dir, 'data_combined.csv'), 'w')
 
-            update_progress(i / num_keys)
+        w_standard = writer(f_standard)
+        w_genetic = writer(f_genetic)
+        w_combined = writer(f_combined)
 
-        f.close()
+        w_standard.writerow(self.feature_names + ['performance'])
+        w_genetic.writerow(self.feature_names + ['performance'])
+        w_combined.writerow(self.feature_names + ['performance'])
 
-        output_data.append('\nValidation Results:')
-        output_data.append(f'Valid Levels: {valid_levels}')
-        output_data.append(f'Invalid Levels: {invalid_levels}')
-        output_data.append(f'Total Levels: {invalid_levels + valid_levels}')
-        output_data.append(f'Mean Scores: {sum(scores) / len(scores)}')
+        searched = 0
+        total = self.resolution ** 2
+        for x in range(self.resolution):
+            for y in range(self.resolution):
+                key = (x, y)
+
+                found_standard = False
+                found_gram = False
+
+                if key in bins_standard:
+                    level_standard = bins_standard[key][1]
+                    playability_standard = self.get_percent_playable(level_standard)
+                    scores_standard.append(playability_standard)
+
+                    if playability_standard == 1.0:
+                        valid_levels_standard += 1
+                    else:
+                        invalid_levels_standard += 1
+
+                    fitness_standard = self.get_fitness(level_standard, playability_standard)
+                    if fitness_standard == 0.0:
+                        found_standard = True
+
+                    w_standard.writerow(list(key) + [fitness_standard])
+
+                    level_file = open(join(level_path_standard, f'{x}_{y}.txt'), 'w')
+                    level_file.write(columns_into_grid_string(level_standard))
+                    level_file.close()
+                
+                if key in bins_genetic:
+                    level_genetic = bins_genetic[key][1]
+                    playability_genetic = self.get_percent_playable(level_genetic)
+                    scores_genetic.append(playability_genetic)
+
+                    if playability_genetic == 1.0:
+                        valid_levels_genetic += 1
+                    else:
+                        invalid_levels_genetic += 1
+
+                    fitness_genetic = self.get_fitness(level_genetic, playability_genetic)
+                    if fitness_genetic == 0.0:
+                        found_gram = True
+
+                    w_genetic.writerow(list(key) + [fitness_genetic])
+                    level_file = open(join(level_path_genetic, f'{x}_{y}.txt'), 'w')
+                    level_file.write(columns_into_grid_string(level_genetic))
+                    level_file.close()
+
+                level_combined = None
+                fitness_combined = None
+                if found_gram and found_standard:
+                    if random() >= 0.5:
+                        level_combined = level_standard
+                        fitness_combined = fitness_standard
+                        playability_combined = playability_standard
+                    else:
+                        level_combined = level_genetic
+                        fitness_combined = fitness_genetic
+                        playability_combined = playability_genetic
+                elif found_gram:
+                    level_combined = level_genetic
+                    fitness_combined = fitness_genetic
+                    playability_combined = playability_genetic
+                elif found_standard:
+                    level_combined = level_standard
+                    fitness_combined = fitness_standard
+                    playability_combined = playability_standard
+
+                if level_combined != None:
+                    valid_levels_combined += 1
+                    bins_combined[key] = (playability_combined, level_combined)
+
+                    w_combined.writerow(list(key) + [fitness_combined])
+                    level_file = open(join(level_path_combined, f'{x}_{y}.txt'), 'w')
+                    level_file.write(columns_into_grid_string(level_combined))
+                    level_file.close()
+
+                searched += 1
+                update_progress(searched / total)
+
+        f_standard.close()
+        f_genetic.close()
+        f_combined.close()
+
+        output_data.append('\nValidation Results Standard:')
+        output_data.append(f'Valid Levels: {valid_levels_standard}')
+        output_data.append(f'Invalid Levels: {invalid_levels_standard}')
+        output_data.append(f'Total Levels: {invalid_levels_standard + valid_levels_standard}')
+        output_data.append(f'Mean Scores: {sum(scores_standard) / len(scores_standard)}')
+
+        output_data.append('\nValidation Results Genetic:')
+        output_data.append(f'Valid Levels: {valid_levels_genetic}')
+        output_data.append(f'Invalid Levels: {invalid_levels_genetic}')
+        output_data.append(f'Total Levels: {invalid_levels_genetic + valid_levels_genetic}')
+        output_data.append(f'Mean Scores: {sum(scores_genetic) / len(scores_genetic)}')
+
+        output_data.append('\nValidation Results Combined:')
+        output_data.append(f'Total Levels: {invalid_levels_combined + valid_levels_combined}')
 
         #######################################################################
         print('Starting python process to graph MAP-Elites bins...')
-        Popen(['python', join('Scripts', 'build_map_elites.py'), self.map_elites_config])
+        Popen(['python', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_standard.json'])
+        Popen(['python', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_genetic.json'])
+        Popen(['python', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_combined.json'])
 
         #######################################################################
         if self.skip_after_map_elites:
@@ -117,7 +207,7 @@ class GenerationPipeline():
         DIRECTIONS = ((0,1), (0,-1), (1, 0), (-1, 0))
 
         entry_is_valid = {}
-        keys = set(search.bins.keys())
+        keys = set(bins_combined.keys())
 
         i = 0
         total = len(keys) * 4
@@ -126,18 +216,18 @@ class GenerationPipeline():
         link_count = 0
 
         for entry in keys:
-            if search.bins[entry][0] != 0.0:
+            if bins_combined[entry][0] != 1.0:
                 entry_is_valid[str(entry)] = {}
                 continue
 
             for dir in DIRECTIONS:
                 neighbor = (entry[0] + dir[0], entry[1] + dir[1])
-                while neighbor not in search.bins:
+                while neighbor not in bins_combined:
                     neighbor = (neighbor[0] + dir[0], neighbor[1] + dir[1])
                     if not self.__in_bounds(neighbor):
                         break
 
-                if self.__in_bounds(neighbor) and neighbor in search.bins:
+                if self.__in_bounds(neighbor) and neighbor in bins_combined:
                     link_count += 1
                     str_entry_one = str(entry)
                     str_entry_two = str(neighbor)
@@ -147,8 +237,8 @@ class GenerationPipeline():
 
                     level, length = generate_link(
                         self.gram, 
-                        search.bins[entry][1], 
-                        search.bins[neighbor][1], 
+                        bins_combined[entry][1], 
+                        bins_combined[neighbor][1], 
                         0,
                         include_path_length=True)
 
@@ -186,7 +276,8 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        iterations = 1000
+        print("update me!!!!!!!!!!!!!!!!! iterations in generationpipleine is me!!!!!!!!!!!!!!!!!!!!")
+        iterations = 10
         percent_completes = {}
 
         valid_levels= 0
@@ -195,7 +286,7 @@ class GenerationPipeline():
         while len(percent_completes) < iterations:
             path_length = 0
             point = eval(choice(list(entry_is_valid.keys())))
-            level = search.bins[point][1].copy()
+            level = bins_combined[point][1].copy()
             path = [point]
 
             while path_length < self.max_path_length:
@@ -214,7 +305,7 @@ class GenerationPipeline():
                 level = generate_link(
                     self.gram, 
                     level, 
-                    search.bins[point][1], 
+                    bins_combined[point][1], 
                     0)
 
                 path.append(point)
@@ -252,13 +343,13 @@ class GenerationPipeline():
         grid = json_load(f)
         f.close()
 
-        f = open(join(self.data_dir, 'data.csv'), 'r')
+        f = open(join(self.data_dir, 'data_combined.csv'), 'r')
         f.readline() # get rid of header
         bins = {}
-        for i, line in enumerate(f.readlines()):
+        for line in f.readlines():
             linearity, leniency, _ = line.split(',')
 
-            level_file = open(join(self.data_dir, 'levels', f'{i}.txt'))
+            level_file = open(join(self.data_dir, 'levels_combined', f'{linearity}_{leniency}.txt'))
             bins[(int(linearity), int(leniency))] = rows_into_columns(level_file.readlines())
             level_file.close()
         f.close()
@@ -275,7 +366,7 @@ class GenerationPipeline():
                 src_playability = self.get_percent_playable(bins[src], agent=flawed_agent)
 
                 for dst_str in neighbors:
-                    if neighbors[dst_str] == 0.0:
+                    if neighbors[dst_str] == 1.0:
                         dst = eval(dst_str)
                         level = generate_link(
                             self.gram, 
@@ -285,7 +376,7 @@ class GenerationPipeline():
 
                         if level == None:
                             new_neighbors[dst_str] = -1
-                        elif src_playability == 0.0:
+                        elif src_playability == 1.0:
                             playability = self.get_percent_playable(level, agent=flawed_agent)
                             new_neighbors[dst_str] = playability
                         else:
@@ -301,11 +392,13 @@ class GenerationPipeline():
             f.write(json_dumps(result, indent=2))
             f.close()
 
+            Popen(['python', join('Scripts', 'build_dda_grid.py'), self.data_dir, flawed_agent])
+
     def get_percent_playable(self, level, agent=None):
-        raise NotImplementedError()
+        pass # I'd use a not implemented error but pylance makes the code unreachable, sooo.....
 
     def get_fitness(self, level, percent_playable, agent=None):
-        raise NotImplementedError()
+        pass  # I'd use a not implemented error but pylance makes the code unreachable, sooo.....
 
     def write_info_file(self, output_data):
         file_path = join(self.data_dir, 'info.txt')
@@ -315,4 +408,18 @@ class GenerationPipeline():
             f = open(file_path, 'w')
 
         f.write('\n'.join(output_data))
+        f.close()
+
+    def write_config_file(self, operator_type):
+        config = {
+            'data_file': f'{self.data_file}_{operator_type}.csv',
+            'x_label': self.x_label,
+            'y_label': self.y_label,
+            'save_file': f'{self.save_file}_{operator_type}.pdf',
+            'title': self.title,
+            'resolution': self.resolution
+        }
+
+        f = open(f'{self.map_elites_config}_{operator_type}.json', 'w')
+        f.write(json_dumps(config))
         f.close()

@@ -12,8 +12,8 @@ from dungeongrams import *
 from os.path import join
 
 class DungeonGram(GenerationPipeline):
-    def __init__(self, use_standard_operators, skip_after_map_elites):
-        self.data_dir = f'DungeonData_{use_standard_operators}'
+    def __init__(self, skip_after_map_elites):
+        self.data_dir = f'DungeonData'
         self.skip_after_map_elites = skip_after_map_elites
 
         self.flawed_agents = [
@@ -24,6 +24,11 @@ class DungeonGram(GenerationPipeline):
         
         self.start_population_size = 500
         self.fast_iterations = 100000
+        self.slow_iterations = 0
+
+        print('TODO: update dungeongrams iterations!!!!!!!!!!!!')
+        self.start_population_size = 10
+        self.fast_iterations = 2500
         self.slow_iterations = 0
 
         self.feature_names = ['Density', 'leniency']
@@ -47,21 +52,17 @@ class DungeonGram(GenerationPipeline):
         self.max_strand_size = 11
         self.seed = 0
 
-        if use_standard_operators:
-            mutation_values = list(unigram.grammar[''].keys())
-            self.population_generator = PopulationGenerator(mutation_values, self.start_strand_size)
-            self.mutator = Mutate(mutation_values, 0.02)
-            self.crossover = SinglePointCrossover()
-        else:
-            self.population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
-            self.mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
-            self.crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
+        self.population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
+        self.mutator = Mutate(list(unigram.grammar[''].keys()), 0.02)
+        self.crossover = SinglePointCrossover()
+        self.n_mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
+        self.n_crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
 
-        self.map_elites_config = join(self.data_dir, 'config_map_elites.json')
-        self.data_file = join(self.data_dir, 'data.csv')
+        self.map_elites_config = join(self.data_dir, 'config_map_elites')
+        self.data_file = join(self.data_dir, 'data')
         self.x_label = 'Densty'
         self.y_label = 'Leniency'
-        self.save_file = join(self.data_dir, 'map_elites.pdf')
+        self.save_file = join(self.data_dir, 'map_elites')
         self.title = ''
 
         self.max_path_length = 3

@@ -5,6 +5,9 @@ from Utility.NGram import NGram
 import sys
 import os
 
+raise NotImplementedError('need to update for new to level mapping')
+
+
 f = open(os.path.join(sys.argv[1], 'data.csv'))
 f.readline() # remove header
 bins = {}

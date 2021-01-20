@@ -4,9 +4,9 @@ import json
 import sys
 import os
 
-if len(sys.argv) == 2:
-    save_path = os.path.join(sys.argv[1], 'dda_grid.pdf')
-    f = open(os.path.join(sys.argv[1], 'dda_graph.json'), 'r')
+if len(sys.argv) == 3:
+    save_path = os.path.join(sys.argv[1], f'dda_grid_{sys.argv[2]}.pdf')
+    f = open(os.path.join(sys.argv[1], f'dda_graph_{sys.argv[2]}.json'), 'r')
 else:
     save_path = os.path.join(sys.argv[1], f'dda_grid.pdf')
     f = open(os.path.join(sys.argv[1], f'dda_graph.json'), 'r')
@@ -43,7 +43,7 @@ for src in data:
             graph.add_edge(src, dst)
 
 color_map = []
-for i, res in enumerate(graph.in_degree()):
+for res in graph.in_degree():
     node_key, in_edges = res
     if in_edges == 0:
         color_map.append('gray')
@@ -74,7 +74,7 @@ if os.path.exists(file_path):
 else:
     f = open(file_path, 'w')
 
-f.write(f'\nConnected nodes: {len(nodes)}')
-f.write(f'\ntotal number of nodes: {len(graph.nodes)}\n')
+f.write(f'\n\nDDA Grid {sys.argv} Results\n')
+f.write(f'Connected nodes: {len(nodes)}\n')
+f.write(f'Total number of nodes: {len(graph.nodes)}\n')
 f.close()
-

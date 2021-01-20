@@ -15,8 +15,8 @@ from os.path import join
 from os import mkdir, remove, listdir
 
 class Mario(GenerationPipeline):
-    def __init__(self, use_standard_operators, skip_after_map_elites):
-        self.data_dir = f'MarioData_{use_standard_operators}'
+    def __init__(self, skip_after_map_elites):
+        self.data_dir = f'MarioData'
         self.skip_after_map_elites = skip_after_map_elites
 
         self.flawed_agents = [
@@ -29,6 +29,11 @@ class Mario(GenerationPipeline):
         self.start_population_size = 500
         self.fast_iterations = 10000000
         self.slow_iterations = 10000
+
+        print('update MARIO iterations')
+        self.start_population_size = 5
+        self.fast_iterations = 10
+        self.slow_iterations = 10
 
         self.feature_names = ['linearity', 'leniency']
         self.feature_descriptors = [percent_linearity, percent_leniency]
@@ -52,18 +57,14 @@ class Mario(GenerationPipeline):
         self.max_strand_size = 30
         self.seed = 0
 
-        if use_standard_operators:
-            mutation_values = list(unigram.grammar[''].keys())
-            self.population_generator = PopulationGenerator(mutation_values, self.start_strand_size)
-            self.mutator = Mutate(mutation_values, 0.02)
-            self.crossover = SinglePointCrossover()
-        else:
-            self.population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
-            self.mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
-            self.crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
+        self.population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
+        self.mutator = Mutate(list(unigram.grammar[''].keys()), 0.02)
+        self.crossover = SinglePointCrossover()
+        self.n_mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
+        self.n_crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
 
         self.map_elites_config = join(self.data_dir, 'config_map_elites.json')
-        self.data_file = join(self.data_dir, 'data.csv')
+        self.data_file = join(self.data_dir, 'data')
         self.x_label = 'Linearity'
         self.y_label = 'Leniency'
         self.save_file = join(self.data_dir, 'map_elites.pdf')
