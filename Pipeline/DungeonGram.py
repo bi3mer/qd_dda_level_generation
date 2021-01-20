@@ -26,11 +26,6 @@ class DungeonGram(GenerationPipeline):
         self.fast_iterations = 100000
         self.slow_iterations = 0
 
-        print('TODO: update dungeongrams iterations!!!!!!!!!!!!')
-        self.start_population_size = 10
-        self.fast_iterations = 2500
-        self.slow_iterations = 0
-
         self.feature_names = ['Density', 'leniency']
         self.feature_descriptors = [density, leniency]
         self.feature_dimensions = [[0, 1.0], [0, 0.5]] 

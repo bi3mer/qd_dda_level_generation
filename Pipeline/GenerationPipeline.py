@@ -276,8 +276,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        print("update me!!!!!!!!!!!!!!!!! iterations in generationpipleine is me!!!!!!!!!!!!!!!!!!!!")
-        iterations = 10
+        iterations = 1000
         percent_completes = {}
 
         valid_levels= 0
