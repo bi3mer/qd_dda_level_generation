@@ -52,11 +52,14 @@ class Mario(GenerationPipeline):
         self.max_strand_size = 30
         self.seed = 0
 
-        self.population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
-        self.mutator = Mutate(list(unigram.grammar[''].keys()), 0.02)
+        mutation_values = list(unigram.grammar[''].keys())
+        self.mutator = Mutate(mutation_values, 0.02)
         self.crossover = SinglePointCrossover()
+        self.population_generator = PopulationGenerator(mutation_values, self.start_strand_size)
+        
         self.n_mutator = NGramMutate(0.02, self.gram, self.max_strand_size)
         self.n_crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
+        self.n_population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
 
         self.map_elites_config = join(self.data_dir, 'config_map_elites.json')
         self.data_file = join(self.data_dir, 'data')
@@ -119,5 +122,5 @@ class Mario(GenerationPipeline):
         return percent_complete
     
     def get_fitness(self, level, percent_playable, agent=None):
-        bad_transitions = self.gram.count_bad_transitions(level)
-        return bad_transitions + 1 - percent_playable
+        bad_n_grams = self.gram.count_bad_n_grams(level)
+        return bad_n_grams + 1 - percent_playable

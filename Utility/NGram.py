@@ -77,7 +77,7 @@ class NGram():
 
         return True
         
-    def count_bad_transitions(self, sequence):
+    def count_bad_n_grams(self, sequence):
         max_length = self.n - 1
         queue = deque([], maxlen=max_length)
         append_to_queue = queue.append
@@ -87,6 +87,8 @@ class NGram():
             if len(queue) == max_length:
                 input_sequence = ','.join(list(queue))
                 if input_sequence not in self.grammar:
+                    bad_transitions += 1
+                elif token not in self.grammar[input_sequence]:
                     bad_transitions += 1
 
             append_to_queue(token)
