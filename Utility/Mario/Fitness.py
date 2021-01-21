@@ -49,7 +49,7 @@ def naive_percent_playable(columns):
 
 def build_slow_fitness_function(grammar):
     def slow_fitness(columns):
-        bad_transitions = grammar.count_bad_transitions(columns)
+        bad_transitions = grammar.count_bad_n_grams(columns)
 
         columns.insert(0, 'X-------------')
         columns.insert(0, 'X-------------')
@@ -63,7 +63,7 @@ def build_slow_fitness_function(grammar):
 
 def build_fast_fitness_function(grammar):
     def fast_fitness(columns):
-        bad_transitions = grammar.count_bad_transitions(columns)
+        bad_transitions = grammar.count_bad_n_grams(columns)
 
         columns.insert(0, 'X-------------')
         columns.insert(0, 'X-------------')
