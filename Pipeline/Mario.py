@@ -61,11 +61,11 @@ class Mario(GenerationPipeline):
         self.n_crossover = NGramCrossover(self.gram, self.start_strand_size, self.max_strand_size)
         self.n_population_generator = NGramPopulationGenerator(self.gram, self.start_strand_size)
 
-        self.map_elites_config = join(self.data_dir, 'config_map_elites.json')
+        self.map_elites_config = join(self.data_dir, 'config_map_elites')
         self.data_file = join(self.data_dir, 'data')
         self.x_label = 'Linearity'
         self.y_label = 'Leniency'
-        self.save_file = join(self.data_dir, 'map_elites.pdf')
+        self.save_file = join(self.data_dir, 'map_elites')
         self.title = ''
 
         self.max_path_length = 5

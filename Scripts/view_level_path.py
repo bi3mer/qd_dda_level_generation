@@ -5,16 +5,14 @@ from Utility.NGram import NGram
 import sys
 import os
 
-raise NotImplementedError('need to update for new to level mapping')
 
-
-f = open(os.path.join(sys.argv[1], 'data.csv'))
+f = open(os.path.join(sys.argv[1], 'data_combined.csv'))
 f.readline() # remove header
 bins = {}
 for i, line in enumerate(f.readlines()):
     linearity, leniency, _,  = line.split(',')
 
-    level_file = open(os.path.join(sys.argv[1], 'levels', f'{i}.txt'))
+    level_file = open(os.path.join(sys.argv[1], 'levels_combined', f'{linearity}_{leniency}.txt'))
     bins[(int(linearity), int(leniency))] = rows_into_columns(level_file.readlines())
     level_file.close()
 

@@ -3,11 +3,10 @@ from Utility.LinkerGeneration import generate_link
 from MapElites import MapElites
 from Utility import *
 
-from itertools import repeat
-from os.path import join, exists
 from json import load as json_load, dumps as json_dumps
-from random import random
+from os.path import join, exists
 from subprocess import Popen
+from itertools import repeat
 from random import choice
 from csv import writer
 
@@ -17,15 +16,16 @@ class GenerationPipeline():
 
         #######################################################################
         print('Setting up data directory...')
-        level_path_standard = join(self.data_dir, 'levels_standard')
-        level_path_standard = join(self.data_dir, 'levels_standard_n')
-        level_path_genetic = join(self.data_dir, 'levels_genetic')
-        level_path_combined = join(self.data_dir, 'levels_combined')
+        level_paths = [
+            join(self.data_dir, 'levels_standard'),
+            join(self.data_dir, 'levels_standard_n'),
+            join(self.data_dir, 'levels_genetic'),
+            join(self.data_dir, 'levels_combined')
+        ]
 
         clear_directory(self.data_dir)
-        clear_directory(level_path_standard)
-        clear_directory(level_path_genetic)
-        clear_directory(level_path_combined)
+        for path in level_paths:
+            clear_directory(path)
 
         #######################################################################
         print('writing config files for graphing')
@@ -35,22 +35,6 @@ class GenerationPipeline():
         self.write_config_file('combined')
 
         #######################################################################
-        print('Running MAP-Elites with n-gram operators...')
-        gram_search = MapElites(
-            self.start_population_size,
-            self.feature_descriptors,
-            self.feature_dimensions,
-            self.resolution,
-            self.fast_fitness,
-            self.slow_fitness,
-            self.minimize_performance,
-            self.n_population_generator,
-            self.n_mutator,
-            self.n_crossover,
-            rng_seed=self.seed
-        )
-        gram_search.run(self.fast_iterations, self.slow_iterations)
-
         print('Running MAP-Elites with standard operators...')
         standard_search = MapElites(
             self.start_population_size,
@@ -82,6 +66,22 @@ class GenerationPipeline():
             rng_seed=self.seed
         )
         standard_n_search.run(self.fast_iterations, self.slow_iterations)
+
+        print('Running MAP-Elites with n-gram operators...')
+        gram_search = MapElites(
+            self.start_population_size,
+            self.feature_descriptors,
+            self.feature_dimensions,
+            self.resolution,
+            self.fast_fitness,
+            self.slow_fitness,
+            self.minimize_performance,
+            self.n_population_generator,
+            self.n_mutator,
+            self.n_crossover,
+            rng_seed=self.seed
+        )
+        gram_search.run(self.fast_iterations, self.slow_iterations)
 
         #######################################################################
         print('Validating levels...')
@@ -127,18 +127,16 @@ class GenerationPipeline():
                         playability = self.get_percent_playable(level)
                         scores[i].append(playability)
 
-                        if playability == 1.0:
+                        fitness = self.get_fitness(level, playability)
+                        if fitness == 0.0:
+                            found.append((level, fitness, playability))
                             valid_levels[i] += 1
                         else:
                             invalid_levels[i] += 1
 
-                        fitness = self.get_fitness(level, playability)
-                        if fitness == 0.0:
-                            found.append((level, fitness, playability))
-
                         writers[i].writerow(list(key) + [fitness])
 
-                        level_file = open(join(level_path_standard, f'{x}_{y}.txt'), 'w')
+                        level_file = open(join(level_paths[i], f'{x}_{y}.txt'), 'w')
                         level_file.write(columns_into_grid_string(level))
                         level_file.close()
 
@@ -150,7 +148,7 @@ class GenerationPipeline():
                     bins[COMBINED_INDEX][key] = (playability, level)
 
                     writers[COMBINED_INDEX].writerow(list(key) + [fitness])
-                    level_file = open(join(level_path_combined, f'{x}_{y}.txt'), 'w')
+                    level_file = open(join(level_paths[COMBINED_INDEX], f'{x}_{y}.txt'), 'w')
                     level_file.write(columns_into_grid_string(level))
                     level_file.close()
 
@@ -168,13 +166,6 @@ class GenerationPipeline():
         bins_combined = bins[COMBINED_INDEX]
 
         #######################################################################
-        print('Starting python process to graph MAP-Elites bins...')
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_standard.json'])
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_standard_n.json'])
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_genetic.json'])
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_combined.json'])
-
-        #######################################################################
         if self.skip_after_map_elites:
             self.write_info_file(output_data)
             return
@@ -182,7 +173,7 @@ class GenerationPipeline():
         print('Building and validating MAP-Elites directed DDA graph...')
         DIRECTIONS = ((0,1), (0,-1), (1, 0), (-1, 0))
 
-        entry_is_valid = {}
+        dda_graph = {}
         keys = set(bins_combined.keys())
 
         i = 0
@@ -193,7 +184,7 @@ class GenerationPipeline():
 
         for entry in keys:
             if bins_combined[entry][0] != 1.0:
-                entry_is_valid[str(entry)] = {}
+                dda_graph[str(entry)] = {}
                 continue
 
             for dir in DIRECTIONS:
@@ -208,8 +199,8 @@ class GenerationPipeline():
                     str_entry_one = str(entry)
                     str_entry_two = str(neighbor)
                     
-                    if str_entry_one not in entry_is_valid:
-                        entry_is_valid[str_entry_one] = {}
+                    if str_entry_one not in dda_graph:
+                        dda_graph[str_entry_one] = {}
 
                     level, length = generate_link(
                         self.gram, 
@@ -219,11 +210,11 @@ class GenerationPipeline():
                         include_path_length=True)
 
                     if level == None:
-                        entry_is_valid[str_entry_one][str_entry_two] = -1
+                        dda_graph[str_entry_one][str_entry_two] = -1
                     else:
                         playable = self.get_percent_playable(level)
                         playable_scores.append(playable)
-                        entry_is_valid[str_entry_one][str_entry_two] = playable
+                        dda_graph[str_entry_one][str_entry_two] = playable
 
                         if playable == 1.0:
                             link_lengths.append(length)
@@ -232,7 +223,7 @@ class GenerationPipeline():
                 update_progress(i/total)
                 
         f = open(join(self.data_dir, 'dda_graph.json'), 'w')
-        f.write(json_dumps(entry_is_valid, indent=2))
+        f.write(json_dumps(dda_graph, indent=2))
         f.close()
 
         output_data.append('\nLink Lengths')
@@ -248,7 +239,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        iterations = 1000
+        iterations = 10
         percent_completes = {}
 
         valid_levels= 0
@@ -256,12 +247,12 @@ class GenerationPipeline():
 
         while len(percent_completes) < iterations:
             path_length = 0
-            point = eval(choice(list(entry_is_valid.keys())))
+            point = eval(choice(list(dda_graph.keys())))
             level = bins_combined[point][1].copy()
             path = [point]
 
             while path_length < self.max_path_length:
-                neighbors = entry_is_valid[str(point)]
+                neighbors = dda_graph[str(point)]
                 valid_keys = []
 
                 for key in neighbors.keys():

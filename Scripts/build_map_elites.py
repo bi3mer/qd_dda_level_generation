@@ -24,10 +24,14 @@ f.close()
 worst_performance = 1.0
 
 matrix = [[np.nan for _ in range(resolution + 1)] for __ in range(resolution + 1)]
+valid_levels = 0
 for row in content:
     split_line = row.strip().split(',')
     worst_performance = max(worst_performance, float(split_line[2]))
     matrix[int(split_line[1])][int(split_line[0])] = float(split_line[2])
+
+    if float(split_line[2]) == 0.0:
+        valid_levels += 1
 matrix = np.array(matrix)
 
 mask = np.zeros_like(matrix)
@@ -35,6 +39,9 @@ for i, row in enumerate(matrix):
     for j, val in enumerate(row):
         if val == np.nan:
             mask[i][j] = 1.0
+
+
+print(valid_levels)
 
 colors = [
     [0.0, "green"],
