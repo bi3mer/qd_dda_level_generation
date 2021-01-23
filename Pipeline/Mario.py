@@ -49,7 +49,7 @@ class Mario(GenerationPipeline):
         self.minimize_performance = True
         
         self.start_strand_size = 25
-        self.max_strand_size = 30
+        self.max_strand_size = 25
         self.seed = 0
 
         mutation_values = list(unigram.grammar[''].keys())

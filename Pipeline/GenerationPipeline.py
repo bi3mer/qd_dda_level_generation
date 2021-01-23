@@ -226,6 +226,8 @@ class GenerationPipeline():
         f.write(json_dumps(dda_graph, indent=2))
         f.close()
 
+        print(link_lengths)
+
         output_data.append('\nLink Lengths')
         output_data.append(f'min: {min(link_lengths)}')
         output_data.append(f'mean: {sum(link_lengths) / len(link_lengths)}')
@@ -239,7 +241,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        iterations = 10
+        iterations = 1000
         percent_completes = {}
 
         valid_levels= 0
@@ -256,14 +258,15 @@ class GenerationPipeline():
                 valid_keys = []
 
                 for key in neighbors.keys():
-                    if neighbors[key] == 1.0 and key not in path:
-                        valid_keys.append(key)
+                    key_tuple = eval(key)
+                    if neighbors[key] == 1.0 and key_tuple not in path:
+                        valid_keys.append(key_tuple)
 
                 if len(valid_keys) == 0:
                     break
                 
                 # get a random neighbor and convert it into a tuple
-                point = eval(choice(valid_keys))
+                point = choice(valid_keys)
                 level = generate_link(
                     self.gram, 
                     level, 

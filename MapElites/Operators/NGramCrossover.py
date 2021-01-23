@@ -1,7 +1,5 @@
 from Utility import generate_link
-
 from random import randrange
-from math import floor
 
 class NGramCrossover:
     __slots__ = ['gram', 'min_length', 'max_length', 'max_attempts']
@@ -26,8 +24,7 @@ class NGramCrossover:
 
             start = parent_1[:cross_over_point]
             end = parent_2[cross_over_point:]
-            required_new_columns = max(0, self.min_length - len(start) - len(end))
-            p_1 = generate_link(self.gram, start, end, required_new_columns)
+            p_1 = generate_link(self.gram, start, end, 0)
 
             if p_1 == None:
                 continue
@@ -36,8 +33,7 @@ class NGramCrossover:
 
             start = parent_2[:cross_over_point]
             end = parent_1[cross_over_point:]
-            required_new_columns = max(0, self.min_length - len(start) - len(end))
-            p_2 = generate_link(self.gram, start, end, required_new_columns)
+            p_2 = generate_link(self.gram, start, end, 0)
             
             if p_2 == None:
                 continue
