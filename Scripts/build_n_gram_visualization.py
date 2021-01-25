@@ -1,3 +1,5 @@
+from collections import deque
+
 import matplotlib.pyplot as plt 
 import networkx as nx
 import sys
@@ -21,9 +23,17 @@ for level in levels:
 
 graph = nx.DiGraph()
 for src in gram.grammar:
+    source_list = src.split(',')
     for dst in gram.grammar[src]:
-        graph.add_edge(src, dst)
+        dst_prior = deque(src, maxlen=n - 1)
+        dst_prior.extend(source_list)
+        dst_prior.append(dst)
+        graph.add_edge(src, ','.join(dst_prior))
 
 plt.figure(figsize=(9, 9))
 nx.draw_spring(graph) 
 plt.show()
+
+for node in graph.nodes:
+    if len(graph.out_edges(node)) == 0:
+        print(f'{node} has no outgoing priors')

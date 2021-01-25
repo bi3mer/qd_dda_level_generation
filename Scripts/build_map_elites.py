@@ -42,7 +42,7 @@ for c in configs:
 
     matrices.append(matrix)
 
-color_bar_label = '# Bad Transitions + 1 - Percent Playable'
+color_bar_label = 'Fitness'
 colors = [
     [0.0, "green"],
     [0.00000001, "#ff000011"],
@@ -51,6 +51,8 @@ colors = [
 cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
 
 for config, matrix in zip_longest(configs, matrices):
+    x_dimensions, y_dimensions = config['feature_dimensions']
+    resolution = int(config['resolution'])
     sns.set(rc={'figure.figsize':(11.7,8.27)})
     sns.color_palette('viridis')
     ax = sns.heatmap(
@@ -64,7 +66,15 @@ for config, matrix in zip_longest(configs, matrices):
         vmax=worst_performance)
 
     ax.set(xlabel=config['x_label'], ylabel=config['y_label'])
-    ax.set(xticklabels=[], yticklabels=[])
+    ax.set_xticks(ax.get_xticks()[::5])
+    ax.set_yticks(ax.get_yticks()[::5])
+
+    # lower dimension is always 0 so I'm being lazy
+    xticks = [((x-0.5)/resolution) * x_dimensions[1] for x in ax.get_xticks().tolist()]
+    yticks = [((y-0.5)/resolution) * y_dimensions[1] for y in ax.get_yticks().tolist()]
+    ax.set_xticklabels(xticks)
+    ax.set_yticklabels(yticks)
+
     ax.set(title=config['title'])
     ax.invert_yaxis()
     plt.savefig(config['save_file'], bbox_inches="tight")

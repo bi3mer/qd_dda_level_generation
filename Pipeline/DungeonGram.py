@@ -22,8 +22,8 @@ class DungeonGram(GenerationPipeline):
             'no_speed'
         ]
         
-        self.start_population_size = 500
-        self.fast_iterations = 100000
+        self.start_population_size = 50
+        self.fast_iterations = 100
         self.slow_iterations = 0
 
         self.feature_names = ['Density', 'leniency']
@@ -58,7 +58,7 @@ class DungeonGram(GenerationPipeline):
 
         self.map_elites_config = join(self.data_dir, 'config_map_elites')
         self.data_file = join(self.data_dir, 'data')
-        self.x_label = 'Densty'
+        self.x_label = 'Density'
         self.y_label = 'Leniency'
         self.save_file = join(self.data_dir, 'map_elites')
         self.title = ''

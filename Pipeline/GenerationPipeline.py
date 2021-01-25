@@ -99,7 +99,8 @@ class GenerationPipeline():
 
         valid_levels = [0 for _ in repeat(None, 4)]
         invalid_levels =  [0 for _ in repeat(None, 4)]
-        scores = [[] for _ in repeat(None, 4)]
+        percent_playables = [[] for _ in repeat(None, 4)]
+        fitnesses = [[] for _ in repeat(None, 4)]
         bins = [standard_search.bins, standard_n_search.bins, gram_search.bins, {}]
         files = [
             open(join(self.data_dir, 'data_standard.csv'), 'w'),
@@ -125,11 +126,13 @@ class GenerationPipeline():
                     if key in bin:
                         level = bin[key][1]
                         playability = self.get_percent_playable(level)
-                        scores[i].append(playability)
-
                         fitness = self.get_fitness(level, playability)
+
+                        percent_playables[i].append(playability)
+                        fitnesses[i].append(fitness)
+
                         if fitness == 0.0:
-                            found.append((level, fitness, playability))
+                            found.append((level, fitness, playability, fitness))
                             valid_levels[i] += 1
                         else:
                             invalid_levels[i] += 1
@@ -141,10 +144,11 @@ class GenerationPipeline():
                         level_file.close()
 
                 if len(found) > 0:
-                    level, fitness, playability = choice(found)
+                    level, fitness, playability, fitness = choice(found)
 
                     valid_levels[COMBINED_INDEX] += 1
-                    scores[COMBINED_INDEX].append(playability)
+                    percent_playables[COMBINED_INDEX].append(playability)
+                    fitnesses[COMBINED_INDEX].append(fitness)
                     bins[COMBINED_INDEX][key] = (playability, level)
 
                     writers[COMBINED_INDEX].writerow(list(key) + [fitness])
@@ -161,13 +165,15 @@ class GenerationPipeline():
             output_data.append(f'Valid Levels: {valid_levels[i]}')
             output_data.append(f'Invalid Levels: {invalid_levels[i]}')
             output_data.append(f'Total Levels: {invalid_levels[i] + valid_levels[i]}')
-            output_data.append(f'Mean Scores: {sum(scores[i]) / len(scores[i])}')
+            output_data.append(f'Mean Playability: {sum(percent_playables[i]) / len(percent_playables[i])}')
+            output_data.append(f'Mean Fitness: {sum(fitnesses[i]) / len(fitnesses[i])}')
 
         bins_combined = bins[COMBINED_INDEX]
 
         #######################################################################
         if self.skip_after_map_elites:
             self.write_info_file(output_data)
+            Popen(['python3', join('Scripts', 'build_map_elites.py'), self.data_dir])
             return
 
         print('Building and validating MAP-Elites directed DDA graph...')
@@ -244,6 +250,7 @@ class GenerationPipeline():
         iterations = 1000
         percent_completes = {}
 
+        duplicates_found = 0
         valid_levels= 0
         scores = []
 
@@ -276,10 +283,16 @@ class GenerationPipeline():
                 path.append(point)
                 path_length += 1
 
-            if path_length >= 2:
+            str_path = str(path)
+            if str_path in percent_completes:
+                duplicates_found += 1
+                if duplicates_found > 1000:
+                    print('Found over 1000 duplicates.')
+                    break
+            elif path_length >= 2:
                 score = self.get_percent_playable(level)
                 scores.append(score)
-                percent_completes[str(path)] = score
+                percent_completes[str_path] = score
                 update_progress(len(percent_completes) / iterations)
 
                 if score == 1.0:
@@ -292,6 +305,7 @@ class GenerationPipeline():
         output_data.append(f'Min Scores: {min(scores)}')
         output_data.append(f'Mean Scores: {sum(scores) / len(scores)}')
         output_data.append(f'Max Scores: {max(scores)}')
+        output_data.append(f'Duplicates: {duplicates_found}')
 
         f = open(join(self.data_dir, 'random_walkthroughs.json'), 'w')
         f.write(json_dumps(percent_completes, indent=2))
@@ -387,7 +401,8 @@ class GenerationPipeline():
             'y_label': self.y_label,
             'save_file': f'{self.save_file}_{operator_type}.pdf',
             'title': self.title,
-            'resolution': self.resolution
+            'resolution': self.resolution,
+            'feature_dimensions': self.feature_dimensions
         }
 
         f = open(f'{self.map_elites_config}_{operator_type}.json', 'w')
