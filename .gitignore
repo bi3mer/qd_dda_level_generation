@@ -129,11 +129,5 @@ dmypy.json
 .pyre/
 
 *.zip
-mario_data/
-dungeongram_data/
-MarioData_False/
-MarioData_True/
-DungeonData_False/
-DungeonData_True/
-MarioData/
-DungeonData/
+MarioData*
+DungeonData*

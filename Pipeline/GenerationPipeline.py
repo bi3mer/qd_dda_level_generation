@@ -174,6 +174,7 @@ class GenerationPipeline():
         if self.skip_after_map_elites:
             self.write_info_file(output_data)
             Popen(['python3', join('Scripts', 'build_map_elites.py'), self.data_dir])
+            Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.data_dir])
             return
 
         print('Building and validating MAP-Elites directed DDA graph...')
@@ -231,8 +232,6 @@ class GenerationPipeline():
         f = open(join(self.data_dir, 'dda_graph.json'), 'w')
         f.write(json_dumps(dda_graph, indent=2))
         f.close()
-
-        print(link_lengths)
 
         output_data.append('\nLink Lengths')
         output_data.append(f'min: {min(link_lengths)}')
@@ -316,6 +315,7 @@ class GenerationPipeline():
         #######################################################################
         print('Starting python graphing processes...\n\n')
         Popen(['python3', join('Scripts', 'build_map_elites.py'), self.data_dir])
+        Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.data_dir])
         Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.data_dir])
 
     def __in_bounds(self, coordinate):

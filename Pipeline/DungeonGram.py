@@ -22,8 +22,8 @@ class DungeonGram(GenerationPipeline):
             'no_speed'
         ]
         
-        self.start_population_size = 50
-        self.fast_iterations = 100
+        self.start_population_size = 500
+        self.fast_iterations = 100000
         self.slow_iterations = 0
 
         self.feature_names = ['Density', 'leniency']

@@ -12,7 +12,7 @@ print(f'Generating MAP-Elites graphs...')
 
 configs = []
 for file_name in os.listdir(sys.argv[1]):
-    if 'config' in file_name and '.json' in file_name:
+    if 'config' in file_name and '.json' in file_name and 'combined' not in file_name:
         f = open(os.path.join(sys.argv[1], file_name), 'r')
         configs.append(json.load(f))
         f.close()
