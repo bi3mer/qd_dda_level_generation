@@ -301,10 +301,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Starting python graphing processes...\n\n')
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_standard.json'])
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_standard_n.json'])
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_genetic.json'])
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), f'{self.map_elites_config}_combined.json'])
+        Popen(['python3', join('Scripts', 'build_map_elites.py'), self.data_dir])
         Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.data_dir])
 
     def __in_bounds(self, coordinate):
