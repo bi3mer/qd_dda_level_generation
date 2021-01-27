@@ -233,10 +233,21 @@ class GenerationPipeline():
         f.write(json_dumps(dda_graph, indent=2))
         f.close()
 
+        # https://www.geeksforgeeks.org/finding-mean-median-mode-in-python-without-libraries/
+        link_lengths.sort()
+        if len(link_lengths) % 2 == 0:
+            median1 = link_lengths[len(link_lengths)//2] 
+            median2 = link_lengths[len(link_lengths)//2 - 1] 
+            median = (median1 + median2)/2
+        else:
+            median = link_lengths[len(link_lengths)//2] 
+
         output_data.append('\nLink Lengths')
         output_data.append(f'min: {min(link_lengths)}')
         output_data.append(f'mean: {sum(link_lengths) / len(link_lengths)}')
         output_data.append(f'max: {max(link_lengths)}')
+        output_data.append(f'median: {median}')
+        output_data.append(json_dumps(link_lengths))
 
         output_data.append('\nLink Counts')
         output_data.append(f'# valid links: {len(link_lengths)}')

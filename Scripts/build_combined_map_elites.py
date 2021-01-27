@@ -45,6 +45,10 @@ for c in configs:
 
     matrices.append(matrix)
 
+genetic = 0
+standard = 0
+both = 0
+
 resolution = combined_config['resolution']
 matrix = [[np.nan for _ in range(resolution + 1)] for __ in range(resolution + 1)]
 for y in range(resolution + 1):
@@ -58,10 +62,13 @@ for y in range(resolution + 1):
         # anything usable but I have a check just in case
         values = tuple(values)
         if (True, False, False) == values:
+            genetic += 1
             matrix[y][x] = 0.0
         elif (False, True, False) == values:
+            standard += 1
             matrix[y][x] = 0.2
         elif (True, True, False) == values:
+            both += 1
             matrix[y][x] = 0.6
         elif (False, False, False) == values:
             pass
@@ -106,18 +113,23 @@ ax.set_xticks(ax.get_xticks()[::5])
 ax.set_yticks(ax.get_yticks()[::5])
 
 ax.legend(handles=[
-    mpatches.Patch(color=colors[0][1], label='NGP + GO'),
+    mpatches.Patch(color=colors[0][1], label='NGP + NGO'),
     mpatches.Patch(color=colors[1][1], label='NGP + SO'),
-    mpatches.Patch(color=colors[3][1], label='Both'),
-])
+    mpatches.Patch(color=colors[3][1], label='Both')],
+    fontsize='x-large')
 
 # lower dimension is always 0 so I'm being lazy
 xticks = [((x-0.5)/resolution) * x_dimensions[1] for x in ax.get_xticks().tolist()]
 yticks = [((y-0.5)/resolution) * y_dimensions[1] for y in ax.get_yticks().tolist()]
 ax.set_xticklabels(xticks)
 ax.set_yticklabels(yticks)
+plt.rcParams["axes.labelsize"] = 22
 
 ax.set(title=combined_config['title'])
 ax.invert_yaxis()
 plt.savefig(combined_config['save_file'], bbox_inches="tight")
 plt.close()
+
+print(f'genetic: {genetic}')
+print(f'standard: {standard}')
+print(f'both: {both}')
