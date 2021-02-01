@@ -60,21 +60,22 @@ plt.figure(figsize=(12,12))
 plt.xlim(min_cor, max_cor)
 plt.ylim(min_cor, max_cor)
 
-nx.draw(graph, pos, node_color=color_map, node_size=10, with_labels=False, arrowsize=5) 
+nx.draw(graph, pos, node_color=color_map, node_size=60, with_labels=False, arrowsize=15) 
+# plt.show()
 plt.savefig(save_path, bbox_inches="tight") 
 
-nodes = set()
-for path in list(nx.bfs_edges(graph, '(0, 0)')):
-    for n in path:
-        nodes.add(n)
+# nodes = set()
+# for path in list(nx.bfs_edges(graph, '(0, 0)')):
+#     for n in path:
+#         nodes.add(n)
 
-file_path = os.path.join(sys.argv[1], 'info.txt')
-if os.path.exists(file_path):
-    f = open(file_path, 'a')
-else:
-    f = open(file_path, 'w')
+# file_path = os.path.join(sys.argv[1], 'info.txt')
+# if os.path.exists(file_path):
+#     f = open(file_path, 'a')
+# else:
+#     f = open(file_path, 'w')
 
-f.write(f'\n\nDDA Grid {sys.argv} Results\n')
-f.write(f'Connected nodes: {len(nodes)}\n')
-f.write(f'Total number of nodes: {len(graph.nodes)}\n')
-f.close()
+# f.write(f'\n\nDDA Grid {sys.argv} Results\n')
+# f.write(f'Connected nodes: {len(nodes)}\n')
+# f.write(f'Total number of nodes: {len(graph.nodes)}\n')
+# f.close()

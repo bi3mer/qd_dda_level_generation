@@ -299,7 +299,7 @@ class GenerationPipeline():
                 if duplicates_found > 1000:
                     print('Found over 1000 duplicates.')
                     break
-            elif path_length >= 2:
+            elif path_length > 2:
                 score = self.get_percent_playable(level)
                 scores.append(score)
                 percent_completes[str_path] = score
