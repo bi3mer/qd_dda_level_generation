@@ -30,10 +30,15 @@ class Mario(GenerationPipeline):
         self.fast_iterations = 10000000
         self.slow_iterations = 10000
 
+        self.start_population_size = 50
+        self.fast_iterations = 1000
+        self.slow_iterations = 100
+
         self.feature_names = ['linearity', 'leniency']
         self.feature_descriptors = [percent_linearity, percent_leniency]
         self.feature_dimensions = [[0, 1], [0, 1]] 
 
+        self.elites_per_bin = 4
         self.resolution = 40
         
         n = 3

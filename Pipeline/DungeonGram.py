@@ -26,11 +26,16 @@ class DungeonGram(GenerationPipeline):
         self.fast_iterations = 100000
         self.slow_iterations = 0
 
+        self.start_population_size = 50
+        self.fast_iterations = 1000
+        self.slow_iterations = 0
+
         self.feature_names = ['Density', 'leniency']
         self.feature_descriptors = [density, leniency]
         self.feature_dimensions = [[0, 1.0], [0, 0.5]] 
 
         self.resolution = 20
+        self.elites_per_bin = 4
         self.fast_fitness = lambda lvl: self.get_fitness(lvl, self.get_percent_playable(lvl))
         self.slow_fitness = None
         self.minimize_performance = True

@@ -1,21 +1,17 @@
 from Utility import update_progress
 from random import seed, sample
 from math import floor
+from heapq import heappush
 
 class MapElites:
     '''
     This is the more basic form of map-elites without resolution switching,
     parallel execution, etc.
     '''
-    __slots__ = [
-        'start_population_size', 'feature_descriptors', 'feature_dimensions', 
-        'resolution', 'fast_performance', 'slow_performance', 'minimize_performance', 
-        'population_generator', 'mutator', 'crossover', 'rng_seed', 'bins', 'keys']
-
     def __init__(
         self, start_population_size, feature_descriptors, feature_dimensions, 
         resolution, fast_performance, slow_performance, minimize_performance, 
-        population_generator, mutator, crossover, rng_seed=None):
+        population_generator, mutator, crossover, elites_per_bin, rng_seed=None):
 
         self.minimize_performance = minimize_performance
         self.feature_descriptors = feature_descriptors
@@ -27,6 +23,7 @@ class MapElites:
         self.population_generator = population_generator
         self.crossover = crossover.operate
         self.mutator = mutator.mutate
+        self.elites_per_bin = elites_per_bin
         self.bins = None
 
         if seed != None:
@@ -42,8 +39,8 @@ class MapElites:
 
         # fast iterations
         for i in range(self.start_population_size, fast_iterations):
-            parent_1 = self.bins[sample(self.keys, 1)[0]][1]
-            parent_2 = self.bins[sample(self.keys, 1)[0]][1]
+            parent_1 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
+            parent_2 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
 
             for strand in self.crossover(parent_1, parent_2):
                 self.__add_to_bins(self.mutator(strand), self.fast_performance)
@@ -58,13 +55,15 @@ class MapElites:
         # switch to slow performance function
         print('Switching performance functions...')
         for key in self.keys:
-            _, strand = self.bins[key]
-            self.bins[key][0] = self.slow_performance(strand) 
+            new_entry = []
+            for _, strand in self.bins[key]:
+                heappush(new_entry, (self.slow_performance(strand), strand))
+            self.bins[key] = new_entry
 
         # slow iterations
         for i in range(slow_iterations):
-            parent_1 = self.bins[sample(self.keys, 1)[0]][1]
-            parent_2 = self.bins[sample(self.keys, 1)[0]][1]
+            parent_1 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
+            parent_2 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
 
             for strand in self.crossover(parent_1, parent_2):
                 self.__add_to_bins(self.mutator(strand), self.slow_performance)
@@ -102,14 +101,11 @@ class MapElites:
         feature_vector = tuple(feature_vector)
         if feature_vector not in self.bins:
             self.keys.add(feature_vector)
-            self.bins[feature_vector] = [fitness, strand]
+            self.bins[feature_vector] = [(fitness, strand)]
         else:
-            current_fitness_score = self.bins[feature_vector][0]
-
-            if self.minimize_performance:
-                if fitness < current_fitness_score:
-                    self.bins[feature_vector][0] = fitness
-                    self.bins[feature_vector][1] = strand
-            elif fitness > current_fitness_score:
-                self.bins[feature_vector][0] = fitness
-                self.bins[feature_vector][1] = strand
+            heappush(self.bins[feature_vector], ((fitness, strand)))
+            if len(self.bins[feature_vector]) >= self.elites_per_bin:
+                if self.minimize_performance:
+                    self.bins[feature_vector].pop()
+                else:
+                    self.bins[feature_vector].pop(0)

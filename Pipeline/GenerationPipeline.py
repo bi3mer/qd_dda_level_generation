@@ -47,6 +47,7 @@ class GenerationPipeline():
             self.population_generator,
             self.mutator,
             self.crossover,
+            self.elites_per_bin,
             rng_seed=self.seed
         )
         standard_search.run(self.fast_iterations, self.slow_iterations)
@@ -63,6 +64,7 @@ class GenerationPipeline():
             self.n_population_generator,
             self.mutator,
             self.crossover,
+            self.elites_per_bin,
             rng_seed=self.seed
         )
         standard_n_search.run(self.fast_iterations, self.slow_iterations)
@@ -79,6 +81,7 @@ class GenerationPipeline():
             self.n_population_generator,
             self.n_mutator,
             self.n_crossover,
+            self.elites_per_bin,
             rng_seed=self.seed
         )
         gram_search.run(self.fast_iterations, self.slow_iterations)
@@ -117,32 +120,34 @@ class GenerationPipeline():
         
         searched = 0
         total = self.resolution ** 2
-        for x in range(self.resolution):
-            for y in range(self.resolution):
+        for x in range(self.resolution): # loop through bins in x dir
+            for y in range(self.resolution): # loop through bins in y dir
                 key = (x, y)
                 found = []
 
-                for i, bin in enumerate(bins):
+                for i, bin in enumerate(bins): # for each algorithm type
                     if key in bin:
-                        level = bin[key][1]
-                        playability = self.get_percent_playable(level)
-                        fitness = self.get_fitness(level, playability)
+                        for level_index, info in enumerate(bin[key]):
+                            level = info[1]
+                            playability = self.get_percent_playable(level)
+                            fitness = self.get_fitness(level, playability)
 
-                        percent_playables[i].append(playability)
-                        fitnesses[i].append(fitness)
+                            percent_playables[i].append(playability)
+                            fitnesses[i].append(fitness)
 
-                        if fitness == 0.0:
-                            found.append((level, fitness, playability, fitness))
-                            valid_levels[i] += 1
-                        else:
-                            invalid_levels[i] += 1
+                            if fitness == 0.0:
+                                found.append((level, fitness, playability, fitness))
+                                valid_levels[i] += 1
+                            else:
+                                invalid_levels[i] += 1
 
-                        writers[i].writerow(list(key) + [fitness])
+                            writers[i].writerow(list(key) + [fitness])
 
-                        level_file = open(join(level_paths[i], f'{x}_{y}.txt'), 'w')
-                        level_file.write(columns_into_grid_string(level))
-                        level_file.close()
+                            level_file = open(join(level_paths[i], f'{x}_{y}_{level_index}.txt'), 'w')
+                            level_file.write(columns_into_grid_string(level))
+                            level_file.close()
 
+                # combined algorithm
                 if len(found) > 0:
                     level, fitness, playability, fitness = choice(found)
 
@@ -152,7 +157,7 @@ class GenerationPipeline():
                     bins[COMBINED_INDEX][key] = (playability, level)
 
                     writers[COMBINED_INDEX].writerow(list(key) + [fitness])
-                    level_file = open(join(level_paths[COMBINED_INDEX], f'{x}_{y}.txt'), 'w')
+                    level_file = open(join(level_paths[COMBINED_INDEX], f'{x}_{y}_{level_index}.txt'), 'w')
                     level_file.write(columns_into_grid_string(level))
                     level_file.close()
 
