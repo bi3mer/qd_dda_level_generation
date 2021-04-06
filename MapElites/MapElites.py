@@ -1,5 +1,6 @@
 from Utility import update_progress
 from random import seed, sample
+from functools import reduce
 from math import floor
 from heapq import heappush
 
@@ -30,6 +31,9 @@ class MapElites:
             seed(rng_seed)
 
     def run(self, fast_iterations, slow_iterations):
+        counts = [0]
+        self.current_count = 0
+
         self.bins = {} 
         self.keys = set()
 
@@ -45,6 +49,8 @@ class MapElites:
             for strand in self.crossover(parent_1, parent_2):
                 self.__add_to_bins(self.mutator(strand), self.fast_performance)
                 update_progress(i / fast_iterations)
+
+            counts.append(self.current_count)
 
         update_progress(1)
 
@@ -69,7 +75,10 @@ class MapElites:
                 self.__add_to_bins(self.mutator(strand), self.slow_performance)
                 update_progress(i / slow_iterations)
 
+            counts.append(self.current_count)
+
         update_progress(1.0)
+        return counts
 
     def __add_to_bins(self, strand, performance):
         '''
@@ -103,9 +112,16 @@ class MapElites:
             self.keys.add(feature_vector)
             self.bins[feature_vector] = [(fitness, strand)]
         else:
-            heappush(self.bins[feature_vector], ((fitness, strand)))
+            current_length = self.__iterator_size((filter(lambda entry: entry[0] == 0.0, self.bins[feature_vector])))
+            heappush(self.bins[feature_vector], (fitness, strand))
             if len(self.bins[feature_vector]) >= self.elites_per_bin:
                 if self.minimize_performance:
                     self.bins[feature_vector].pop()
                 else:
                     self.bins[feature_vector].pop(0)
+            
+            new_length = self.__iterator_size(filter(lambda entry: entry[0] == 0.0, self.bins[feature_vector]))
+            self.current_count += new_length - current_length
+            
+    def __iterator_size(self, iterator):
+        return reduce(lambda sum, element: sum + 1, iterator, 0)

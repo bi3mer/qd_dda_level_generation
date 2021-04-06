@@ -36,6 +36,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running MAP-Elites with standard operators...')
+        counts = []
         standard_search = MapElites(
             self.start_population_size,
             self.feature_descriptors,
@@ -50,7 +51,7 @@ class GenerationPipeline():
             self.elites_per_bin,
             rng_seed=self.seed
         )
-        standard_search.run(self.fast_iterations, self.slow_iterations)
+        counts.append(standard_search.run(self.fast_iterations, self.slow_iterations))
 
         print('Running MAP-Elites with standard operators and n-gram population...')
         standard_n_search = MapElites(
@@ -67,7 +68,7 @@ class GenerationPipeline():
             self.elites_per_bin,
             rng_seed=self.seed
         )
-        standard_n_search.run(self.fast_iterations, self.slow_iterations)
+        counts.append(standard_n_search.run(self.fast_iterations, self.slow_iterations))
 
         print('Running MAP-Elites with n-gram operators...')
         gram_search = MapElites(
@@ -84,9 +85,22 @@ class GenerationPipeline():
             self.elites_per_bin,
             rng_seed=self.seed
         )
-        gram_search.run(self.fast_iterations, self.slow_iterations)
+        counts.append(gram_search.run(self.fast_iterations, self.slow_iterations))
+
+        write_path = join(self.data_dir, 'counts.json')
+        f = open(write_path, 'w')
+        f.write(json_dumps({
+            'standard': counts[0],
+            'standard_n': counts[1],
+            'genetic': counts[2]
+        }))
+
+        save_path = join(self.data_dir, 'counts.png')
+        Popen(['python3', join('Scripts', 'build_counts_graph.py'), write_path, save_path])
+
 
         #######################################################################
+        return
         print('Validating levels...')
         STANDARD_INDEX = 0
         STANDARD_N_INDEX = 1
