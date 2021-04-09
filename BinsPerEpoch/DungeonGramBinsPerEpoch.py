@@ -19,10 +19,6 @@ class DungeonGramBinsPerEpoch(BinsPerEpoch):
         self.fast_iterations = 10000
         self.slow_iterations = 0
 
-        self.start_population_size = 5
-        self.fast_iterations = 50
-        self.slow_iterations = 0
-
         self.feature_names = ['Density', 'leniency']
         self.feature_descriptors = [density, leniency]
         self.feature_dimensions = [[0, 1.0], [0, 0.5]] 

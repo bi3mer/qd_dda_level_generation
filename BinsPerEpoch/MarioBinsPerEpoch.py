@@ -29,7 +29,7 @@ class MarioBinsPerEpoch(BinsPerEpoch):
             unigram.add_sequence(level)
 
         self.fast_fitness = build_slow_fitness_function(self.gram)
-        self.slow_fitness = build_slow_fitness_function(self.gram)
+        self.slow_fitness = None
         self.minimize_performance = True
         
         self.start_strand_size = 25
