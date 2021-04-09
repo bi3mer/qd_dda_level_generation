@@ -10,12 +10,8 @@ class MarioBinsPerEpoch(BinsPerEpoch):
         self.data_dir = f'MarioData'
 
         self.start_population_size = 500
-        self.fast_iterations = 100000
-        self.slow_iterations = 10000
-
-        self.start_population_size = 50
-        self.fast_iterations = 1000
-        self.slow_iterations = 100
+        self.fast_iterations = 10000
+        self.slow_iterations = 0
 
         self.feature_names = ['linearity', 'leniency']
         self.feature_descriptors = [percent_linearity, percent_leniency]
@@ -32,7 +28,7 @@ class MarioBinsPerEpoch(BinsPerEpoch):
             self.gram.add_sequence(level)
             unigram.add_sequence(level)
 
-        self.fast_fitness = build_fast_fitness_function(self.gram)
+        self.fast_fitness = build_slow_fitness_function(self.gram)
         self.slow_fitness = build_slow_fitness_function(self.gram)
         self.minimize_performance = True
         

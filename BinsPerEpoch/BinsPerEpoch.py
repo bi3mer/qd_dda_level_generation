@@ -1,14 +1,10 @@
-from Utility.GridTools import columns_into_grid_string
-from Utility.LinkerGeneration import generate_link
 from MapElites import MapElites
 from Utility import *
 
-from json import load as json_load, dumps as json_dumps
+from json import dumps as json_dumps
 from os.path import join, exists
+from os import mkdir
 from subprocess import Popen
-from itertools import repeat
-from random import choice
-from csv import writer
 
 class BinsPerEpoch:
     def run(self, runs):
@@ -69,13 +65,14 @@ class BinsPerEpoch:
             )
             ngo_counts.append(gram_search.run(self.fast_iterations, self.slow_iterations))
 
-        write_path = join(self.data_dir, 'counts.json')
-        f = open(write_path, 'w')
+        if not exists(self.data_dir):
+            mkdir(self.data_dir)
+
+        f = open(join(self.data_dir, 'counts.json'), 'w')
         f.write(json_dumps({
             'standard': standard_counts,
             'standard_n': standard_n_counts,
             'ngo': ngo_counts
         }))
 
-        save_path = join(self.data_dir, 'counts.png')
-        Popen(['python3', join('Scripts', 'build_counts_graph.py'), write_path, save_path])
+        Popen(['python3', join('Scripts', 'build_counts_graph.py'), self.data_dir])

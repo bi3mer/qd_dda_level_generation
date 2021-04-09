@@ -31,7 +31,7 @@ class MapElites:
             seed(rng_seed)
 
     def run(self, fast_iterations, slow_iterations):
-        counts = [0]
+        counts = []
         self.current_count = 0
 
         self.bins = {} 
@@ -56,7 +56,7 @@ class MapElites:
 
         # No need to force the user to have a slow function
         if self.slow_performance == None:
-            return
+            return counts
         
         # switch to slow performance function
         print('Switching performance functions...')
@@ -111,6 +111,9 @@ class MapElites:
         if feature_vector not in self.bins:
             self.keys.add(feature_vector)
             self.bins[feature_vector] = [(fitness, strand)]
+
+            if fitness == 0.0:
+                self.current_count += 1
         else:
             current_length = self.__iterator_size((filter(lambda entry: entry[0] == 0.0, self.bins[feature_vector])))
             heappush(self.bins[feature_vector], (fitness, strand))

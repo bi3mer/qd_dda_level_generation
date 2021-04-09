@@ -15,6 +15,9 @@ parser.add_argument('--runs',type=check_positive, help='Number of runs.')
 
 args = parser.parse_args()
 
+args.mario = True
+args.runs = 5
+
 if not args.mario and not args.dungeongram and not args.runs:
     parser.print_help()
     sys.exit(0)

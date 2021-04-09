@@ -2,6 +2,7 @@ from .BinsPerEpoch import BinsPerEpoch
 
 from dungeongrams.dungeongrams import *
 from MapElites.Operators import *
+from Utility.GridTools import columns_into_rows
 from Utility.DungeonGram.IO import get_levels
 from Utility.DungeonGram.Behavior import *
 from Utility.DungeonGram.Fitness import *
@@ -57,3 +58,14 @@ class DungeonGramBinsPerEpoch(BinsPerEpoch):
         self.title = ''
 
         self.max_path_length = 4
+
+    def get_percent_playable(self, level, agent=None):
+        rows = columns_into_rows(level)
+        if agent == None:
+            agent = FLAW_NO_FLAW
+
+        return percent_playable(rows, False, True, agent)
+
+    def get_fitness(self, level, percent_playable, agent=None):
+        bad_transitions = self.gram.count_bad_n_grams(level)
+        return bad_transitions + 1 - percent_playable
