@@ -23,10 +23,6 @@ class DungeonGram(GenerationPipeline):
         ]
         
         self.start_population_size = 500
-        self.fast_iterations = 100000
-        self.slow_iterations = 0
-
-        self.start_population_size = 500
         self.fast_iterations = 10000
         self.slow_iterations = 0
 
