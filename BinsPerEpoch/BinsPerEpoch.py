@@ -8,25 +8,19 @@ from subprocess import Popen
 
 class BinsPerEpoch:
     def run(self, runs):
-        print('Running Standard Operators')
-        standard_counts = []
-        for i in range(runs):
-            standard_search = MapElites(
-                self.start_population_size,
-                self.feature_descriptors,
-                self.feature_dimensions,
-                self.resolution,
-                self.fast_fitness,
-                self.slow_fitness,
-                self.minimize_performance,
-                self.population_generator,
-                self.mutator,
-                self.crossover,
-                self.elites_per_bin,
-                rng_seed=self.seed+i
-            )
-            standard_counts.append(standard_search.run(self.fast_iterations, self.slow_iterations))
+        #######################################################################
+        print('Setting up data directory...')
+        level_paths = [
+            join(self.data_dir, 'levels_standard_n'),
+            join(self.data_dir, 'levels_ngo'),
+        ]
 
+        clear_directory(self.data_dir)
+        for path in level_paths:
+            clear_directory(path)
+
+
+        #######################################################################
         print('Running Standard Operators + N-Gram')
         standard_n_counts = []
         for i in range(runs):
@@ -65,14 +59,26 @@ class BinsPerEpoch:
             )
             ngo_counts.append(gram_search.run(self.fast_iterations, self.slow_iterations))
 
-        if not exists(self.data_dir):
-            mkdir(self.data_dir)
-
         f = open(join(self.data_dir, 'counts.json'), 'w')
         f.write(json_dumps({
-            'standard': standard_counts,
             'standard_n': standard_n_counts,
             'ngo': ngo_counts
         }))
 
         Popen(['python3', join('Scripts', 'build_counts_graph.py'), self.data_dir])
+
+        #######################################################################
+        print('Storing Valid Levels...')
+        level_paths = [
+            join(self.data_dir, 'levels_standard_n'),
+            join(self.data_dir, 'levels_ngo'),
+        ]
+
+        searches = [standard_n_search.bins, gram_search.bins]
+
+        for levels_dir, bins in zip(level_paths, searches):
+            for key in bins:
+                if bins[key][0][0] == 0.0:
+                    f = open(join(levels_dir, f'{key[0]}-{key[1]}.txt'), 'w')
+                    f.write(columns_into_grid_string(bins[key][0][1]))
+                    f.close()

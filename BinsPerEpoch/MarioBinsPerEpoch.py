@@ -10,9 +10,9 @@ class MarioBinsPerEpoch(BinsPerEpoch):
         self.data_dir = f'MarioData'
 
         self.start_population_size = 500
-        self.fast_iterations = 10000
+        self.fast_iterations = 50000
         self.slow_iterations = 0
-
+        
         self.feature_names = ['linearity', 'leniency']
         self.feature_descriptors = [percent_linearity, percent_leniency]
         self.feature_dimensions = [[0, 1], [0, 1]] 

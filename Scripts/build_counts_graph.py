@@ -22,11 +22,9 @@ def make_multi_line_plot(counts_list, title, save_name, max_y):
     plt.close(fig)
 
 max_y = max(
-    max([max(c) for c in counts['standard']]),
     max([max(c) for c in counts['standard_n']]),
     max([max(c) for c in counts['ngo']]))
 
-make_multi_line_plot(counts['standard'], 'Standard Operators', 'so.png', max_y)
 make_multi_line_plot(counts['standard_n'], 'Standard Operators + N-Gram Population', 'son.png', max_y)
 make_multi_line_plot(counts['ngo'], 'N-Gram Genetic Operators', 'ngo.png', max_y)
 
