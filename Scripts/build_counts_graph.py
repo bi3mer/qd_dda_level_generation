@@ -23,10 +23,12 @@ def make_multi_line_plot(counts_list, title, save_name, max_y):
 
 max_y = max(
     max([max(c) for c in counts['standard_n']]),
-    max([max(c) for c in counts['ngo']]))
+    max([max(c) for c in counts['ngo']]),
+    max([max(c) for c in counts['grammar']]))
 
 make_multi_line_plot(counts['standard_n'], 'Standard Operators + N-Gram Population', 'son.png', max_y)
 make_multi_line_plot(counts['ngo'], 'N-Gram Genetic Operators', 'ngo.png', max_y)
+make_multi_line_plot(counts['grammar'], 'N-Gram', 'ngram.png', max_y)
 
 def build_data(counts):
     X = []
@@ -52,6 +54,12 @@ X, Y = build_data(counts['standard_n'])
 son_df['X'] = X
 son_df['Y'] = Y
 sns.lineplot(data=son_df, x='X', y='Y', label='Standard Operators + N-Gram')
+
+gram_df = pd.DataFrame()
+X, Y = build_data(counts['grammar'])
+gram_df['X'] = X
+gram_df['Y'] = Y
+sns.lineplot(data=gram_df, x='X', y='Y', label='N-Gram')
 
 plt.title('Valid Segments Per Generation')
 plt.xlabel('Generation')

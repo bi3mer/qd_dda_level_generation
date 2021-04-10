@@ -39,10 +39,11 @@ class MapElites:
 
         for i, strand in enumerate(self.population_generator.generate(self.start_population_size)):
             self.__add_to_bins(strand, self.fast_performance)
-            update_progress(i / fast_iterations)
+            update_progress(i / self.start_population_size)
+            counts.append(self.current_count)
 
         # fast iterations
-        for i in range(self.start_population_size, fast_iterations):
+        for i in range(fast_iterations):
             parent_1 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
             parent_2 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
 
