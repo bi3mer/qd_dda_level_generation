@@ -61,6 +61,7 @@ class DungeonGramBinsPerEpoch(BinsPerEpoch):
 
     def get_percent_playable(self, level, agent=None):
         rows = columns_into_rows(level)
+        print('\n\n' + '\n'.join(rows))
         if agent == None:
             agent = FLAW_NO_FLAW
 

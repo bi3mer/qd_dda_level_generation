@@ -9,6 +9,11 @@ f = open(os.path.join(sys.argv[1], 'counts.json'), 'r')
 counts = json.load(f)
 f.close()
 
+initial_population_size = 500
+counts['standard_n'] = [c[initial_population_size:] for c in counts['standard_n']]
+counts['ngo'] = [c[initial_population_size:] for c in counts['ngo']]
+counts['grammar'] = [c[initial_population_size:] for c in counts['grammar']]
+
 def make_multi_line_plot(counts_list, title, save_name, max_y):
     fig, ax = plt.subplots()
     X = [x for x in range(len(counts_list[0]))]
