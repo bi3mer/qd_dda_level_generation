@@ -22,7 +22,7 @@ def make_multi_line_plot(counts_list, title, save_name, max_y):
 
     ax.set_ylim([0, max_y])
     ax.set_title(title)
-    ax.set(xlabel='Generation', ylabel='Valid Strands')
+    ax.set(xlabel='Generation', ylabel='Usable Segments')
     fig.savefig(os.path.join(sys.argv[1], save_name))
     plt.close(fig)
 
@@ -31,9 +31,14 @@ max_y = max(
     max([max(c) for c in counts['ngo']]),
     max([max(c) for c in counts['grammar']]))
 
-make_multi_line_plot(counts['standard_n'], 'Standard Operators + N-Gram Population', 'son.png', max_y)
-make_multi_line_plot(counts['ngo'], 'N-Gram Genetic Operators', 'ngo.png', max_y)
-make_multi_line_plot(counts['grammar'], 'N-Gram', 'ngram.png', max_y)
+print('building standard_n graph')
+make_multi_line_plot(counts['standard_n'], 'ME-SO', 'son.png', max_y)
+
+print('building ngo graph')
+make_multi_line_plot(counts['ngo'], 'ME-NGO', 'ngo.png', max_y)
+
+print('building n-gram graph')
+make_multi_line_plot(counts['grammar'], 'NG', 'ngram.png', max_y)
 
 def build_data(counts):
     X = []
@@ -48,26 +53,29 @@ def build_data(counts):
 
     return X, Y
 
+print('building cumulative ngo')
 ngo_df = pd.DataFrame()
 X, Y = build_data(counts['ngo'])
 ngo_df['X'] = X
 ngo_df['Y'] = Y
-sns.lineplot(data=ngo_df, x='X', y='Y', label='NGO')
+sns.lineplot(data=ngo_df, x='X', y='Y', label='ME-NGO')
 
+print('building cumulative standard_n')
 son_df = pd.DataFrame()
 X, Y = build_data(counts['standard_n'])
 son_df['X'] = X
 son_df['Y'] = Y
-sns.lineplot(data=son_df, x='X', y='Y', label='Standard Operators + N-Gram')
+sns.lineplot(data=son_df, x='X', y='Y', label='ME-SO')
 
+print('building cumulative n-gram')
 gram_df = pd.DataFrame()
 X, Y = build_data(counts['grammar'])
 gram_df['X'] = X
 gram_df['Y'] = Y
-sns.lineplot(data=gram_df, x='X', y='Y', label='N-Gram')
+sns.lineplot(data=gram_df, x='X', y='Y', label='NG')
 
 plt.title('Valid Segments Per Generation')
 plt.xlabel('Generation')
-plt.ylabel('Valid Strands')
+plt.ylabel('Usable Strands')
 plt.legend()
 plt.savefig(os.path.join(sys.argv[1], 'counts.png'))
