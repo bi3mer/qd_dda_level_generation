@@ -98,4 +98,7 @@ def percent_completable(subOptimal, src,levelStr):
                 prev[next_node[1]] = node[1]
                 heappush(heap, next_node)
 
+        if furthest_x == maxX:
+            break
+
     return furthest_x / maxX

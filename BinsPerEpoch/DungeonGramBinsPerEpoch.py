@@ -15,8 +15,8 @@ class DungeonGramBinsPerEpoch(BinsPerEpoch):
     def __init__(self):
         self.data_dir = f'DungeonData'
         
-        self.start_population_size = 500
-        self.fast_iterations = 50000
+        self.start_population_size = 50
+        self.fast_iterations = 50
         self.slow_iterations = 0
 
         self.feature_names = ['Density', 'leniency']

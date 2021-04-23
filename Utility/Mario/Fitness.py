@@ -1,6 +1,6 @@
 from .Extractor import max_height, heights as col_heights
 from .SummervilleAgent import percent_completable
-    
+from Utility.GridTools import columns_into_rows
 
 def percent_playable(columns, start_position):
     '''
@@ -53,12 +53,11 @@ def build_slow_fitness_function(grammar):
 
         columns.insert(0, 'X-------------')
         columns.insert(0, 'X-------------')
-        fitness = percent_playable(columns, (1, 1, -1))
+        fitness = percent_playable(columns_into_rows(columns), (1, 1, -1))
         columns.pop(0)
         columns.pop(0)
 
         return bad_transitions + 1 - fitness
-
     return slow_fitness
 
 def build_fast_fitness_function(grammar):

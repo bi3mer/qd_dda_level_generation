@@ -74,7 +74,7 @@ gram_df['X'] = X
 gram_df['Y'] = Y
 sns.lineplot(data=gram_df, x='X', y='Y', label='NG')
 
-plt.title('Valid Segments Per Generation')
+plt.title('Usable Segments Per Generation')
 plt.xlabel('Generation')
 plt.ylabel('Usable Strands')
 plt.legend()
