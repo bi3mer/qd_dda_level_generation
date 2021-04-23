@@ -48,14 +48,21 @@ def naive_percent_playable(columns):
     return i / len(columns)
 
 def build_slow_fitness_function(grammar):
+    length = len('X-------------')
     def slow_fitness(columns):
         bad_transitions = grammar.count_bad_n_grams(columns)
 
         columns.insert(0, 'X-------------')
         columns.insert(0, 'X-------------')
-        fitness = percent_playable(columns_into_rows(columns), (1, 1, -1))
+        columns.append('--------------')
+        columns.append('--------------')
+
+        fitness = percent_playable(columns_into_rows(columns), (1, length - 2, -1))
+
         columns.pop(0)
         columns.pop(0)
+        columns.pop()
+        columns.pop()
 
         return bad_transitions + 1 - fitness
     return slow_fitness

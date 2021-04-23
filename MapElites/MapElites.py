@@ -1,3 +1,4 @@
+from Utility.GridTools import columns_into_rows
 from Utility import update_progress
 from random import seed, sample
 from functools import reduce
