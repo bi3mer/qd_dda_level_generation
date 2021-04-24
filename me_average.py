@@ -1,4 +1,4 @@
-from BinsPerEpoch import MarioBinsPerEpoch, DungeonGramBinsPerEpoch
+from BinsPerEpoch import MarioBinsPerEpoch, DungeonGramBinsPerEpoch, IcarusBinsPerEpoch
 import argparse
 import sys
 
@@ -9,19 +9,18 @@ def check_positive(value):
     return ivalue
 
 parser = argparse.ArgumentParser(description='Generate Multiple Runs of QD')
-parser.add_argument('--dungeongram', action='store_true', help='Run DungeonGrams')
-parser.add_argument('--mario', action='store_true', help='Run Mario')
-parser.add_argument('--runs',type=check_positive, help='Number of runs.')
-
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('--dungeongram', action='store_true', help='Run DungeonGrams')
+group.add_argument('--mario', action='store_true', help='Run Mario')
+group.add_argument('--icarus', action='store_true', help='Run Icarus')
+parser.add_argument('--runs',type=check_positive, help='Number of runs.', required=True)
 args = parser.parse_args()
-
-if not args.mario and not args.dungeongram and not args.runs:
-    parser.print_help()
-    sys.exit(0)
 
 if args.dungeongram:
     runner = DungeonGramBinsPerEpoch()    
 elif args.mario:
     runner = MarioBinsPerEpoch()
+elif args.icarus:
+    runner = IcarusBinsPerEpoch()
 
 runner.run(args.runs)
