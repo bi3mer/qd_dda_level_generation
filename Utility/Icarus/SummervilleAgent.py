@@ -7,9 +7,12 @@ modified directly from:
 from heapq import heappush, heappop
 from .config import JUMPS, SOLIDS
 
+DEBUG_DISPLAY = False
+
 def isSolid(tile):
     return tile in SOLIDS
 
+# should account for level edges and wrap
 def levelTile(levelStr, x, y):
     maxX = len(levelStr[0])-1
     maxY = len(levelStr)-1
@@ -88,6 +91,11 @@ def makeGetNeighbors(jumps,levelStr,visited,isSolid):
             if tile_below_left is not None and not isSolid(tile_below_left):
                 neighbors.append([dist+1.4,(tile_below_left_pos[0], tile_below_left_pos[1], -1)])
 
+        if DEBUG_DISPLAY:
+            print()
+            print(pos, neighbors)
+            print()
+
         return neighbors
     return getNeighbors
 
@@ -105,8 +113,19 @@ def percent_completable(src, levelStr):
     heap = [(dist[src], src, 0)]
     furthest_y = maxY
 
+    if DEBUG_DISPLAY:
+        explored = list(levelStr)
+
     while heap:
         node = heappop(heap)
+
+        if DEBUG_DISPLAY:
+            explored[node[1][1]] = explored[node[1][1]][:node[1][0]] + '.' + explored[node[1][1]][node[1][0] + 1:]
+            print()
+            for row in explored:
+                print(row)
+            print()
+            
         for next_node in getNeighbors(node):
             next_node[0] += heuristic(next_node[1])
             next_node.append(heuristic(next_node[1]))
@@ -119,5 +138,9 @@ def percent_completable(src, levelStr):
                 dist[next_node[1]] = next_node[0]
                 prev[next_node[1]] = node[1]
                 heappush(heap, next_node)
+
+    if DEBUG_DISPLAY:
+        import sys
+        sys.exit(-1)
 
     return (maxY - furthest_y) / maxY

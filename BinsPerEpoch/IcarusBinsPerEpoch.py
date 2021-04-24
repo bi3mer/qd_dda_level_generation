@@ -27,10 +27,10 @@ class IcarusBinsPerEpoch(BinsPerEpoch):
         for level in levels:
             self.gram.add_sequence(level)
             unigram.add_sequence(level)
-        pruned = self.gram.prune()
+        pruned = self.gram.prune() # remove dead ends from grammar
 
         unigram_keys = set(unigram.grammar[''].keys())
-        unigram_keys.difference_update(pruned)
+        unigram_keys.difference_update(pruned) # remove any n-gram dead ends from unigram
     
         self.fast_fitness = build_slow_fitness_function(self.gram)
         self.slow_fitness = None
