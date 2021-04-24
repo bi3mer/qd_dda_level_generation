@@ -67,6 +67,7 @@ class Icarus(GenerationPipeline):
         self.max_path_length = 4
 
     def get_percent_playable(self, level, agent=None):
+        print('Warning using fitness for percent playable!')
         return self.fast_fitness(level)
 
     def get_fitness(self, level, percent_playable, agent=None):
