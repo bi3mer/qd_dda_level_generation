@@ -139,6 +139,9 @@ def percent_completable(src, levelStr):
                 prev[next_node[1]] = node[1]
                 heappush(heap, next_node)
 
+        if furthest_y == bestY:
+            break
+
     if DEBUG_DISPLAY:
         import sys
         sys.exit(-1)
