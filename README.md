@@ -2,7 +2,7 @@
 
 ## Assets
 
-Text files in [MarioLevels](./MarioLevels) come from [The VGLC](https://github.com/TheVGLC/TheVGLC).
+Text files in [MarioLevels](./MarioLevels) and [IcarusLevels](./IcarusLevels) come from [The VGLC](https://github.com/TheVGLC/TheVGLC).
 
 ## To Run
 

@@ -1,35 +1,38 @@
 from .BinsPerEpoch import BinsPerEpoch
 from MapElites.Operators import *
-from Utility.Mario.IO import get_levels, write_level
-from Utility.Mario.Behavior import *
-from Utility.Mario.Fitness import *
+from Utility.Icarus.IO import get_levels, write_level
+from Utility.Icarus.Behavior import *
+from Utility.Icarus.Fitness import *
 from Utility.NGram import NGram
 
-class MarioBinsPerEpoch(BinsPerEpoch):
+class IcarusBinsPerEpoch(BinsPerEpoch):
     def __init__(self):
-        self.data_dir = f'MarioData'
+        self.data_dir = f'IcarusData'
         self.write_level = write_level
 
         self.start_population_size = 500
         self.fast_iterations = 50000
-        self.fast_iterations = 5000
         self.slow_iterations = 0
         
-        self.feature_names = ['linearity', 'leniency']
-        self.feature_descriptors = [percent_linearity, percent_leniency]
-        self.feature_dimensions = [[0, 1], [0, 1]] 
+        self.feature_names = ['density', 'leniency']
+        self.feature_descriptors = [density, leniency]
+        self.feature_dimensions = [[0, 0.5], [0, 0.5]] 
 
         self.elites_per_bin = 1
         self.resolution = 40
         
-        n = 3
+        n = 2
         self.gram = NGram(n)
         unigram = NGram(1)
         levels = get_levels()
         for level in levels:
             self.gram.add_sequence(level)
             unigram.add_sequence(level)
+        pruned = self.gram.prune() # remove dead ends from grammar
 
+        unigram_keys = set(unigram.grammar[''].keys())
+        unigram_keys.difference_update(pruned) # remove any n-gram dead ends from unigram
+    
         self.fast_fitness = build_slow_fitness_function(self.gram)
         self.slow_fitness = None
         self.minimize_performance = True
@@ -38,7 +41,7 @@ class MarioBinsPerEpoch(BinsPerEpoch):
         self.max_strand_size = 25
         self.seed = 0
 
-        mutation_values = list(unigram.grammar[''].keys())
+        mutation_values = list(unigram_keys)
         self.mutator = Mutate(mutation_values, 0.02)
         self.crossover = SinglePointCrossover()
         self.population_generator = PopulationGenerator(mutation_values, self.start_strand_size)

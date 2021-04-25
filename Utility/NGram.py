@@ -94,3 +94,29 @@ class NGram():
             append_to_queue(token)
 
         return bad_transitions
+
+    def prune(self):
+        pruned = set()
+
+        while True:
+            leaves = set()
+            for key, val in self.grammar.items():
+                if len(val) == 0:
+                    leaves.add(key)
+                for e in val:
+                    if e not in self.grammar:
+                        leaves.add(e)
+
+            if len(leaves) == 0:
+                return pruned
+
+            for leaf in leaves:
+                if leaf in self.grammar:
+                    del self.grammar[leaf]
+
+                for key, val in self.grammar.items():
+                    if leaf in val:
+                        del val[leaf]
+
+            for leaf in leaves:
+                pruned.add(leaf)

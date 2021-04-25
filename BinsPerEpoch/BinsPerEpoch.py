@@ -95,6 +95,5 @@ class BinsPerEpoch:
         for levels_dir, bins in zip(level_paths, searches):
             for key in bins:
                 if bins[key][0][0] == 0.0:
-                    f = open(join(levels_dir, f'{key[0]}-{key[1]}.txt'), 'w')
-                    f.write(columns_into_grid_string(bins[key][0][1]))
-                    f.close()
+                    with open(join(levels_dir, f'{key[0]}-{key[1]}.txt'), 'w') as f:
+                        self.write_level(f, bins[key][0][1])
