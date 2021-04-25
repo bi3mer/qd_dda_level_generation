@@ -1,6 +1,6 @@
 from .BinsPerEpoch import BinsPerEpoch
 from MapElites.Operators import *
-from Utility.Mario.IO import get_levels
+from Utility.Mario.IO import get_levels, write_level
 from Utility.Mario.Behavior import *
 from Utility.Mario.Fitness import *
 from Utility.NGram import NGram
@@ -8,6 +8,7 @@ from Utility.NGram import NGram
 class MarioBinsPerEpoch(BinsPerEpoch):
     def __init__(self):
         self.data_dir = f'MarioData'
+        self.write_level = write_level
 
         self.start_population_size = 500
         self.fast_iterations = 50000

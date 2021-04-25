@@ -8,3 +8,6 @@ def get_levels():
             levels.append([l.strip() for l in reversed(f.readlines())])
 
     return levels
+
+def write_level(f, slices):
+    f.write('\n'.join(reversed(slices)))

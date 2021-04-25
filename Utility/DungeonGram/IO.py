@@ -1,4 +1,4 @@
-from Utility.GridTools import rows_into_columns
+from Utility.GridTools import rows_into_columns, columns_into_grid_string
 from os.path import join
 from os import listdir
 
@@ -11,3 +11,6 @@ def get_levels():
         f.close()
 
     return levels
+
+def write_level(f, columns):
+    f.write(columns_into_grid_string(columns))

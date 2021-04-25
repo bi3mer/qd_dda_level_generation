@@ -3,7 +3,7 @@ from .BinsPerEpoch import BinsPerEpoch
 from dungeongrams.dungeongrams import *
 from MapElites.Operators import *
 from Utility.GridTools import columns_into_rows
-from Utility.DungeonGram.IO import get_levels
+from Utility.DungeonGram.IO import get_levels, write_level
 from Utility.DungeonGram.Behavior import *
 from Utility.DungeonGram.Fitness import *
 from Utility.NGram import NGram
@@ -14,12 +14,13 @@ from os.path import join
 class DungeonGramBinsPerEpoch(BinsPerEpoch):
     def __init__(self):
         self.data_dir = f'DungeonData'
+        self.write_level = write_level
         
         self.start_population_size = 50
         self.fast_iterations = 50
         self.slow_iterations = 0
 
-        self.feature_names = ['Density', 'leniency']
+        self.feature_names = ['density', 'leniency']
         self.feature_descriptors = [density, leniency]
         self.feature_dimensions = [[0, 1.0], [0, 0.5]] 
 
