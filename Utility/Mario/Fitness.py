@@ -54,8 +54,8 @@ def build_slow_fitness_function(grammar):
 
         columns.insert(0, 'X-------------')
         columns.insert(0, 'X-------------')
-        columns.append('--------------')
-        columns.append('--------------')
+        columns.append('X-------------')
+        columns.append('X-------------')
 
         fitness = percent_playable(columns_into_rows(columns), (1, length - 2, -1))
 
