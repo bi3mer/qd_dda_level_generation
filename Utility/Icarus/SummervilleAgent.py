@@ -114,17 +114,27 @@ def percent_completable(src, levelStr):
     furthest_y = maxY
 
     if DEBUG_DISPLAY:
-        explored = list(levelStr)
+        import sys
+        explored = set()
+        path = set()
+
+        def displayLevel():
+            for yy, row in enumerate(levelStr):
+                for xx, tile in enumerate(row):
+                    if (xx, yy) in path:
+                        sys.stdout.write('!')
+                    elif (xx, yy) in explored:
+                        sys.stdout.write('.')
+                    else:
+                        sys.stdout.write(tile)
+                sys.stdout.write('\n')
 
     while heap:
         node = heappop(heap)
 
         if DEBUG_DISPLAY:
-            explored[node[1][1]] = explored[node[1][1]][:node[1][0]] + '.' + explored[node[1][1]][node[1][0] + 1:]
-            print()
-            for row in explored:
-                print(row)
-            print()
+            explored.add((node[1][0], node[1][1]))
+            displayLevel()
             
         for next_node in getNeighbors(node):
             next_node[0] += heuristic(next_node[1])
@@ -133,6 +143,19 @@ def percent_completable(src, levelStr):
                 current_y = next_node[1][1]
                 furthest_y = min(furthest_y, current_y)
                 if furthest_y == bestY:
+
+                    if DEBUG_DISPLAY:
+                        path.add((next_node[1][0], next_node[1][1]))
+                        full_path = [next_node[1]]
+                        path_node = node[1]
+                        while path_node != None:
+                            path_node = prev[path_node]
+                            if path_node != None:
+                                path.add((path_node[0], path_node[1]))
+                                full_path.append(path_node)
+                        print(full_path)
+                        displayLevel()
+                        
                     break
                 
                 dist[next_node[1]] = next_node[0]
