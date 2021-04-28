@@ -113,15 +113,19 @@ def percent_completable(subOptimal, src,levelStr):
                 furthest_x = max(furthest_x, next_node[1][0])
                 if furthest_x == maxX:
                     if DEBUG_DISPLAY:
-                        path.add((next_node[1][0], next_node[1][1]))
-                        full_path = [next_node[1]]
-                        path_node = node[1]
+                        full_path = []
+                        path_node = next_node[1]
+
                         while path_node != None:
-                            path_node = prev[path_node]
-                            if path_node != None:
-                                path.add((path_node[0], path_node[1]))
-                                full_path.append(path_node)
-                        print(full_path)
+                            path.add((path_node[0], path_node[1]))
+                            full_path.append(path_node)
+                            
+                            if path_node == next_node[1]:
+                                path_node = node[1]
+                            else:
+                                path_node = prev[path_node]
+
+                        print('path', list(reversed(full_path)))
                         displayLevel()
                         
                     break
