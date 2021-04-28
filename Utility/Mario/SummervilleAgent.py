@@ -7,6 +7,8 @@ modified directly from:
 from heapq import heappush, heappop
 from .config import JUMPS, SOLIDS
 
+DEBUG_DISPLAY = False
+
 def isSolid(tile):
     return tile in SOLIDS
 
@@ -80,8 +82,29 @@ def percent_completable(subOptimal, src,levelStr):
     heap = [(dist[src], src,0)]
     furthest_x = 0
 
+    if DEBUG_DISPLAY:
+        import sys
+        explored = set()
+        path = set()
+
+        def displayLevel():
+            for yy, row in enumerate(levelStr):
+                for xx, tile in enumerate(row):
+                    if (xx, yy) in path:
+                        sys.stdout.write('!')
+                    elif (xx, yy) in explored:
+                        sys.stdout.write('.')
+                    else:
+                        sys.stdout.write(tile)
+                sys.stdout.write('\n')
+
     while heap:
         node = heappop(heap)
+
+        if DEBUG_DISPLAY:
+            explored.add((node[1][0], node[1][1]))
+            displayLevel()
+
         for next_node in getNeighbors(node):
             next_node[0] += heuristic(next_node[1])
             next_node.append(heuristic(next_node[1]))
@@ -89,6 +112,18 @@ def percent_completable(subOptimal, src,levelStr):
                 current_x = next_node[1][0]
                 furthest_x = max(furthest_x, next_node[1][0])
                 if furthest_x == maxX:
+                    if DEBUG_DISPLAY:
+                        path.add((next_node[1][0], next_node[1][1]))
+                        full_path = [next_node[1]]
+                        path_node = node[1]
+                        while path_node != None:
+                            path_node = prev[path_node]
+                            if path_node != None:
+                                path.add((path_node[0], path_node[1]))
+                                full_path.append(path_node)
+                        print(full_path)
+                        displayLevel()
+                        
                     break
                 
                 if current_x + subOptimal <= furthest_x:
@@ -100,5 +135,10 @@ def percent_completable(subOptimal, src,levelStr):
 
         if furthest_x == maxX:
             break
+
+    if DEBUG_DISPLAY:
+        import sys
+        print(f'fitness: {furthest_x / maxX}')
+        sys.exit(-1)
 
     return furthest_x / maxX
