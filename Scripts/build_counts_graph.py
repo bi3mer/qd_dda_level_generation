@@ -9,7 +9,7 @@ f = open(os.path.join(sys.argv[1], 'counts.json'), 'r')
 counts = json.load(f)
 f.close()
 
-initial_population_size = 500
+initial_population_size = int(sys.argv[2])
 counts['standard_n'] = [c[initial_population_size:] for c in counts['standard_n']]
 counts['ngo'] = [c[initial_population_size:] for c in counts['ngo']]
 counts['grammar'] = [c[initial_population_size:] for c in counts['grammar']]

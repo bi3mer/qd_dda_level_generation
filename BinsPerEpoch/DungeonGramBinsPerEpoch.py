@@ -16,8 +16,8 @@ class DungeonGramBinsPerEpoch(BinsPerEpoch):
         self.data_dir = f'DungeonData'
         self.write_level = write_level
         
-        self.start_population_size = 50
-        self.fast_iterations = 50
+        self.start_population_size = 500
+        self.fast_iterations = 50000
         self.slow_iterations = 0
 
         self.feature_names = ['density', 'leniency']
@@ -62,7 +62,7 @@ class DungeonGramBinsPerEpoch(BinsPerEpoch):
 
     def get_percent_playable(self, level, agent=None):
         rows = columns_into_rows(level)
-        print('\n\n' + '\n'.join(rows))
+        # print('\n\n' + '\n'.join(rows))
         if agent == None:
             agent = FLAW_NO_FLAW
 
