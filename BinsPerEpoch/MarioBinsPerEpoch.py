@@ -12,7 +12,6 @@ class MarioBinsPerEpoch(BinsPerEpoch):
 
         self.start_population_size = 500
         self.fast_iterations = 50000
-        self.fast_iterations = 5000
         self.slow_iterations = 0
         
         self.feature_names = ['linearity', 'leniency']
