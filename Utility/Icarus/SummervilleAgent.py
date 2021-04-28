@@ -21,7 +21,7 @@ def levelTile(levelStr, x, y):
         y = 0
 
     if y > maxY:
-        return None
+        return None, None
 
     while x < 0:
         x += (maxX + 1)
@@ -60,11 +60,14 @@ def makeGetNeighbors(jumps,levelStr,visited,isSolid):
                     neighbors.append([dist+1,(tile_jump_pos[0], tile_jump_pos[1], jump, ii, pos[4])])
 
         tile_below, tile_below_pos = levelTile(levelStr, below[0], below[1])
+        if tile_below is None:
+            return []
+
         if isSolid(tile_below):
             tile_right, tile_right_pos = levelTile(levelStr, pos[0]+1, pos[1])
             if tile_right is not None and not isSolid(tile_right):
                 neighbors.append([dist+1,(tile_right_pos[0], tile_right_pos[1], -1)])
-            
+
             tile_left, tile_left_pos = levelTile(levelStr, pos[0]-1, pos[1])
             if tile_left is not None and not isSolid(tile_left):
                 neighbors.append([dist+1,(tile_left_pos[0], tile_left_pos[1], -1)])
@@ -86,14 +89,14 @@ def makeGetNeighbors(jumps,levelStr,visited,isSolid):
             tile_below_right, tile_below_right_pos = levelTile(levelStr, pos[0]+1, pos[1]+1)
             if tile_below_right is not None and not isSolid(tile_below_right):
                 neighbors.append([dist+1.4,(tile_below_right_pos[0], tile_below_right_pos[1], -1)])
-                
+
             tile_below_left, tile_below_left_pos = levelTile(levelStr, pos[0]-1, pos[1]+1)
             if tile_below_left is not None and not isSolid(tile_below_left):
                 neighbors.append([dist+1.4,(tile_below_left_pos[0], tile_below_left_pos[1], -1)])
 
         if DEBUG_DISPLAY:
             print()
-            print(pos, neighbors)
+            print('neighbors', pos, neighbors)
             print()
 
         return neighbors
@@ -119,6 +122,7 @@ def percent_completable(src, levelStr):
         path = set()
 
         def displayLevel():
+            print()
             for yy, row in enumerate(levelStr):
                 for xx, tile in enumerate(row):
                     if (xx, yy) in path:
@@ -145,15 +149,19 @@ def percent_completable(src, levelStr):
                 if furthest_y == bestY:
 
                     if DEBUG_DISPLAY:
-                        path.add((next_node[1][0], next_node[1][1]))
-                        full_path = [next_node[1]]
-                        path_node = node[1]
+                        full_path = []
+                        path_node = next_node[1]
+
                         while path_node != None:
-                            path_node = prev[path_node]
-                            if path_node != None:
-                                path.add((path_node[0], path_node[1]))
-                                full_path.append(path_node)
-                        print(full_path)
+                            path.add((path_node[0], path_node[1]))
+                            full_path.append(path_node)
+                            
+                            if path_node == next_node[1]:
+                                path_node = node[1]
+                            else:
+                                path_node = prev[path_node]
+
+                        print('path', list(reversed(full_path)))
                         displayLevel()
                         
                     break
