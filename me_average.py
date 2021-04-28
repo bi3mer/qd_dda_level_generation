@@ -1,6 +1,5 @@
 from BinsPerEpoch import MarioBinsPerEpoch, DungeonGramBinsPerEpoch, IcarusBinsPerEpoch
 import argparse
-import sys
 
 def check_positive(value):
     ivalue = int(value)
