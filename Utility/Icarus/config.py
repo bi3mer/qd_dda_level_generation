@@ -3,6 +3,7 @@ SOLIDS = set()
 SOLIDS.add('#')
 SOLIDS.add('T')
 SOLIDS.add('X')
+SOLIDS.add('D')
 
 DOOR = 'D'
 MOVING = 'M'
