@@ -19,7 +19,7 @@ class IcarusBinsPerEpoch(BinsPerEpoch):
         self.feature_dimensions = [[0, 0.5], [0, 0.5]] 
 
         self.elites_per_bin = 1
-        self.resolution = 40
+        self.resolution = 35
         
         n = 2
         self.gram = NGram(n)
