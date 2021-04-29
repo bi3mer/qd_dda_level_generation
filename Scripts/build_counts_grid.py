@@ -20,6 +20,13 @@ for method in data['methods']:
     grid = data['methods'][method]
     for key in grid:
         x, y = eval(key)
+        if y > resolution:
+            print(f'Warning: received too large of y: {y} > {resolution}')
+            continue
+        if x > resolution:
+            print(f'Warning: received too large of x: {x} > {resolution}')
+            continue
+
         matrix[y][x] = grid[key] / runs
 
     sns.set(rc={'figure.figsize':(11.7,8.27)})
