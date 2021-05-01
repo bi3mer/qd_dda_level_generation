@@ -1,6 +1,6 @@
 SOLID_BLOCK = 'X'
 ENEMY = '#'
-SWITCH = '~'
+SWITCH = '*'
 SPIKE = '^'
 
 FLAW_NO_FLAW = 'no_flaw'

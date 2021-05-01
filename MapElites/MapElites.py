@@ -105,7 +105,7 @@ class MapElites:
         
         for i in range(len(self.feature_dimensions)):
             minimum, maximum = self.feature_dimensions[i]
-            score = feature_vector[i]
+            score = max(minimum, min(maximum, feature_vector[i]))
             score_in_range = (score - minimum) * 100 / (maximum - minimum) 
             feature_vector[i] = floor(score_in_range / self.resolution)
 
