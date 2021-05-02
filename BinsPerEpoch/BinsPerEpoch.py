@@ -4,7 +4,7 @@ from Utility import *
 from json import dumps as json_dumps
 from os.path import join, exists
 from os import mkdir
-from subprocess import Popen
+from subprocess import call
 
 class BinsPerEpoch:
     def run_generator(self, runs, build_map_elites, fast_iterations, slow_iterations, name):
@@ -147,5 +147,5 @@ class BinsPerEpoch:
         
         #######################################################################
         print('Starting Plotters...')
-        Popen(['python3', join('Scripts', 'build_counts_graph.py'), self.data_dir, str(self.start_population_size)])
-        Popen(['python3', join('Scripts', 'build_counts_grid.py'), self.data_dir])
+        call(['python3', join('Scripts', 'build_counts_graph.py'), self.data_dir, str(self.start_population_size)])
+        call(['python3', join('Scripts', 'build_counts_grid.py'), self.data_dir])
