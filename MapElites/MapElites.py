@@ -28,7 +28,7 @@ class MapElites:
         self.elites_per_bin = elites_per_bin
         self.bins = None
 
-        if seed != None:
+        if rng_seed != None:
             seed(rng_seed)
 
     def run(self, fast_iterations, slow_iterations):
