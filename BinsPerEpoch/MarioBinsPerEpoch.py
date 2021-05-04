@@ -6,7 +6,9 @@ from Utility.Mario.Fitness import *
 from Utility.NGram import NGram
 
 class MarioBinsPerEpoch(BinsPerEpoch):
-    def __init__(self):
+    def __init__(self, seed=0):
+        super().__init__(seed)
+
         self.data_dir = f'MarioData'
         self.write_level = write_level
 

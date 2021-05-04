@@ -6,7 +6,9 @@ from Utility.Icarus.Fitness import *
 from Utility.NGram import NGram
 
 class IcarusBinsPerEpoch(BinsPerEpoch):
-    def __init__(self):
+    def __init__(self, seed=0):
+        super().__init__(seed)
+
         self.data_dir = f'IcarusData'
         self.write_level = write_level
 

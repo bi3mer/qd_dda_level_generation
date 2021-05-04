@@ -17,12 +17,10 @@ parser.add_argument('--seed', type=int, help='Random seed.', default=0)
 args = parser.parse_args()
 
 if args.dungeongram:
-    runner = DungeonGramBinsPerEpoch()    
+    runner = DungeonGramBinsPerEpoch(args.seed)    
 elif args.mario:
-    runner = MarioBinsPerEpoch()
+    runner = MarioBinsPerEpoch(args.seed)
 elif args.icarus:
-    runner = IcarusBinsPerEpoch()
-
-runner.seed = args.seed
+    runner = IcarusBinsPerEpoch(args.seed)
 
 runner.run(args.runs)
