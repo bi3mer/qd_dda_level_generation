@@ -7,6 +7,9 @@ from os import mkdir
 from subprocess import Popen
 
 class BinsPerEpoch:
+    def __init__(self, seed):
+        self.seed = seed
+
     def run_generator(self, runs, build_map_elites, fast_iterations, slow_iterations, name):
         bins = {}
         counts = []

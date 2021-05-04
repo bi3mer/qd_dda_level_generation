@@ -12,7 +12,9 @@ from dungeongrams import *
 from os.path import join
 
 class DungeonGramBinsPerEpoch(BinsPerEpoch):
-    def __init__(self):
+    def __init__(self, seed=0):
+        super().__init__(seed)
+
         self.data_dir = f'DungeonData'
         self.write_level = write_level
         
