@@ -15,6 +15,14 @@ f.close()
 runs = data['runs']
 resolution = data['resolution']
 
+colors = [
+    [0.0, "#aa444455"],
+    [0.00000001, "#DDD"],
+    [1.0, "#00AA00FF"],
+]
+cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
+
+
 for method in data['methods']:
     matrix = [[0 for _ in range(resolution + 1)] for __ in range(resolution + 1)]
     grid = data['methods'][method]
@@ -27,17 +35,24 @@ for method in data['methods']:
             print(f'Warning: received too large of x: {x} > {resolution}')
             continue
 
-        matrix[y][x] = grid[key] / runs
+        matrix[y][x] = (grid[key] / runs)*100
+
+    # mask = np.zeros_like(matrix)
+    # for i, row in enumerate(matrix):
+    #     for j, val in enumerate(row):
+    #         if val == np.nan:
+    #             mask[i][j] = 1.0
 
     sns.set(rc={'figure.figsize':(11.7,8.27)})
     ax = sns.heatmap(
         matrix, 
         linewidths=.5, 
         square=True,
-        cmap='Greens',
+        cmap=cmap,
+        # mask=mask,
         cbar_kws={'label': '% Runs Found Bin'},
         vmin=0,
-        vmax=1
+        vmax=100
     )
 
     ax.set(xlabel=data['x_label'], ylabel=data['y_label'])
