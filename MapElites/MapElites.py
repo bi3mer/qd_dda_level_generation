@@ -105,9 +105,13 @@ class MapElites:
         
         for i in range(len(self.feature_dimensions)):
             minimum, maximum = self.feature_dimensions[i]
-            score = max(minimum, min(maximum, feature_vector[i]))
-            assert score >= minimum
-            assert score <= maximum
+            unclamped_score = feature_vector[i]
+
+            if unclamped_score < minimum or unclamped_score > maximum:
+                print(f'Warnning: clamping score, {minimum} <= {unclamped_score} <= {maximum}')
+                score = max(minimum, min(maximum, feature_vector[i]))
+            else:
+                score = unclamped_score
             
             score_in_range = (score - minimum) * 100 / (maximum - minimum) 
             feature_vector[i] = floor(score_in_range / self.resolution)
