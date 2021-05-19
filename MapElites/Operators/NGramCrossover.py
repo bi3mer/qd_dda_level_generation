@@ -1,4 +1,4 @@
-from Utility import generate_link
+from Utility.LinkerGeneration import generate_link_bfs
 from random import randrange
 
 class NGramCrossover:
@@ -24,7 +24,7 @@ class NGramCrossover:
 
             start = parent_1[:cross_over_point]
             end = parent_2[cross_over_point:]
-            p_1 = generate_link(self.gram, start, end, 0)
+            p_1 = start + generate_link_bfs(self.gram, start, end, 0) + end
 
             if p_1 == None:
                 continue
@@ -33,7 +33,7 @@ class NGramCrossover:
 
             start = parent_2[:cross_over_point]
             end = parent_1[cross_over_point:]
-            p_2 = generate_link(self.gram, start, end, 0)
+            p_2 = start + generate_link_bfs(self.gram, start, end, 0) + end
             
             if p_2 == None:
                 continue

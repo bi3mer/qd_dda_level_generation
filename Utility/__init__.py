@@ -1,4 +1,4 @@
-from .LinkerGeneration import generate_link
+from .LinkerGeneration import *
 from .ProgressBar import update_progress
 from .GridTools import *
 from . import Mario

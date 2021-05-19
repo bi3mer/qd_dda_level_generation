@@ -26,8 +26,6 @@ class Mario(GenerationPipeline):
             'NO_SPEED'
         ]
 
-
-
         self.start_population_size = 10
         self.iterations = 100
 

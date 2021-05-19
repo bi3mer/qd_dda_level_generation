@@ -1,6 +1,6 @@
 from Utility.Log import Log
 from Utility.GridTools import columns_into_grid_string
-from Utility.LinkerGeneration import generate_link
+from Utility.LinkerGeneration import generate_link_bfs, generate_link_mcts
 from MapElites import MapElites
 from Utility import *
 
@@ -213,12 +213,9 @@ class GenerationPipeline():
                     if str_entry_one not in dda_graph:
                         dda_graph[str_entry_one] = {}
 
-                    level, length = generate_link(
-                        self.gram, 
-                        bins_combined[entry][1], 
-                        bins_combined[neighbor][1], 
-                        0,
-                        include_path_length=True)
+                    start = bins_combined[entry][1]
+                    end = bins_combined[neighbor][1]
+                    link = generate_link_bfs(self.gram, start, end, 0)
 
                     if level == None:
                         dda_graph[str_entry_one][str_entry_two] = -1
@@ -228,7 +225,7 @@ class GenerationPipeline():
                         dda_graph[str_entry_one][str_entry_two] = playable
 
                         if playable == 1.0:
-                            link_lengths.append(length)
+                            link_lengths.append(len(link))
 
                 i += 1
                 update_progress(i/total)
@@ -288,7 +285,7 @@ class GenerationPipeline():
                 
                 # get a random neighbor and convert it into a tuple
                 point = choice(valid_keys)
-                level = generate_link(
+                level = generate_link_bfs(
                     self.gram, 
                     level, 
                     bins_combined[point][1], 
@@ -367,7 +364,7 @@ class GenerationPipeline():
                 for dst_str in neighbors:
                     if neighbors[dst_str] == 1.0:
                         dst = eval(dst_str)
-                        level = generate_link(
+                        level = generate_link_bfs(
                             self.gram, 
                             bins[src], 
                             bins[dst], 

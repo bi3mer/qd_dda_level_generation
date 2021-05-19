@@ -1,5 +1,5 @@
 from Utility.GridTools import rows_into_columns, columns_into_grid_string
-from Utility.LinkerGeneration import generate_link
+from Utility.LinkerGeneration import generate_link_bfs
 from Utility import Mario, DungeonGram
 from Utility.NGram import NGram
 import sys
@@ -37,10 +37,6 @@ for point in path:
     if level == None:
         level = bins[point]
     else:
-        level = generate_link(
-            gram, 
-            level, 
-            bins[point], 
-            0)
+        level = level + generate_link_bfs(gram, level, bins[point], 0) + bins[point]
 
 print(columns_into_grid_string(level))

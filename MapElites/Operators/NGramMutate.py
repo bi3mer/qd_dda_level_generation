@@ -1,4 +1,4 @@
-from Utility import generate_link
+from Utility.LinkerGeneration import generate_link_bfs
 from random import randrange, random
 
 class NGramMutate:
@@ -25,7 +25,9 @@ class NGramMutate:
             while path == None and attempts < self.max_attempts:
                 attempts += 1
                 point = randrange(self.gram.n, len(strand) - self.gram.n)
-                path = generate_link(self.gram, strand[:point], strand[point + 1:], 1)
+                start =  strand[:point]
+                end = strand[point + 1:]
+                path = start + generate_link_bfs(self.gram, start, end, 1) + end
 
             if path == None:
                 return None
