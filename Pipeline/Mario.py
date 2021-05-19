@@ -26,13 +26,10 @@ class Mario(GenerationPipeline):
             'NO_SPEED'
         ]
 
-        self.start_population_size = 500
-        self.fast_iterations = 10000000
-        self.slow_iterations = 10000
 
-        self.start_population_size = 500
-        self.fast_iterations = 100000
-        self.slow_iterations = 10000
+
+        self.start_population_size = 10
+        self.iterations = 100
 
         self.feature_names = ['linearity', 'leniency']
         self.feature_descriptors = [percent_linearity, percent_leniency]
@@ -49,8 +46,7 @@ class Mario(GenerationPipeline):
             self.gram.add_sequence(level)
             unigram.add_sequence(level)
 
-        self.fast_fitness = build_fast_fitness_function(self.gram)
-        self.slow_fitness = build_slow_fitness_function(self.gram)
+        self.fitness = summerville_fitness(self.gram)
         self.minimize_performance = True
         
         self.start_strand_size = 25

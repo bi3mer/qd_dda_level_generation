@@ -1,3 +1,4 @@
+from Utility.Log import Log
 from Utility.GridTools import columns_into_grid_string
 from Utility.LinkerGeneration import generate_link
 from MapElites import MapElites
@@ -15,7 +16,6 @@ class GenerationPipeline():
         output_data = []
 
         #######################################################################
-        print('Setting up data directory...')
         level_paths = [
             join(self.data_dir, 'levels_standard'),
             join(self.data_dir, 'levels_standard_n'),
@@ -27,22 +27,23 @@ class GenerationPipeline():
         for path in level_paths:
             clear_directory(path)
 
+        log = Log.Log(0, self.data_dir)
+
         #######################################################################
-        print('writing config files for graphing')
+        log.log_info('writing config files for graphing')
         self.write_config_file('standard')
         self.write_config_file('standard_n')
         self.write_config_file('genetic')
         self.write_config_file('combined')
 
         #######################################################################
-        print('Running MAP-Elites with standard operators...')
+        log.log_info('Running MAP-Elites with standard operators...')
         standard_search = MapElites(
             self.start_population_size,
             self.feature_descriptors,
             self.feature_dimensions,
             self.resolution,
-            self.fast_fitness,
-            self.slow_fitness,
+            self.fitness,
             self.minimize_performance,
             self.population_generator,
             self.mutator,
@@ -50,16 +51,15 @@ class GenerationPipeline():
             self.elites_per_bin,
             rng_seed=self.seed
         )
-        standard_search.run(self.fast_iterations, self.slow_iterations)
+        standard_search.run(self.iterations)
 
-        print('Running MAP-Elites with standard operators and n-gram population...')
+        log.log_info('Running MAP-Elites with standard operators and n-gram population...')
         standard_n_search = MapElites(
             self.start_population_size,
             self.feature_descriptors,
             self.feature_dimensions,
             self.resolution,
-            self.fast_fitness,
-            self.slow_fitness,
+            self.fitness,
             self.minimize_performance,
             self.n_population_generator,
             self.mutator,
@@ -67,16 +67,15 @@ class GenerationPipeline():
             self.elites_per_bin,
             rng_seed=self.seed
         )
-        standard_n_search.run(self.fast_iterations, self.slow_iterations)
+        standard_n_search.run(self.iterations)
 
-        print('Running MAP-Elites with n-gram operators...')
+        log.log_info('Running MAP-Elites with n-gram operators...')
         gram_search = MapElites(
             self.start_population_size,
             self.feature_descriptors,
             self.feature_dimensions,
             self.resolution,
-            self.fast_fitness,
-            self.slow_fitness,
+            self.fitness,
             self.minimize_performance,
             self.n_population_generator,
             self.n_mutator,
@@ -84,11 +83,10 @@ class GenerationPipeline():
             self.elites_per_bin,
             rng_seed=self.seed
         )
-        gram_search.run(self.fast_iterations, self.slow_iterations)
-
+        gram_search.run(self.iterations)
 
         #######################################################################
-        print('Validating levels...')
+        log.log_info('Validating levels...')
         STANDARD_INDEX = 0
         STANDARD_N_INDEX = 1
         GENETIC_INDEX = 2
@@ -183,7 +181,7 @@ class GenerationPipeline():
             Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.data_dir])
             return
 
-        print('Building and validating MAP-Elites directed DDA graph...')
+        log.log_info('Building and validating MAP-Elites directed DDA graph...')
         DIRECTIONS = ((0,1), (0,-1), (1, 0), (-1, 0))
 
         dda_graph = {}
@@ -262,7 +260,7 @@ class GenerationPipeline():
         output_data.append(f'\nLink Playability: {sum(playable_scores) / len(playable_scores)}')
 
         #######################################################################
-        print('Running validation on random set of links...')
+        log.log_info('Running validation on random set of links...')
         iterations = 1000
         percent_completes = {}
 
@@ -303,7 +301,7 @@ class GenerationPipeline():
             if str_path in percent_completes:
                 duplicates_found += 1
                 if duplicates_found > 1000:
-                    print('Found over 1000 duplicates.')
+                    log.log_warning('Found over 1000 duplicates.')
                     break
             elif path_length > 2:
                 score = self.get_percent_playable(level)
@@ -314,7 +312,7 @@ class GenerationPipeline():
                 if score == 1.0:
                     valid_levels += 1
             else:
-                print('Unable to find valid level. Trying again.')
+                log.log_warning('Unable to find valid level. Trying again.')
 
         output_data.append('\nWalkthrough Results')
         output_data.append(f'Result: {valid_levels} / {iterations}')
@@ -330,7 +328,7 @@ class GenerationPipeline():
         self.write_info_file(output_data)
 
         #######################################################################
-        print('Starting python graphing processes...\n\n')
+        log.log_info('Starting python graphing processes...\n\n')
         Popen(['python3', join('Scripts', 'build_map_elites.py'), self.data_dir])
         Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.data_dir])
         Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.data_dir])

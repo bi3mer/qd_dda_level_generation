@@ -47,7 +47,7 @@ def naive_percent_playable(columns):
 
     return i / len(columns)
 
-def build_slow_fitness_function(grammar):
+def summerville_fitness(grammar):
     length = len('X-------------')
     def slow_fitness(columns):
         bad_transitions = grammar.count_bad_n_grams(columns)
@@ -67,7 +67,7 @@ def build_slow_fitness_function(grammar):
         return bad_transitions + 1 - fitness
     return slow_fitness
 
-def build_fast_fitness_function(grammar):
+def naive_fitness(grammar):
     def fast_fitness(columns):
         bad_transitions = grammar.count_bad_n_grams(columns)
 

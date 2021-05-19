@@ -12,15 +12,14 @@ class MapElites:
     '''
     def __init__(
         self, start_population_size, feature_descriptors, feature_dimensions, 
-        resolution, fast_performance, slow_performance, minimize_performance, 
+        resolution, performance, minimize_performance, 
         population_generator, mutator, crossover, elites_per_bin, rng_seed=None):
 
         self.minimize_performance = minimize_performance
         self.feature_descriptors = feature_descriptors
         self.feature_dimensions = feature_dimensions
         self.resolution = 100 / resolution # view __add_to_bins comments
-        self.fast_performance = fast_performance
-        self.slow_performance = slow_performance
+        self.performance = performance
         self.start_population_size = start_population_size
         self.population_generator = population_generator
         self.crossover = crossover.operate
@@ -31,7 +30,7 @@ class MapElites:
         if rng_seed != None:
             seed(rng_seed)
 
-    def run(self, fast_iterations, slow_iterations):
+    def run(self, iterations):
         counts = []
         self.current_count = 0
 
@@ -39,47 +38,23 @@ class MapElites:
         self.keys = set()
 
         for i, strand in enumerate(self.population_generator.generate(self.start_population_size)):
-            self.__add_to_bins(strand, self.fast_performance)
+            self.__add_to_bins(strand, self.performance)
             update_progress(i / self.start_population_size)
             counts.append(self.current_count)
 
         # fast iterations
-        for i in range(fast_iterations):
+        for i in range(iterations):
             parent_1 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
             parent_2 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
 
             for strand in self.crossover(parent_1, parent_2):
-                self.__add_to_bins(self.mutator(strand), self.fast_performance)
-                update_progress(i / fast_iterations)
+                self.__add_to_bins(self.mutator(strand), self.performance)
+                update_progress(i / iterations)
 
             counts.append(self.current_count)
 
         update_progress(1)
 
-        # No need to force the user to have a slow function
-        if self.slow_performance == None:
-            return counts
-        
-        # switch to slow performance function
-        print('Switching performance functions...')
-        for key in self.keys:
-            new_entry = []
-            for _, strand in self.bins[key]:
-                heappush(new_entry, (self.slow_performance(strand), strand))
-            self.bins[key] = new_entry
-
-        # slow iterations
-        for i in range(slow_iterations):
-            parent_1 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
-            parent_2 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
-
-            for strand in self.crossover(parent_1, parent_2):
-                self.__add_to_bins(self.mutator(strand), self.slow_performance)
-                update_progress(i / slow_iterations)
-
-            counts.append(self.current_count)
-
-        update_progress(1.0)
         return counts
 
     def __add_to_bins(self, strand, performance):
