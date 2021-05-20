@@ -23,16 +23,18 @@ class DungeonGram(GenerationPipeline):
         ]
         
         self.start_population_size = 10
-        self.iterations = 100
+        self.iterations = 20
 
         self.feature_names = ['Density', 'leniency']
         self.feature_descriptors = [density, leniency]
         self.feature_dimensions = [[0, 1.0], [0, 0.5]] 
 
         self.resolution = 20
-        self.elites_per_bin = 1
+        self.elites_per_bin = 4
         self.fitness = lambda lvl: self.get_fitness(lvl, self.get_percent_playable(lvl))
         self.minimize_performance = True
+
+        self.uses_separate_simulation = False
         
         n = 3
         self.gram = NGram(n)
@@ -65,12 +67,12 @@ class DungeonGram(GenerationPipeline):
         self.max_path_length = 4
 
     def get_percent_playable(self, level, agent=None):
-        rows = columns_into_rows(level)
-        print('\n\n' + '\n'.join(rows))
+        # rows = columns_into_rows(level)
+        # print('\n\n' + '\n'.join(rows))
         if agent == None:
             agent = FLAW_NO_FLAW
 
-        return percent_playable(rows, False, True, agent)
+        return percent_playable(columns_into_rows(level), False, True, agent)
 
     def get_fitness(self, level, percent_playable, agent=None):
         bad_transitions = self.gram.count_bad_n_grams(level)

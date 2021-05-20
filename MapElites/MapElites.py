@@ -38,7 +38,7 @@ class MapElites:
         self.keys = set()
 
         for i, strand in enumerate(self.population_generator.generate(self.start_population_size)):
-            self.__add_to_bins(strand, self.performance)
+            self.__add_to_bins(strand)
             update_progress(i / self.start_population_size)
             counts.append(self.current_count)
 
@@ -48,7 +48,7 @@ class MapElites:
             parent_2 = sample(self.bins[sample(self.keys, 1)[0]], 1)[0][1]
 
             for strand in self.crossover(parent_1, parent_2):
-                self.__add_to_bins(self.mutator(strand), self.performance)
+                self.__add_to_bins(self.mutator(strand))
                 update_progress(i / iterations)
 
             counts.append(self.current_count)
@@ -57,7 +57,7 @@ class MapElites:
 
         return counts
 
-    def __add_to_bins(self, strand, performance):
+    def __add_to_bins(self, strand):
         '''
         Resolution is the number of bins for each feature. Meaning if we have 2
         features and a resolution of 2, we we will have a 2x2 matrix. We have to
@@ -75,7 +75,7 @@ class MapElites:
         if strand == None:
             return
 
-        fitness = performance(strand)
+        fitness = self.performance(strand)
         feature_vector = [score(strand) for score in self.feature_descriptors]
         
         for i in range(len(self.feature_dimensions)):

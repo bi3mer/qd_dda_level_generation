@@ -20,7 +20,6 @@ class GenerationPipeline():
             join(self.data_dir, 'levels_standard'),
             join(self.data_dir, 'levels_standard_n'),
             join(self.data_dir, 'levels_genetic'),
-            join(self.data_dir, 'levels_combined')
         ]
 
         clear_directory(self.data_dir)
@@ -34,7 +33,6 @@ class GenerationPipeline():
         self.write_config_file('standard')
         self.write_config_file('standard_n')
         self.write_config_file('genetic')
-        self.write_config_file('combined')
 
         #######################################################################
         log.log_info('Running MAP-Elites with standard operators...')
@@ -51,7 +49,8 @@ class GenerationPipeline():
             self.elites_per_bin,
             rng_seed=self.seed
         )
-        standard_search.run(self.iterations)
+        print('WARNING: not running standard search')
+        standard_search.run(0)
 
         log.log_info('Running MAP-Elites with standard operators and n-gram population...')
         standard_n_search = MapElites(
@@ -67,7 +66,8 @@ class GenerationPipeline():
             self.elites_per_bin,
             rng_seed=self.seed
         )
-        standard_n_search.run(self.iterations)
+        print('WARNING: not running standard+n search')
+        standard_n_search.run(0)
 
         log.log_info('Running MAP-Elites with n-gram operators...')
         gram_search = MapElites(
@@ -90,25 +90,21 @@ class GenerationPipeline():
         STANDARD_INDEX = 0
         STANDARD_N_INDEX = 1
         GENETIC_INDEX = 2
-        COMBINED_INDEX = 3
 
         titles = [
             'standard operators', 
             'standard operators + n-gram pop', 
             'n-gram operators', 
-            'combined'
         ]
 
-        valid_levels = [0 for _ in repeat(None, 4)]
-        invalid_levels =  [0 for _ in repeat(None, 4)]
-        percent_playables = [[] for _ in repeat(None, 4)]
-        fitnesses = [[] for _ in repeat(None, 4)]
-        bins = [standard_search.bins, standard_n_search.bins, gram_search.bins, {}]
+        valid_levels = [0 for _ in repeat(None, 3)]
+        invalid_levels =  [0 for _ in repeat(None, 3)]
+        fitnesses = [[] for _ in repeat(None, 3)]
+        bins = [standard_search.bins, standard_n_search.bins, gram_search.bins]
         files = [
             open(join(self.data_dir, 'data_standard.csv'), 'w'),
             open(join(self.data_dir, 'data_standard_n.csv'), 'w'),
             open(join(self.data_dir, 'data_genetic.csv'), 'w'),
-            open(join(self.data_dir, 'data_combined.csv'), 'w')
         ]
         
         writers = []
@@ -119,23 +115,28 @@ class GenerationPipeline():
         
         searched = 0
         total = self.resolution ** 2
-        for x in range(self.resolution): # loop through bins in x dir
-            for y in range(self.resolution): # loop through bins in y dir
+        for x in range(self.resolution):
+            for y in range(self.resolution): 
                 key = (x, y)
                 found = []
 
                 for i, bin in enumerate(bins): # for each algorithm type
                     if key in bin:
-                        for level_index, info in enumerate(bin[key]):
+                        for level_index, info in enumerate(bin[key]): # for each elite in the bin
+                            # Mario uses a separate simulation but the others do not. 
+                            # The simulation does not have to be re-run.
                             level = info[1]
-                            playability = self.get_percent_playable(level)
-                            fitness = self.get_fitness(level, playability)
 
-                            percent_playables[i].append(playability)
+                            if self.uses_separate_simulation:
+                                playability = self.get_percent_playable(level)
+                                fitness = self.get_fitness(level, playability)
+                            else: 
+                                fitness = info[0]
+
                             fitnesses[i].append(fitness)
 
                             if fitness == 0.0:
-                                found.append((level, fitness, playability, fitness))
+                                found.append((level, fitness, fitness))
                                 valid_levels[i] += 1
                             else:
                                 invalid_levels[i] += 1
@@ -146,33 +147,17 @@ class GenerationPipeline():
                             level_file.write(columns_into_grid_string(level))
                             level_file.close()
 
-                # combined algorithm
-                if len(found) > 0:
-                    level, fitness, playability, fitness = choice(found)
-
-                    valid_levels[COMBINED_INDEX] += 1
-                    percent_playables[COMBINED_INDEX].append(playability)
-                    fitnesses[COMBINED_INDEX].append(fitness)
-                    bins[COMBINED_INDEX][key] = (playability, level)
-
-                    writers[COMBINED_INDEX].writerow(list(key) + [fitness])
-                    level_file = open(join(level_paths[COMBINED_INDEX], f'{x}_{y}_{level_index}.txt'), 'w')
-                    level_file.write(columns_into_grid_string(level))
-                    level_file.close()
-
                 searched += 1
                 update_progress(searched / total)
 
         map(lambda f: f.close(), files)
-        for i in range(4):
+        for i in range(len(titles)):
             output_data.append(f'\nValidation Results {titles[i]}:')
             output_data.append(f'Valid Levels: {valid_levels[i]}')
             output_data.append(f'Invalid Levels: {invalid_levels[i]}')
             output_data.append(f'Total Levels: {invalid_levels[i] + valid_levels[i]}')
-            output_data.append(f'Mean Playability: {sum(percent_playables[i]) / len(percent_playables[i])}')
             output_data.append(f'Mean Fitness: {sum(fitnesses[i]) / len(fitnesses[i])}')
 
-        bins_combined = bins[COMBINED_INDEX]
 
         #######################################################################
         if self.skip_after_map_elites:
@@ -185,53 +170,63 @@ class GenerationPipeline():
         DIRECTIONS = ((0,1), (0,-1), (1, 0), (-1, 0))
 
         dda_graph = {}
-        keys = set(bins_combined.keys())
+        bins = gram_search.bins
+        keys = set(bins.keys())
 
         i = 0
-        total = len(keys) * 4
         playable_scores = []
         link_lengths = []
         link_count = 0
 
-        for entry in keys:
-            if bins_combined[entry][0] != 1.0:
-                dda_graph[str(entry)] = {}
-                continue
+        print('WARNING: this will not work Mario right now if a simulation is used.')
+        for k in keys: # iterate through keys
+            for entry_index, entry in enumerate(bins[k]): # iterate through elites
+                if entry[0] != 0.0:
+                    dda_graph[str(entry)] = {}
+                    continue
 
-            for dir in DIRECTIONS:
-                neighbor = (entry[0] + dir[0], entry[1] + dir[1])
-                while neighbor not in bins_combined:
-                    neighbor = (neighbor[0] + dir[0], neighbor[1] + dir[1])
-                    if not self.__in_bounds(neighbor):
-                        break
+                for dir in DIRECTIONS:
+                    neighbor = (k[0] + dir[0], k[1] + dir[1])
+                    while neighbor not in bins:
+                        neighbor = (neighbor[0] + dir[0], neighbor[1] + dir[1])
+                        if not self.__in_bounds(neighbor):
+                            break
 
-                if self.__in_bounds(neighbor) and neighbor in bins_combined:
-                    link_count += 1
-                    str_entry_one = str(entry)
-                    str_entry_two = str(neighbor)
-                    
-                    if str_entry_one not in dda_graph:
-                        dda_graph[str_entry_one] = {}
+                    if self.__in_bounds(neighbor) and neighbor in bins:
+                        link_count += 1
+                        str_entry_one = f'{k[0]},{k[1]},{entry_index}'
+                        
+                        if str_entry_one not in dda_graph:
+                            dda_graph[str_entry_one] = {}
+                        
+                        start = entry[1]
+                        for n_index, n_entry in enumerate(bins[neighbor]):
+                            str_entry_two = f'{neighbor[0]},{neighbor[1]},{n_index}'
+                            end = n_entry[1]
+                            link = generate_link_bfs(self.gram, start, end, 0)
+                            level = start + link + end
 
-                    start = bins_combined[entry][1]
-                    end = bins_combined[neighbor][1]
-                    link = generate_link_bfs(self.gram, start, end, 0)
+                            if level == None:
+                                dda_graph[str_entry_one][str_entry_two] = {
+                                    'percent_playable': -1,
+                                    'link': link
+                                }
+                            else:
+                                playable = self.get_percent_playable(level)
+                                playable_scores.append(playable)
+                                dda_graph[str_entry_one][str_entry_two] = {
+                                    'percent_playable': playable,
+                                    'link': link
+                                }
 
-                    if level == None:
-                        dda_graph[str_entry_one][str_entry_two] = -1
-                    else:
-                        playable = self.get_percent_playable(level)
-                        playable_scores.append(playable)
-                        dda_graph[str_entry_one][str_entry_two] = playable
+                                if playable == 1.0:
+                                    link_lengths.append(len(link))
 
-                        if playable == 1.0:
-                            link_lengths.append(len(link))
-
-                i += 1
-                update_progress(i/total)
+            i += 1
+            update_progress(i/len(keys))
                 
         f = open(join(self.data_dir, 'dda_graph.json'), 'w')
-        f.write(json_dumps(dda_graph, indent=2))
+        f.write(json_dumps(dda_graph, indent=1))
         f.close()
 
         # https://www.geeksforgeeks.org/finding-mean-median-mode-in-python-without-libraries/
@@ -267,31 +262,32 @@ class GenerationPipeline():
 
         while len(percent_completes) < iterations:
             path_length = 0
-            point = eval(choice(list(dda_graph.keys())))
-            level = bins_combined[point][1].copy()
+            next_choice = choice(list(dda_graph.keys()))
+            start_split = next_choice.split(',')
+            point = (int(start_split[0]), int(start_split[1]))
+            level = bins[point][int(start_split[2])][1]
             path = [point]
 
             while path_length < self.max_path_length:
-                neighbors = dda_graph[str(point)]
-                valid_keys = []
+                previous_choice = next_choice
+                neighbors = dda_graph[previous_choice]
+                valid_neighbors = []
 
                 for key in neighbors.keys():
-                    key_tuple = eval(key)
-                    if neighbors[key] == 1.0 and key_tuple not in path:
-                        valid_keys.append(key_tuple)
+                    if neighbors[key]['percent_playable'] == 1.0 and key not in path:
+                        valid_neighbors.append(key)
 
-                if len(valid_keys) == 0:
+                if len(valid_neighbors) == 0:
                     break
-                
-                # get a random neighbor and convert it into a tuple
-                point = choice(valid_keys)
-                level = generate_link_bfs(
-                    self.gram, 
-                    level, 
-                    bins_combined[point][1], 
-                    0)
 
-                path.append(point)
+                next_choice = choice(list(dda_graph[previous_choice].keys()))
+                start_split = next_choice.split(',')
+                point = (int(start_split[0]), int(start_split[1]))
+                end = bins[point][int(start_split[2])][1]
+
+                level = level + dda_graph[previous_choice][next_choice]['link'] + end
+
+                path.append(next_choice)
                 path_length += 1
 
             str_path = str(path)

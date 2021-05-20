@@ -83,6 +83,8 @@ def generate_link_mcts(grammar, start, end, additional_columns, include_path_len
     '''
     Based off of work from Summerville, MCMCTS 4 SMB.
     '''
+    raise NotImplementedError()
+
     # generate path of minimum length with an n-ram
     min_path = start + grammar.generate(start, additional_columns)
 

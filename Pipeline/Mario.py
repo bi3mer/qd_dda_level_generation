@@ -35,6 +35,8 @@ class Mario(GenerationPipeline):
 
         self.elites_per_bin = 1
         self.resolution = 40
+
+        self.uses_separate_simulation = True
         
         n = 3
         self.gram = NGram(n)

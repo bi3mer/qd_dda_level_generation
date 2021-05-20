@@ -7,6 +7,8 @@ import json
 import sys
 import os
 
+raise NotImplementedError('combined version not implemented anymore.')
+
 GENETIC_INDEX = 0
 STANDARD_N_INDEX = 1
 STANDARD_INDEX = 2
