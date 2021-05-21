@@ -48,7 +48,7 @@ class DungeonGram(GenerationPipeline):
         self.max_strand_size = 15
         self.seed = 0
 
-        mutation_values = list(unigram.grammar[''].keys())
+        mutation_values = list(unigram.grammar[()].keys())
         self.mutator = Mutate(mutation_values, 0.02)
         self.crossover = SinglePointCrossover()
         self.population_generator = PopulationGenerator(mutation_values, self.start_strand_size)

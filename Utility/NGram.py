@@ -14,7 +14,7 @@ class NGram():
 
         for token in sequence:
             if len(queue) == queue.maxlen:
-                key = ','.join(queue)
+                key = tuple(queue)
                 if key not in self.grammar:
                     self.grammar[key] = { token: 1 }
                 elif token not in self.grammar[key]:
@@ -25,7 +25,7 @@ class NGram():
             queue.append(token)
 
     def has_next_step(self, sequence):
-        return sequence in self.grammar
+        return tuple(sequence) in self.grammar
 
     def get_output(self, sequence):
         unigram = self.grammar[sequence]
@@ -46,18 +46,14 @@ class NGram():
             
         unigram = self.grammar[sequence]
         return list(unigram.keys())
-
-    def generate(self, input_sequence, size):
-        prior = deque(input_sequence, maxlen=self.n - 1)
-        prior_val = ','.join(list(prior))
+    
+    def generate(self, prior, size):
         output = []
 
-        while len(output) < size and self.has_next_step(prior_val):
-            new_token = self.get_output(prior_val)
+        while len(output) < size and self.has_next_step(prior):
+            new_token = self.get_output(prior)
             output.append(new_token)
-            prior.append(new_token)
-
-            prior_val = ','.join(list(prior))
+            prior = tuple(prior[-1:]) + (new_token,)
 
         return output
 
@@ -65,7 +61,7 @@ class NGram():
         prior = deque([], maxlen=self.n - 1)
 
         for token in sequence:
-            key = ','.join(prior)
+            key = tuple(prior)
             if len(prior) == prior.maxlen:
                 if key not in self.grammar:
                     print(key)
@@ -87,7 +83,7 @@ class NGram():
 
         for token in sequence:
             if len(queue) == max_length:
-                input_sequence = ','.join(list(queue))
+                input_sequence = tuple(queue)
                 if input_sequence not in self.grammar:
                     bad_transitions += 1
                 elif token not in self.grammar[input_sequence]:

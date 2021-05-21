@@ -10,7 +10,8 @@ class NGramPopulationGenerator:
         self.gram = n_gram
 
     def generate(self, n):
+        keys = list(self.gram.grammar.keys())
         return [
-            self.gram.generate(choice(list(self.gram.grammar.keys())).split(','), self.strand_size) 
+            self.gram.generate(choice(keys), self.strand_size) 
             for _ in repeat(None, n)
         ]

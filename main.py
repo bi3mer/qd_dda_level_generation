@@ -1,4 +1,5 @@
 import argparse
+from os import pipe
 from Pipeline import Mario, DungeonGram, Icarus
 
 parser = argparse.ArgumentParser(description='Level Generation Pipeline.')
@@ -21,3 +22,4 @@ if args.run_flawed_agents:
     pipeline.run_flawed_agents()
 else:
     pipeline.run()
+    

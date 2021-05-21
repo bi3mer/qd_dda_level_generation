@@ -203,7 +203,7 @@ class GenerationPipeline():
                         for n_index, n_entry in enumerate(bins[neighbor]):
                             str_entry_two = f'{neighbor[0]},{neighbor[1]},{n_index}'
                             end = n_entry[1]
-                            link = generate_link_bfs(self.gram, start, end, 0)
+                            link = generate_link_mcts(self.gram, start, end, 0)
                             level = start + link + end
 
                             if level == None:
