@@ -18,8 +18,8 @@ class DungeonGramBinsPerEpoch(BinsPerEpoch):
         self.data_dir = f'DungeonData'
         self.write_level = write_level
         
-        self.start_population_size = 500
-        self.fast_iterations = 50000
+        self.start_population_size = 50
+        self.fast_iterations = 500
         self.slow_iterations = 0
 
         self.feature_names = ['density', 'leniency']

@@ -1,6 +1,6 @@
 from collections import deque
 from math import sqrt, log, exp
-from random import choice
+from random import randrange
 
 ##################################### BFS #####################################
 def generate_link_bfs(grammar, start, end, additional_columns):
@@ -101,17 +101,34 @@ def generate_link_mcts(
     end, 
     feature_dimensions, 
     feature_targets,
-    simulations=10000,
+    after_found_simulations=50_000,
+    max_simulations=500_000,
     max_path_size=30):
     '''
     Based off of work from Summerville, MCMCTS 4 SMB.
+
+    The problem with this approach is that some grammars have a large space
+    to get from the start prior to the end prior. MCTS can take a lot of
+    iterations to find a link. Because this is offline, we can do it a bit
+    intelligently. In real time, this is not an option. But here we'll go
+    till a connection is found and then do 50,000 more iterations. We'll also
+    have a max number of simulations just in case. The code that calls this
+    function, therefore, should be prepared to receive a value of None and
+    use the BFS alternative. 
     '''
     root = [0, 0, False, tuple(start[-(grammar.n - 1):]), []]
     end_prior = tuple(end[:grammar.n - 1])
+    t = 1
 
     # t represents the total number of simulations and is used in the upper
     # confidence bound applied to tress (UCT).
-    for t in range(simulations):
+    for t in range(1, max_simulations):
+        if root[S]:
+            if after_found_simulations <= 0:
+                break
+            else:
+                after_found_simulations -= 1
+
         # roll out to leaf and make sure that the leaf in question is not at
         # the end prior since that is already complete. During the rollout 
         # stage the level is built for calculating the score. We also keep a
@@ -120,49 +137,63 @@ def generate_link_mcts(
         level = list(root[P])
         node = root
         path_size = 0
-        # seen_priors = set()
+
         while len(node[B]) != 0:
             best_index = best_child_node(node, t, end_prior)
             
             history.append(best_index)
             node = node[B][best_index]
-            # seen_priors.add(node[P])
             level.append(node[P][-1])
             path_size += 1
 
             if path_size > max_path_size:
                 break
 
-        if path_size > max_path_size:
-            continue
-
         # At leaf, build a new child node. The score is the sum of squares difference
         # of the target values for the feature dimensions and what is actually found.
         # The sigmoid of the result is used to guarantee a value between 0 and 1.
         p = node[P]
-        for new_token in grammar.get_unweighted_output(p):
-            new_p = tuple(p[-1:]) + (new_token,)
-            # if new_p in seen_priors:
-            #     continue
+        output_new_tokens = grammar.get_unweighted_output(p)
 
+        for new_token in output_new_tokens:
+            new_p = (p[-1], new_token)
+            
+            # check if the targer prior was found. If not and this is the index
+            # where we want to roll out more, we do so without keeping track of
+            # history. We do, though, keep track of the level to get a score.
             seen = new_p == end_prior
+            if not seen:
+                level.append(new_token)
+                prior = new_p
+                while len(level) < max_path_size and not seen:
+                    # print(prior)
+                    new_token = grammar.get_output(prior)
+                    level.append(new_token)
+                    prior = (level[-2], level[-1])
+                    seen = new_p == end_prior
+
+            root[S] |= seen
             score = sum([(feature_targets[i] - feature_dimensions[i](level))**2 for i in range(len(feature_dimensions))])
             score = 1/(1 + exp(-score))
             node[B].append([score, 1, seen, new_p, []])
 
-            # Technically this is the backpropagate step but my datastructure doesn't 
-            # allow that direction. The functionlaity is the same though. 
-            root[S] |= seen
             node = root
             for index in history:
-                node = node[B][index]
-                node[1] += score
+                node[W] += score
+                node[N] += 1
                 node[S] |= seen
+                node = node[B][index]
+            node[W] += score
+            node[N] += 1
+            node[S] |= seen
 
-    link = []
-    while root[P] != end_prior:
-        best_index = best_child_node(root, t, end_prior, require_seen=True)
-        root = root[B][best_index]
-        link.append(root[P][-1])
+    if root[S]:
+        link = []
+        while root[P] != end_prior:
+            best_index = best_child_node(root, t, end_prior, require_seen=True)
+            root = root[B][best_index]
+            link.append(root[P][-1])
 
-    return link[:-(grammar.n - 1)]
+        return link[:-(grammar.n - 1)]
+
+    return None

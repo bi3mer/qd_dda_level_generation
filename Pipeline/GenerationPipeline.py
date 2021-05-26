@@ -179,7 +179,10 @@ class GenerationPipeline():
         link_count = 0
 
         print('WARNING: this will not work Mario right now if a simulation is used.')
+        successes = 0
+        failures  = 0
         for k in keys: # iterate through keys
+            f1_values = [val*(self.feature_dimensions[i][1] - self.feature_dimensions[i][0])/100 + self.feature_dimensions[i][0] for i, val in enumerate(k)]
             for entry_index, entry in enumerate(bins[k]): # iterate through elites
                 if entry[0] != 0.0:
                     dda_graph[str(entry)] = {}
@@ -203,7 +206,23 @@ class GenerationPipeline():
                         for n_index, n_entry in enumerate(bins[neighbor]):
                             str_entry_two = f'{neighbor[0]},{neighbor[1]},{n_index}'
                             end = n_entry[1]
-                            link = generate_link_mcts(self.gram, start, end, 0)
+
+                            # this is how I i took the score and put it into the clamped range. 
+                            # So I just need to reverse the math and then I'm in business.
+                            #
+                            # score_in_range = (score - minimum) * 100 / (maximum - minimum) 
+                            # feature_vector[i] = floor(score_in_range / self.resolution)
+                            f2_values = [val*(self.feature_dimensions[i][1] - self.feature_dimensions[i][0])/100 + self.feature_dimensions[i][0] for i, val in enumerate(k)]
+                            f_targets = [(f1_values[i] + f2_values[i])/2 for i in range(len(f2_values))]
+
+                            link = generate_link_mcts(self.gram, start, end, self.feature_descriptors, f_targets)
+
+                            if link == None:
+                                link = generate_link_bfs(self.gram, start, end, 0)
+                                failures += 1
+                            else:
+                                successes += 1
+
                             level = start + link + end
 
                             if level == None:
@@ -225,6 +244,7 @@ class GenerationPipeline():
             i += 1
             update_progress(i/len(keys))
                 
+        log.log_info(f'Link Connections Found: {successes} / {successes + failures}')
         f = open(join(self.data_dir, 'dda_graph.json'), 'w')
         f.write(json_dumps(dda_graph, indent=1))
         f.close()
