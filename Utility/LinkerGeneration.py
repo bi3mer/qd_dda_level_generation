@@ -101,7 +101,7 @@ def generate_link_mcts(
     feature_dimensions, 
     feature_targets,
     after_found_simulations=50_000,
-    max_simulations=200_000,
+    max_simulations=100_000,
     max_path_size=30):
     '''
     Based off of work from Summerville, MCMCTS 4 SMB.

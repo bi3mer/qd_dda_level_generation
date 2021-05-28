@@ -167,7 +167,7 @@ class GenerationPipeline():
             return
 
         log.log_info('Building and validating MAP-Elites directed DDA graph...')
-        DIRECTIONS = ((0,1), (0,-1), (1, 0), (-1, 0))
+        DIRECTIONS = ((0,0), (0,1), (0,-1), (1, 0), (-1, 0))
 
         dda_graph = {}
         bins = gram_search.bins
@@ -196,7 +196,6 @@ class GenerationPipeline():
                             break
 
                     if self.__in_bounds(neighbor) and neighbor in bins:
-                        link_count += 1
                         str_entry_one = f'{k[0]},{k[1]},{entry_index}'
                         
                         if str_entry_one not in dda_graph:
@@ -204,8 +203,13 @@ class GenerationPipeline():
                         
                         start = entry[1]
                         for n_index, n_entry in enumerate(bins[neighbor]):
+                            # we don't want the possibility for something to connect to itself.
+                            if dir == (0,0) and n_index == entry_index:
+                                break
+                            
                             str_entry_two = f'{neighbor[0]},{neighbor[1]},{n_index}'
                             end = n_entry[1]
+                            link_count += 1
 
                             # this is how I i took the score and put it into the clamped range. 
                             # So I just need to reverse the math and then I'm in business.
@@ -215,9 +219,7 @@ class GenerationPipeline():
                             f2_values = [val*(self.feature_dimensions[i][1] - self.feature_dimensions[i][0])/100 + self.feature_dimensions[i][0] for i, val in enumerate(k)]
                             f_targets = [(f1_values[i] + f2_values[i])/2 for i in range(len(f2_values))]
 
-                            # link = generate_link_mcts(self.gram, start, end, self.feature_descriptors, f_targets)
-                            link = None
-
+                            link = generate_link_mcts(self.gram, start, end, self.feature_descriptors, f_targets)
                             if link == None:
                                 link = generate_link_bfs(self.gram, start, end, 0)
                                 failures += 1
