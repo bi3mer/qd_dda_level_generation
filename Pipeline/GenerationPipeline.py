@@ -215,7 +215,8 @@ class GenerationPipeline():
                             f2_values = [val*(self.feature_dimensions[i][1] - self.feature_dimensions[i][0])/100 + self.feature_dimensions[i][0] for i, val in enumerate(k)]
                             f_targets = [(f1_values[i] + f2_values[i])/2 for i in range(len(f2_values))]
 
-                            link = generate_link_mcts(self.gram, start, end, self.feature_descriptors, f_targets)
+                            # link = generate_link_mcts(self.gram, start, end, self.feature_descriptors, f_targets)
+                            link = None
 
                             if link == None:
                                 link = generate_link_bfs(self.gram, start, end, 0)

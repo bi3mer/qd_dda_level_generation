@@ -1,5 +1,6 @@
 from collections import deque
 from random import choices
+from itertools import chain
 
 class NGram():
     __slots__ = ['input_size', 'n', 'grammar']
@@ -53,7 +54,7 @@ class NGram():
         while len(output) < size and self.has_next_step(prior):
             new_token = self.get_output(prior)
             output.append(new_token)
-            prior = tuple(prior[-1:]) + (new_token,)
+            prior = tuple(prior[1:]) + (new_token,)
 
         return output
 
@@ -93,28 +94,63 @@ class NGram():
 
         return bad_transitions
 
-    def prune(self):
-        pruned = set()
+    def fully_connect(self):
+        '''
+        based on pseudocode: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+        A vertex is: [index, low_link, on_stack_or_not]
+        '''
+        groupings = []
+        vertices = {}
+        s = []
+        index = 0
 
-        while True:
-            leaves = set()
-            for key, val in self.grammar.items():
-                if len(val) == 0:
-                    leaves.add(key)
-                for e in val:
-                    if e not in self.grammar:
-                        leaves.add(e)
+        def tarjan_strong_connect(prior):
+            nonlocal index
+            vertices[prior] = [index, index, True]
+            index += 1
+            s.append(prior)
 
-            if len(leaves) == 0:
-                return pruned
+            if prior in self.grammar:
+                for new_token in self.grammar[prior]:
+                    new_prior = tuple(prior[1:]) + (new_token,)
+                    if new_prior not in vertices:
+                        tarjan_strong_connect(new_prior)
+                        vertices[prior][1] = min(vertices[prior][1], vertices[new_prior][1])
+                    elif new_prior in s:
+                        vertices[prior][1] = min(vertices[prior][1], vertices[new_prior][0])
+                
+            if vertices[prior][0] == vertices[prior][1]:
+                new_prior = None
+                scc_group = []
+                while prior != new_prior:
+                    new_prior = s.pop()
+                    vertices[new_prior][2] = False
+                    scc_group.append(new_prior)
 
-            for leaf in leaves:
-                if leaf in self.grammar:
-                    del self.grammar[leaf]
+                groupings.append(scc_group)
 
-                for key, val in self.grammar.items():
-                    if leaf in val:
-                        del val[leaf]
+        for prior in self.grammar:
+            if prior not in vertices:
+                tarjan_strong_connect(prior)
 
-            for leaf in leaves:
-                pruned.add(leaf)
+        # remove priors from grammar. We only use the largest group and remove
+        # the rest.
+        groupings.sort(key=lambda x: -len(x))
+        for grp in groupings[1:]:
+            for prior in grp:
+                if prior in self.grammar:
+                    del self.grammar[prior]
+                
+                for key in self.grammar:
+                    to_delete = []
+                    for output_token in self.grammar[key]:
+                        new_prior = tuple(key[1:]) + (output_token,)
+                        if prior == new_prior:
+                            to_delete.append(output_token)
+
+                    for output_token in to_delete:
+                        del self.grammar[key][output_token]
+
+        # return groups in case dependent grammars want to remove dependencies
+        # as well
+        return list(chain(*groupings[1:]))

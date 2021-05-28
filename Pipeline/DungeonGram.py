@@ -44,11 +44,15 @@ class DungeonGram(GenerationPipeline):
             self.gram.add_sequence(level)
             unigram.add_sequence(level)
 
+        unigram_keys = set(unigram.grammar[()].keys())
+        pruned = self.gram.fully_connect() # remove dead ends from grammar
+        unigram_keys.difference_update(pruned) # remove any n-gram dead ends from unigram
+
         self.start_strand_size = 15
         self.max_strand_size = 15
         self.seed = 0
 
-        mutation_values = list(unigram.grammar[()].keys())
+        mutation_values = list(unigram_keys)
         self.mutator = Mutate(mutation_values, 0.02)
         self.crossover = SinglePointCrossover()
         self.population_generator = PopulationGenerator(mutation_values, self.start_strand_size)

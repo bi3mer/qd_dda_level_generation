@@ -1,6 +1,5 @@
 from collections import deque
 from math import sqrt, log, exp
-from random import randrange
 
 ##################################### BFS #####################################
 def generate_link_bfs(grammar, start, end, additional_columns):
@@ -102,7 +101,7 @@ def generate_link_mcts(
     feature_dimensions, 
     feature_targets,
     after_found_simulations=50_000,
-    max_simulations=500_000,
+    max_simulations=200_000,
     max_path_size=30):
     '''
     Based off of work from Summerville, MCMCTS 4 SMB.

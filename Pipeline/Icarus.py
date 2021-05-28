@@ -33,9 +33,9 @@ class Icarus(GenerationPipeline):
         for level in levels:
             self.gram.add_sequence(level)
             unigram.add_sequence(level)
-        pruned = self.gram.prune() # remove dead ends from grammar
 
-        unigram_keys = set(unigram.grammar[''].keys())
+        unigram_keys = set(unigram.grammar[()].keys())
+        pruned = self.gram.fully_connect() # remove dead ends from grammar
         unigram_keys.difference_update(pruned) # remove any n-gram dead ends from unigram
 
         self.resolution = 40
