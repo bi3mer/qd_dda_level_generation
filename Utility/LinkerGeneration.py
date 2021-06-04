@@ -31,7 +31,7 @@ def generate_link_bfs(grammar, start, end, additional_columns):
         output = grammar.get_unweighted_output(prior)
         if output != None:
             for new_column in output:
-                new_node = (tuple(prior[-1:]) + (new_column,), path_length + 1)
+                new_node = (tuple(prior[1:]) + (new_column,), path_length + 1)
 
                 if new_node not in came_from:
                     if new_node[0] == end_prior and path_length >= grammar.n:

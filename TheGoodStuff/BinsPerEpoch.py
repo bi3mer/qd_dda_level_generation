@@ -18,7 +18,7 @@ class BinsPerEpoch:
             print(f'{name}: {i}/{runs}')
 
             search = build_map_elites(i)
-            counts.append(search.run(fast_iterations, slow_iterations))
+            counts.append(search.run(fast_iterations))
 
             for k in search.bins:
                 if search.bins[k][0][0] == 0.0:
@@ -50,14 +50,13 @@ class BinsPerEpoch:
             self.feature_descriptors,
             self.feature_dimensions,
             self.resolution,
-            self.fast_fitness,
-            self.slow_fitness,
+            self.fitness,
             self.minimize_performance,
             self.n_population_generator,
-            self.mutator,
-            self.crossover,
+            self.n_mutator,
+            self.n_crossover,
             self.elites_per_bin,
-            rng_seed=self.seed+i
+            rng_seed=self.seed + i
         )
         so_bins, so_counts, so_search = self.run_generator(
             runs, 
@@ -73,8 +72,7 @@ class BinsPerEpoch:
             self.feature_descriptors,
             self.feature_dimensions,
             self.resolution,
-            self.fast_fitness,
-            self.slow_fitness,
+            self.fitness,
             self.minimize_performance,
             self.n_population_generator,
             self.n_mutator,
@@ -92,12 +90,11 @@ class BinsPerEpoch:
 
         print('Running N-Grams')
         builder = lambda i: MapElites(
-            self.start_population_size + self.fast_iterations + self.slow_iterations,
+            self.start_population_size,
             self.feature_descriptors,
             self.feature_dimensions,
             self.resolution,
-            self.fast_fitness,
-            self.slow_fitness,
+            self.fitness,
             self.minimize_performance,
             self.n_population_generator,
             self.n_mutator,

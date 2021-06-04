@@ -1,6 +1,8 @@
-import argparse
 from os import pipe
-from Pipeline import Mario, DungeonGram, Icarus
+from TheGoodStuff import GenerationPipeline, BinsPerEpoch
+from Config import Mario, Icarus, DungeonGram
+
+import argparse
 
 # parser = argparse.ArgumentParser(description='Level Generation Pipeline.')
 # group = parser.add_mutually_exclusive_group(required=True)
@@ -8,21 +10,21 @@ from Pipeline import Mario, DungeonGram, Icarus
 # group.add_argument('--mario', action='store_true', help='Run Mario')
 # group.add_argument('--icarus', action='store_true', help='Run Icarus')
 # parser.add_argument('--only-map-elites', action='store_true', help='Only run up until map-elites graph.')
-# parser.add_argument('--run-flawed-agents', action='store_true', help='Assumes pipeline already run. Will run flawed agents on the grid.')
+# # parser.add_argument('--run-flawed-agents', action='store_true', help='Assumes pipeline already run. Will run flawed agents on the grid.')
 # args = parser.parse_args()
 
 # if args.dungeongram:
-#     pipeline = DungeonGram(args.only_map_elites)
+#     config = DungeonGram
 # elif args.mario:
-#     pipeline = Mario(args.only_map_elites)
+#     config = Mario
 # elif args.icarus:
-#     pipeline = Icarus(args.only_map_elites)
+#     config = Icarus
 
-# if args.run_flawed_agents:
-#     pipeline.run_flawed_agents()
-# else:
-#     pipeline.run()
-    
+# pipeline = GenerationPipeline(config, args.only_map_elites)
+# pipeline.run()
 
-pipeline = DungeonGram(False)
-pipeline.run()
+p = GenerationPipeline(Icarus, True)
+p.run()
+
+# pipeline = DungeonGram(False)
+# pipeline.run()

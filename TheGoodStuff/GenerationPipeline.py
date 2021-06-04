@@ -12,21 +12,25 @@ from random import choice
 from csv import writer
 
 class GenerationPipeline():
+    def __init__(self, config, only_map_elites):
+        self.config = config
+        self.only_map_elites = only_map_elites
+
     def run(self):
         output_data = []
 
         #######################################################################
         level_paths = [
-            join(self.data_dir, 'levels_standard'),
-            join(self.data_dir, 'levels_standard_n'),
-            join(self.data_dir, 'levels_genetic'),
+            join(self.config.data_dir, 'levels_standard'),
+            join(self.config.data_dir, 'levels_standard_n'),
+            join(self.config.data_dir, 'levels_genetic'),
         ]
 
-        clear_directory(self.data_dir)
+        clear_directory(self.config.data_dir)
         for path in level_paths:
             clear_directory(path)
 
-        log = Log.Log(0, self.data_dir)
+        log = Log.Log(0, self.config.data_dir)
 
         #######################################################################
         log.log_info('writing config files for graphing')
@@ -37,53 +41,53 @@ class GenerationPipeline():
         #######################################################################
         log.log_info('Running MAP-Elites with standard operators...')
         standard_search = MapElites(
-            self.start_population_size,
-            self.feature_descriptors,
-            self.feature_dimensions,
-            self.resolution,
-            self.fitness,
-            self.minimize_performance,
-            self.population_generator,
-            self.mutator,
-            self.crossover,
-            self.elites_per_bin,
-            rng_seed=self.seed
+            self.config.start_population_size,
+            self.config.feature_descriptors,
+            self.config.feature_dimensions,
+            self.config.resolution,
+            self.config.fitness,
+            self.config.minimize_performance,
+            self.config.population_generator,
+            self.config.mutator,
+            self.config.crossover,
+            self.config.elites_per_bin,
+            rng_seed=self.config.seed
         )
         print('WARNING: not running standard search')
         standard_search.run(0)
 
         log.log_info('Running MAP-Elites with standard operators and n-gram population...')
         standard_n_search = MapElites(
-            self.start_population_size,
-            self.feature_descriptors,
-            self.feature_dimensions,
-            self.resolution,
-            self.fitness,
-            self.minimize_performance,
-            self.n_population_generator,
-            self.mutator,
-            self.crossover,
-            self.elites_per_bin,
-            rng_seed=self.seed
+            self.config.start_population_size,
+            self.config.feature_descriptors,
+            self.config.feature_dimensions,
+            self.config.resolution,
+            self.config.fitness,
+            self.config.minimize_performance,
+            self.config.n_population_generator,
+            self.config.mutator,
+            self.config.crossover,
+            self.config.elites_per_bin,
+            rng_seed=self.config.seed
         )
         print('WARNING: not running standard+n search')
         standard_n_search.run(0)
 
         log.log_info('Running MAP-Elites with n-gram operators...')
         gram_search = MapElites(
-            self.start_population_size,
-            self.feature_descriptors,
-            self.feature_dimensions,
-            self.resolution,
-            self.fitness,
-            self.minimize_performance,
-            self.n_population_generator,
-            self.n_mutator,
-            self.n_crossover,
-            self.elites_per_bin,
-            rng_seed=self.seed
+            self.config.start_population_size,
+            self.config.feature_descriptors,
+            self.config.feature_dimensions,
+            self.config.resolution,
+            self.config.fitness,
+            self.config.minimize_performance,
+            self.config.n_population_generator,
+            self.config.n_mutator,
+            self.config.n_crossover,
+            self.config.elites_per_bin,
+            rng_seed=self.config.seed
         )
-        gram_search.run(self.iterations)
+        gram_search.run(self.config.iterations)
 
         #######################################################################
         log.log_info('Validating levels...')
@@ -102,21 +106,21 @@ class GenerationPipeline():
         fitnesses = [[] for _ in repeat(None, 3)]
         bins = [standard_search.bins, standard_n_search.bins, gram_search.bins]
         files = [
-            open(join(self.data_dir, 'data_standard.csv'), 'w'),
-            open(join(self.data_dir, 'data_standard_n.csv'), 'w'),
-            open(join(self.data_dir, 'data_genetic.csv'), 'w'),
+            open(join(self.config.data_dir, 'data_standard.csv'), 'w'),
+            open(join(self.config.data_dir, 'data_standard_n.csv'), 'w'),
+            open(join(self.config.data_dir, 'data_genetic.csv'), 'w'),
         ]
         
         writers = []
         for f in files:
             w = writer(f)
-            w.writerow(self.feature_names + ['performance'])
+            w.writerow(self.config.feature_names + ['performance'])
             writers.append(w)
         
         searched = 0
-        total = self.resolution ** 2
-        for x in range(self.resolution):
-            for y in range(self.resolution): 
+        total = self.config.resolution ** 2
+        for x in range(self.config.resolution):
+            for y in range(self.config.resolution): 
                 key = (x, y)
                 found = []
 
@@ -127,9 +131,9 @@ class GenerationPipeline():
                             # The simulation does not have to be re-run.
                             level = info[1]
 
-                            if self.uses_separate_simulation:
-                                playability = self.get_percent_playable(level)
-                                fitness = self.get_fitness(level, playability)
+                            if self.config.uses_separate_simulation:
+                                playability = self.config.get_percent_playable(level)
+                                fitness = self.config.get_fitness(level, playability)
                             else: 
                                 fitness = info[0]
 
@@ -160,10 +164,10 @@ class GenerationPipeline():
 
 
         #######################################################################
-        if self.skip_after_map_elites:
+        if self.only_map_elites:
             self.write_info_file(output_data)
-            Popen(['python3', join('Scripts', 'build_map_elites.py'), self.data_dir])
-            Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.data_dir])
+            Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir])
+            Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.config.data_dir])
             return
 
         log.log_info('Building and validating MAP-Elites directed DDA graph...')
@@ -182,7 +186,7 @@ class GenerationPipeline():
         successes = 0
         failures  = 0
         for k in keys: # iterate through keys
-            f1_values = [val*(self.feature_dimensions[i][1] - self.feature_dimensions[i][0])/100 + self.feature_dimensions[i][0] for i, val in enumerate(k)]
+            f1_values = [val*(self.config.feature_dimensions[i][1] - self.config.feature_dimensions[i][0])/100 + self.config.feature_dimensions[i][0] for i, val in enumerate(k)]
             for entry_index, entry in enumerate(bins[k]): # iterate through elites
                 if entry[0] != 0.0:
                     dda_graph[str(entry)] = {}
@@ -203,7 +207,7 @@ class GenerationPipeline():
                         
                         start = entry[1]
                         for n_index, n_entry in enumerate(bins[neighbor]):
-                            # we don't want the possibility for something to connect to itself.
+                            # we don't want the possibility for something to connect to itself.config.
                             if dir == (0,0) and n_index == entry_index:
                                 break
                             
@@ -215,13 +219,15 @@ class GenerationPipeline():
                             # So I just need to reverse the math and then I'm in business.
                             #
                             # score_in_range = (score - minimum) * 100 / (maximum - minimum) 
-                            # feature_vector[i] = floor(score_in_range / self.resolution)
-                            f2_values = [val*(self.feature_dimensions[i][1] - self.feature_dimensions[i][0])/100 + self.feature_dimensions[i][0] for i, val in enumerate(k)]
+                            # feature_vector[i] = floor(score_in_range / self.config.resolution)
+                            f2_values = [val*(self.config.feature_dimensions[i][1] - self.config.feature_dimensions[i][0])/100 + self.config.feature_dimensions[i][0] for i, val in enumerate(k)]
                             f_targets = [(f1_values[i] + f2_values[i])/2 for i in range(len(f2_values))]
 
-                            link = generate_link_mcts(self.gram, start, end, self.feature_descriptors, f_targets)
+                            # TODO: log length, behavioral characteristics, and targets
+                            # link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
+                            link = None
                             if link == None:
-                                link = generate_link_bfs(self.gram, start, end, 0)
+                                link = generate_link_bfs(self.config.gram, start, end, 0)
                                 failures += 1
                             else:
                                 successes += 1
@@ -234,7 +240,7 @@ class GenerationPipeline():
                                     'link': link
                                 }
                             else:
-                                playable = self.get_percent_playable(level)
+                                playable = self.config.get_percent_playable(level)
                                 playable_scores.append(playable)
                                 dda_graph[str_entry_one][str_entry_two] = {
                                     'percent_playable': playable,
@@ -248,7 +254,7 @@ class GenerationPipeline():
             update_progress(i/len(keys))
                 
         log.log_info(f'Link Connections Found: {successes} / {successes + failures}')
-        f = open(join(self.data_dir, 'dda_graph.json'), 'w')
+        f = open(join(self.config.data_dir, 'dda_graph.json'), 'w')
         f.write(json_dumps(dda_graph, indent=1))
         f.close()
 
@@ -276,7 +282,7 @@ class GenerationPipeline():
 
         #######################################################################
         log.log_info('Running validation on random set of links...')
-        iterations = 1000
+        iterations = 25
         percent_completes = {}
 
         duplicates_found = 0
@@ -291,7 +297,7 @@ class GenerationPipeline():
             level = bins[point][int(start_split[2])][1]
             path = [point]
 
-            while path_length < self.max_path_length:
+            while path_length < self.config.max_path_length:
                 previous_choice = next_choice
                 neighbors = dda_graph[previous_choice]
                 valid_neighbors = []
@@ -320,7 +326,7 @@ class GenerationPipeline():
                     log.log_warning('Found over 1000 duplicates.')
                     break
             elif path_length > 2:
-                score = self.get_percent_playable(level)
+                score = self.config.get_percent_playable(level)
                 scores.append(score)
                 percent_completes[str_path] = score
                 update_progress(len(percent_completes) / iterations)
@@ -337,7 +343,7 @@ class GenerationPipeline():
         output_data.append(f'Max Scores: {max(scores)}')
         output_data.append(f'Duplicates: {duplicates_found}')
 
-        f = open(join(self.data_dir, 'random_walkthroughs.json'), 'w')
+        f = open(join(self.config.data_dir, 'random_walkthroughs.json'), 'w')
         f.write(json_dumps(percent_completes, indent=2))
         f.close()
 
@@ -345,31 +351,31 @@ class GenerationPipeline():
 
         #######################################################################
         log.log_info('Starting python graphing processes...\n\n')
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), self.data_dir])
-        Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.data_dir])
-        Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.data_dir])
+        Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir])
+        Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.config.data_dir])
+        Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.config.data_dir])
 
     def __in_bounds(self, coordinate):
-        return coordinate[0] >= 0 and coordinate[0] <= self.resolution and \
-               coordinate[1] >= 0 and coordinate[1] <= self.resolution
+        return coordinate[0] >= 0 and coordinate[0] <= self.config.resolution and \
+               coordinate[1] >= 0 and coordinate[1] <= self.config.resolution
 
     def run_flawed_agents(self):
-        f = open(join(self.data_dir, 'dda_graph.json'), 'r')
+        f = open(join(self.config.data_dir, 'dda_graph.json'), 'r')
         grid = json_load(f)
         f.close()
 
-        f = open(join(self.data_dir, 'data_combined.csv'), 'r')
+        f = open(join(self.config.data_dir, 'data_combined.csv'), 'r')
         f.readline() # get rid of header
         bins = {}
         for line in f.readlines():
             linearity, leniency, _ = line.split(',')
 
-            level_file = open(join(self.data_dir, 'levels_combined', f'{linearity}_{leniency}.txt'))
+            level_file = open(join(self.config.data_dir, 'levels_combined', f'{linearity}_{leniency}.txt'))
             bins[(int(linearity), int(leniency))] = rows_into_columns(level_file.readlines())
             level_file.close()
         f.close()
 
-        for flawed_agent in self.flawed_agents:
+        for flawed_agent in self.config.flawed_agents:
             print(f'\nRunning agent: {flawed_agent}')
             result = {}
 
@@ -378,13 +384,13 @@ class GenerationPipeline():
                 src = eval(src_str)
                 new_neighbors = {}
 
-                src_playability = self.get_percent_playable(bins[src], agent=flawed_agent)
+                src_playability = self.config.get_percent_playable(bins[src], agent=flawed_agent)
 
                 for dst_str in neighbors:
                     if neighbors[dst_str] == 1.0:
                         dst = eval(dst_str)
                         level = generate_link_bfs(
-                            self.gram, 
+                            self.config.gram, 
                             bins[src], 
                             bins[dst], 
                             0)
@@ -392,7 +398,7 @@ class GenerationPipeline():
                         if level == None:
                             new_neighbors[dst_str] = -1
                         elif src_playability == 1.0:
-                            playability = self.get_percent_playable(level, agent=flawed_agent)
+                            playability = self.config.get_percent_playable(level, agent=flawed_agent)
                             new_neighbors[dst_str] = playability
                         else:
                             new_neighbors[dst_str] = src_playability * len(bins[src]) / len(level)
@@ -402,21 +408,15 @@ class GenerationPipeline():
                 result[src_str] = new_neighbors
                 update_progress(i / len(grid))
                     
-            dda_grid_path = join(self.data_dir, f'dda_graph_{flawed_agent}.json')
+            dda_grid_path = join(self.config.data_dir, f'dda_graph_{flawed_agent}.json')
             f = open(dda_grid_path, 'w')
             f.write(json_dumps(result, indent=2))
             f.close()
 
-            Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.data_dir, flawed_agent])
-
-    def get_percent_playable(self, level, agent=None):
-        pass # I'd use a not implemented error but pylance makes the code unreachable, sooo.....
-
-    def get_fitness(self, level, percent_playable, agent=None):
-        pass  # I'd use a not implemented error but pylance makes the code unreachable, sooo.....
+            Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.config.data_dir, flawed_agent])
 
     def write_info_file(self, output_data):
-        file_path = join(self.data_dir, 'info.txt')
+        file_path = join(self.config.data_dir, 'info.txt')
         if exists(file_path):
             f = open(file_path, 'a')
         else:
@@ -427,15 +427,15 @@ class GenerationPipeline():
 
     def write_config_file(self, operator_type):
         config = {
-            'data_file': f'{self.data_file}_{operator_type}.csv',
-            'x_label': self.x_label,
-            'y_label': self.y_label,
-            'save_file': f'{self.save_file}_{operator_type}.pdf',
-            'title': self.title,
-            'resolution': self.resolution,
-            'feature_dimensions': self.feature_dimensions
+            'data_file': f'{self.config.data_file}_{operator_type}.csv',
+            'x_label': self.config.x_label,
+            'y_label': self.config.y_label,
+            'save_file': f'{self.config.save_file}_{operator_type}.pdf',
+            'title': self.config.title,
+            'resolution': self.config.resolution,
+            'feature_dimensions': self.config.feature_dimensions
         }
 
-        f = open(f'{self.map_elites_config}_{operator_type}.json', 'w')
+        f = open(f'{self.config.map_elites_config}_{operator_type}.json', 'w')
         f.write(json_dumps(config))
         f.close()

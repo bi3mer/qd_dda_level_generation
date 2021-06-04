@@ -22,7 +22,7 @@ def make_multi_line_plot(counts_list, title, save_name, max_y):
 
     ax.set_ylim([0, max_y])
     ax.set_title(title)
-    ax.set(xlabel='Generation', ylabel='Usable Segments')
+    ax.set(xlabel='Iteration', ylabel='Usable Segments')
     fig.savefig(os.path.join(sys.argv[1], save_name))
     plt.close(fig)
 
@@ -74,8 +74,8 @@ gram_df['X'] = X
 gram_df['Y'] = Y
 sns.lineplot(data=gram_df, x='X', y='Y', label='NG')
 
-plt.title('Usable Segments Per Epoch')
-plt.xlabel('Epoch')
+plt.title('Usable Segments Per Iteration')
+plt.xlabel('Iteration')
 plt.ylabel('Usable Strands')
 plt.legend()
 plt.savefig(os.path.join(sys.argv[1], 'counts.png'))

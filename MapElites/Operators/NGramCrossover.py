@@ -24,7 +24,10 @@ class NGramCrossover:
 
             start = parent_1[:cross_over_point]
             end = parent_2[cross_over_point:]
-            p_1 = start + generate_link_bfs(self.gram, start, end, 0) + end
+            link = generate_link_bfs(self.gram, start, end, 0)
+            if link == None:
+                link = generate_link_bfs(self.gram, start, end, 0)
+            p_1 = start + link + end
 
             if p_1 == None:
                 continue
