@@ -14,8 +14,8 @@ data_dir = f'IcarusData'
 
 flawed_agents = []
 
-start_population_size = 25
-iterations = 75
+start_population_size = 50
+iterations = 100
 
 feature_names = ['density', 'leniency']
 feature_descriptors = [density, leniency]
@@ -62,8 +62,8 @@ title = ''
 max_path_length = 4
 
 def get_percent_playable(level, agent=None):
-    print('Warning using fitness for percent playable!')
     return fitness(level)
 
 def get_fitness(level, percent_playable, agent=None):
-    return fitness(level)
+    bad_n_grams = gram.count_bad_n_grams(level)
+    return bad_n_grams + 1 - percent_playable

@@ -2,12 +2,12 @@ from Utility.Log import Log
 from Utility.GridTools import columns_into_grid_string
 from Utility.LinkerGeneration import generate_link_bfs, generate_link_mcts
 from MapElites import MapElites
+from Utility.math import *
 from Utility import *
 
 from json import load as json_load, dumps as json_dumps
 from os.path import join, exists
 from subprocess import Popen
-from itertools import repeat
 from random import choice
 from csv import writer
 
@@ -17,63 +17,31 @@ class GenerationPipeline():
         self.only_map_elites = only_map_elites
 
     def run(self):
-        output_data = []
-
         #######################################################################
-        level_paths = [
-            join(self.config.data_dir, 'levels_standard'),
-            join(self.config.data_dir, 'levels_standard_n'),
-            join(self.config.data_dir, 'levels_genetic'),
-        ]
+        level_dir =  join(self.config.data_dir, 'levels')
 
         clear_directory(self.config.data_dir)
-        for path in level_paths:
-            clear_directory(path)
-
-        log = Log.Log(0, self.config.data_dir)
+        clear_directory(level_dir)
 
         #######################################################################
-        log.log_info('writing config files for graphing')
-        self.write_config_file('standard')
-        self.write_config_file('standard_n')
-        self.write_config_file('genetic')
+        print('writing config file for graphing')
+
+        config = {
+            'data_file': f'{self.config.data_file}.csv',
+            'x_label': self.config.x_label,
+            'y_label': self.config.y_label,
+            'save_file': f'{self.config.save_file}.pdf',
+            'title': self.config.title,
+            'resolution': self.config.resolution,
+            'feature_dimensions': self.config.feature_dimensions
+        }
+
+        f = open(f'{self.config.map_elites_config}.json', 'w')
+        f.write(json_dumps(config, indent=2))
+        f.close()
 
         #######################################################################
-        log.log_info('Running MAP-Elites with standard operators...')
-        standard_search = MapElites(
-            self.config.start_population_size,
-            self.config.feature_descriptors,
-            self.config.feature_dimensions,
-            self.config.resolution,
-            self.config.fitness,
-            self.config.minimize_performance,
-            self.config.population_generator,
-            self.config.mutator,
-            self.config.crossover,
-            self.config.elites_per_bin,
-            rng_seed=self.config.seed
-        )
-        print('WARNING: not running standard search')
-        standard_search.run(0)
-
-        log.log_info('Running MAP-Elites with standard operators and n-gram population...')
-        standard_n_search = MapElites(
-            self.config.start_population_size,
-            self.config.feature_descriptors,
-            self.config.feature_dimensions,
-            self.config.resolution,
-            self.config.fitness,
-            self.config.minimize_performance,
-            self.config.n_population_generator,
-            self.config.mutator,
-            self.config.crossover,
-            self.config.elites_per_bin,
-            rng_seed=self.config.seed
-        )
-        print('WARNING: not running standard+n search')
-        standard_n_search.run(0)
-
-        log.log_info('Running MAP-Elites with n-gram operators...')
+        print('Running Gram-Elites...')
         gram_search = MapElites(
             self.config.start_population_size,
             self.config.feature_descriptors,
@@ -90,32 +58,14 @@ class GenerationPipeline():
         gram_search.run(self.config.iterations)
 
         #######################################################################
-        log.log_info('Validating levels...')
-        STANDARD_INDEX = 0
-        STANDARD_N_INDEX = 1
-        GENETIC_INDEX = 2
-
-        titles = [
-            'standard operators', 
-            'standard operators + n-gram pop', 
-            'n-gram operators', 
-        ]
-
-        valid_levels = [0 for _ in repeat(None, 3)]
-        invalid_levels =  [0 for _ in repeat(None, 3)]
-        fitnesses = [[] for _ in repeat(None, 3)]
-        bins = [standard_search.bins, standard_n_search.bins, gram_search.bins]
-        files = [
-            open(join(self.config.data_dir, 'data_standard.csv'), 'w'),
-            open(join(self.config.data_dir, 'data_standard_n.csv'), 'w'),
-            open(join(self.config.data_dir, 'data_genetic.csv'), 'w'),
-        ]
-        
-        writers = []
-        for f in files:
-            w = writer(f)
-            w.writerow(self.config.feature_names + ['performance'])
-            writers.append(w)
+        print('Validating levels...')
+        valid_levels = 0
+        invalid_levels =  0
+        fitnesses = []
+        bins = gram_search.bins
+        f = open(join(self.config.data_dir, 'data.csv'), 'w')
+        csv_writer = writer(f)
+        csv_writer.writerow(self.config.feature_names + ['performance'])
         
         searched = 0
         total = self.config.resolution ** 2
@@ -123,63 +73,63 @@ class GenerationPipeline():
             for y in range(self.config.resolution): 
                 key = (x, y)
                 found = []
+                if key in bins:
+                    for level_index, info in enumerate(bins[key]): # for each elite in the bin
+                        # Mario uses a separate simulation but the others do not. 
+                        # The simulation does not have to be re-run.
+                        level = info[1]
 
-                for i, bin in enumerate(bins): # for each algorithm type
-                    if key in bin:
-                        for level_index, info in enumerate(bin[key]): # for each elite in the bin
-                            # Mario uses a separate simulation but the others do not. 
-                            # The simulation does not have to be re-run.
-                            level = info[1]
+                        if self.config.uses_separate_simulation:
+                            playability = self.config.get_percent_playable(level)
+                            fitness = self.config.get_fitness(level, playability)
+                        else: 
+                            fitness = info[0]
 
-                            if self.config.uses_separate_simulation:
-                                playability = self.config.get_percent_playable(level)
-                                fitness = self.config.get_fitness(level, playability)
-                            else: 
-                                fitness = info[0]
+                        fitnesses.append(fitness)
 
-                            fitnesses[i].append(fitness)
+                        if fitness == 0.0:
+                            found.append((level, fitness, fitness))
+                            valid_levels += 1
+                        else:
+                            invalid_levels += 1
 
-                            if fitness == 0.0:
-                                found.append((level, fitness, fitness))
-                                valid_levels[i] += 1
-                            else:
-                                invalid_levels[i] += 1
+                        csv_writer.writerow(list(key) + [fitness])
 
-                            writers[i].writerow(list(key) + [fitness])
-
-                            level_file = open(join(level_paths[i], f'{x}_{y}_{level_index}.txt'), 'w')
-                            level_file.write(columns_into_grid_string(level))
-                            level_file.close()
+                        level_file = open(join(level_dir, f'{x}_{y}_{level_index}.txt'), 'w')
+                        level_file.write(columns_into_grid_string(level))
+                        level_file.close()
 
                 searched += 1
                 update_progress(searched / total)
 
-        map(lambda f: f.close(), files)
-        for i in range(len(titles)):
-            output_data.append(f'\nValidation Results {titles[i]}:')
-            output_data.append(f'Valid Levels: {valid_levels[i]}')
-            output_data.append(f'Invalid Levels: {invalid_levels[i]}')
-            output_data.append(f'Total Levels: {invalid_levels[i] + valid_levels[i]}')
-            output_data.append(f'Mean Fitness: {sum(fitnesses[i]) / len(fitnesses[i])}')
-
+        f.close()
+        results = {
+            'valid_levels': valid_levels,
+            'invalid_levels': invalid_levels,
+            'total_levels': valid_levels + invalid_levels,
+            'fitness': fitness,
+            'mean_fitness': sum(fitnesses) / len(fitnesses)
+        }
 
         #######################################################################
         if self.only_map_elites:
-            self.write_info_file(output_data)
+            self.write_info_file(results)
             Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir])
             Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.config.data_dir])
             return
 
-        log.log_info('Building and validating MAP-Elites directed DDA graph...')
+        #######################################################################
+        print('Building and validating MAP-Elites directed DDA graph...')
         DIRECTIONS = ((0,0), (0,1), (0,-1), (1, 0), (-1, 0))
+        BFS_KEY = 'bfs'
+        MCTS_KEY = 'mcts'
+        MCTS_AGENT_KEY = 'mcts_agent'
 
         dda_graph = {}
         bins = gram_search.bins
         keys = set(bins.keys())
 
         i = 0
-        playable_scores = []
-        link_lengths = []
         link_count = 0
 
         print('WARNING: this will not work Mario right now if a simulation is used.')
@@ -224,64 +174,66 @@ class GenerationPipeline():
                             f_targets = [(f1_values[i] + f2_values[i])/2 for i in range(len(f2_values))]
 
                             # TODO: log length, behavioral characteristics, and targets
-                            # link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
-                            link = None
-                            if link == None:
-                                link = generate_link_bfs(self.config.gram, start, end, 0)
+                            dda_graph[str_entry_one][str_entry_two] = {}
+                            bfs_link = generate_link_bfs(self.config.gram, start, end, 0)
+                            mcts_link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
+                            if mcts_link == None:
                                 failures += 1
                             else:
+                                # print('WARNING: agent not yet implemented, link is empty for now...')
                                 successes += 1
+                                mcts_agent_link = None
 
-                            level = start + link + end
+                            # bfs
+                            level = start + bfs_link + end
+                            dda_graph[str_entry_one][str_entry_two][BFS_KEY] = {
+                                'percent_playable': self.config.get_percent_playable(level),
+                                'link': bfs_link
+                            }
 
-                            if level == None:
-                                dda_graph[str_entry_one][str_entry_two] = {
+                            # mcts
+                            if mcts_link == None:
+                                dda_graph[str_entry_one][str_entry_two][MCTS_KEY] = {
                                     'percent_playable': -1,
-                                    'link': link
+                                    'link': []
                                 }
                             else:
-                                playable = self.config.get_percent_playable(level)
-                                playable_scores.append(playable)
-                                dda_graph[str_entry_one][str_entry_two] = {
-                                    'percent_playable': playable,
-                                    'link': link
+                                level = start + mcts_link + end
+                                dda_graph[str_entry_one][str_entry_two][MCTS_KEY] = {
+                                    'percent_playable': self.config.get_percent_playable(level),
+                                    'link': mcts_link
                                 }
 
-                                if playable == 1.0:
-                                    link_lengths.append(len(link))
+                            # mcts + a* agent
+                            if mcts_agent_link == None:
+                                dda_graph[str_entry_one][str_entry_two][MCTS_AGENT_KEY] = {
+                                    'percent_playable': -1,
+                                    'link': []
+                                }
+                            else:
+                                level = start + mcts_agent_link + end
+                                dda_graph[str_entry_one][str_entry_two][MCTS_AGENT_KEY] = {
+                                    'percent_playable': self.config.get_percent_playable(level),
+                                    'link': mcts_agent_link
+                                }
 
             i += 1
             update_progress(i/len(keys))
                 
-        log.log_info(f'Link Connections Found: {successes} / {successes + failures}')
+        print(f'Link Connections Found: {successes} / {successes + failures}')
         f = open(join(self.config.data_dir, 'dda_graph.json'), 'w')
         f.write(json_dumps(dda_graph, indent=1))
         f.close()
 
-        # https://www.geeksforgeeks.org/finding-mean-median-mode-in-python-without-libraries/
-        link_lengths.sort()
-        if len(link_lengths) % 2 == 0:
-            median1 = link_lengths[len(link_lengths)//2] 
-            median2 = link_lengths[len(link_lengths)//2 - 1] 
-            median = (median1 + median2)/2
-        else:
-            median = link_lengths[len(link_lengths)//2] 
-
-        output_data.append('\nLink Lengths')
-        output_data.append(f'min: {min(link_lengths)}')
-        output_data.append(f'mean: {sum(link_lengths) / len(link_lengths)}')
-        output_data.append(f'max: {max(link_lengths)}')
-        output_data.append(f'median: {median}')
-        output_data.append(json_dumps(link_lengths))
-
-        output_data.append('\nLink Counts')
-        output_data.append(f'# valid links: {len(link_lengths)}')
-        output_data.append(f'# links: {link_count}')
-
-        output_data.append(f'\nLink Playability: {sum(playable_scores) / len(playable_scores)}')
+        results['possible_links'] = link_count
+        results['mcts'] = {
+            'success': successes,
+            'failure': failures
+        }
 
         #######################################################################
-        log.log_info('Running validation on random set of links...')
+        print('Running validation on random set of links...')
+        raise NotImplementedError('I\'m still not exactly sure how I will handle this.')
         iterations = 25
         percent_completes = {}
 
@@ -350,7 +302,7 @@ class GenerationPipeline():
         self.write_info_file(output_data)
 
         #######################################################################
-        log.log_info('Starting python graphing processes...\n\n')
+        print('Starting python graphing processes...\n\n')
         Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir])
         Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.config.data_dir])
         Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.config.data_dir])
@@ -422,20 +374,5 @@ class GenerationPipeline():
         else:
             f = open(file_path, 'w')
 
-        f.write('\n'.join(output_data))
-        f.close()
-
-    def write_config_file(self, operator_type):
-        config = {
-            'data_file': f'{self.config.data_file}_{operator_type}.csv',
-            'x_label': self.config.x_label,
-            'y_label': self.config.y_label,
-            'save_file': f'{self.config.save_file}_{operator_type}.pdf',
-            'title': self.config.title,
-            'resolution': self.config.resolution,
-            'feature_dimensions': self.config.feature_dimensions
-        }
-
-        f = open(f'{self.config.map_elites_config}_{operator_type}.json', 'w')
-        f.write(json_dumps(config))
+        f.write(json_dumps(output_data, indent=2))
         f.close()

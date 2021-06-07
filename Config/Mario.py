@@ -70,6 +70,13 @@ title = ''
 
 max_path_length = 5
 
+def get_percent_playable(level, agent=None):
+    return fitness(level)
+
+def get_fitness(level, percent_playable, agent=None):
+    bad_n_grams = gram.count_bad_n_grams(level)
+    return bad_n_grams + 1 - percent_playable
+
 # FOr now, let's not bother with Infinite Mario Bros.
 # Necessary to evaluate with Robin Baumgarten agent
 # print('Starting game process...')
