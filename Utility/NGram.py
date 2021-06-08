@@ -65,11 +65,9 @@ class NGram():
             key = tuple(prior)
             if len(prior) == prior.maxlen:
                 if key not in self.grammar:
-                    print(key)
                     return False
 
                 if token not in self.grammar[key]:
-                    print(key, token)
                     return False
 
             prior.append(token)

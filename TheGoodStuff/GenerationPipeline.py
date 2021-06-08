@@ -121,9 +121,7 @@ class GenerationPipeline():
         #######################################################################
         print('Building and validating MAP-Elites directed DDA graph...')
         DIRECTIONS = ((0,0), (0,1), (0,-1), (1, 0), (-1, 0))
-        BFS_KEY = 'bfs'
-        MCTS_KEY = 'mcts'
-        MCTS_AGENT_KEY = 'mcts_agent'
+        KEYS = ['bfs', 'mcts', 'mcts_agent']
 
         dda_graph = {}
         bins = gram_search.bins
@@ -139,7 +137,6 @@ class GenerationPipeline():
             f1_values = [val*(self.config.feature_dimensions[i][1] - self.config.feature_dimensions[i][0])/100 + self.config.feature_dimensions[i][0] for i, val in enumerate(k)]
             for entry_index, entry in enumerate(bins[k]): # iterate through elites
                 if entry[0] != 0.0:
-                    dda_graph[str(entry)] = {}
                     continue
 
                 for dir in DIRECTIONS:
@@ -174,7 +171,10 @@ class GenerationPipeline():
                             f_targets = [(f1_values[i] + f2_values[i])/2 for i in range(len(f2_values))]
 
                             # TODO: log length, behavioral characteristics, and targets
-                            dda_graph[str_entry_one][str_entry_two] = {}
+                            dda_graph[str_entry_one][str_entry_two] = {
+                                'targets': f_targets
+                            }
+
                             bfs_link = generate_link_bfs(self.config.gram, start, end, 0)
                             mcts_link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
                             if mcts_link == None:
@@ -184,38 +184,27 @@ class GenerationPipeline():
                                 successes += 1
                                 mcts_agent_link = None
 
-                            # bfs
-                            level = start + bfs_link + end
-                            dda_graph[str_entry_one][str_entry_two][BFS_KEY] = {
-                                'percent_playable': self.config.get_percent_playable(level),
-                                'link': bfs_link
-                            }
-
-                            # mcts
-                            if mcts_link == None:
-                                dda_graph[str_entry_one][str_entry_two][MCTS_KEY] = {
-                                    'percent_playable': -1,
-                                    'link': []
-                                }
-                            else:
-                                level = start + mcts_link + end
-                                dda_graph[str_entry_one][str_entry_two][MCTS_KEY] = {
-                                    'percent_playable': self.config.get_percent_playable(level),
-                                    'link': mcts_link
-                                }
-
-                            # mcts + a* agent
-                            if mcts_agent_link == None:
-                                dda_graph[str_entry_one][str_entry_two][MCTS_AGENT_KEY] = {
-                                    'percent_playable': -1,
-                                    'link': []
-                                }
-                            else:
-                                level = start + mcts_agent_link + end
-                                dda_graph[str_entry_one][str_entry_two][MCTS_AGENT_KEY] = {
-                                    'percent_playable': self.config.get_percent_playable(level),
-                                    'link': mcts_agent_link
-                                }
+                            for key, link in zip(KEYS, [bfs_link, mcts_link, mcts_agent_link]):
+                                if link == None:
+                                    dda_graph[str_entry_one][str_entry_two][key] = {
+                                        'percent_playable': -1,
+                                        'link': [],
+                                        'behavioral_characteristics': []
+                                    }
+                                elif link == []:
+                                    level = start + link + end
+                                    dda_graph[str_entry_one][str_entry_two][key] = {
+                                        'percent_playable': self.config.get_percent_playable(level),
+                                        'link': link,
+                                        'behavioral_characteristics': [-1 for _ in self.config.feature_descriptors]
+                                    }
+                                else:
+                                    level = start + link + end
+                                    dda_graph[str_entry_one][str_entry_two][key] = {
+                                        'percent_playable': self.config.get_percent_playable(level),
+                                        'link': link,
+                                        'behavioral_characteristics': [bc(link) for bc in self.config.feature_descriptors]
+                                    }
 
             i += 1
             update_progress(i/len(keys))

@@ -9,6 +9,9 @@ def generate_link_bfs(grammar, start, end, additional_columns):
     @TODO: This should really not rely so heavily on splits and all that nonsense.
     The datastructures can definitely be simplified and improved. 
     '''
+    if additional_columns == 0 and grammar.sequence_is_possible(start + end):
+        return []
+
     # generate path of minimum length with an n-ram
     start_link = grammar.generate(start, additional_columns)
     min_path = start + start_link
@@ -115,6 +118,11 @@ def generate_link_mcts(
     function, therefore, should be prepared to receive a value of None and
     use the BFS alternative. 
     '''
+    # We only want to create a link if we have to.
+    if grammar.sequence_is_possible(start + end):
+        return []   
+
+    # initialization
     root = [0, 0, False, tuple(start[-(grammar.n - 1):]), []]
     end_prior = tuple(end[:grammar.n - 1])
     t = 1
@@ -155,7 +163,7 @@ def generate_link_mcts(
         output_new_tokens = grammar.get_unweighted_output(p)
 
         for new_token in output_new_tokens:
-            new_p = (p[-1], new_token)
+            new_p = p[1:] + (new_token,)
             
             # check if the targer prior was found. If not and this is the index
             # where we want to roll out more, we do so without keeping track of
@@ -165,11 +173,12 @@ def generate_link_mcts(
                 level.append(new_token)
                 prior = new_p
                 while len(level) < max_path_size and not seen:
-                    # print(prior)
-                    new_token = grammar.get_output(prior)
-                    level.append(new_token)
-                    prior = (level[-2], level[-1])
-                    seen = new_p == end_prior
+                    next_token = grammar.get_output(prior)
+                    level.append(next_token)
+                    prior = prior[1:] + (next_token,)
+                    # seen = new_p == end_prior
+
+            seen &= path_size >= grammar.n # link cannot be empty
 
             root[S] |= seen
             score = sum([(feature_targets[i] - feature_dimensions[i](level))**2 for i in range(len(feature_dimensions))])

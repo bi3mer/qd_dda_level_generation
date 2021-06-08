@@ -22,5 +22,5 @@ elif args.icarus:
 pipeline = GenerationPipeline(config, args.only_map_elites)
 pipeline.run()
 
-# p = GenerationPipeline(Icarus, True)
+# p = GenerationPipeline(Mario, False)
 # p.run()
