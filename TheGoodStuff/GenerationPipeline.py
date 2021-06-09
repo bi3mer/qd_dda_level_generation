@@ -16,6 +16,8 @@ class GenerationPipeline():
         self.config = config
         self.only_map_elites = only_map_elites
 
+
+
     def run(self):
         #######################################################################
         level_dir =  join(self.config.data_dir, 'levels')
@@ -176,7 +178,8 @@ class GenerationPipeline():
                             }
 
                             bfs_link = generate_link_bfs(self.config.gram, start, end, 0)
-                            mcts_link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
+                            # mcts_link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
+                            mcts_link = bfs_link # TODO: remove this and uncomment above asap
                             if mcts_link == None:
                                 failures += 1
                             else:
@@ -220,16 +223,37 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        raise NotImplementedError('I\'m still not exactly sure how I will handle this.')
+        iterations = 5
+        self.__run_walkthrough(bins, dda_graph, KEYS[0], False, results, iterations)
+        self.__run_walkthrough(bins, dda_graph, KEYS[1], False, results, iterations)
+        self.__run_walkthrough(bins, dda_graph, KEYS[1], True, results, iterations)
+
+        f = open(join(self.config.data_dir, 'results.json'), 'w')
+        f.write(json_dumps(results, indent=2))
+        f.close()
+
+
+        #######################################################################
+        print('Starting python graphing processes...\n\n')
+        Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir])
+        Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.config.data_dir])
+
+
+    
+    def __run_walkthrough(self, bins, dda_graph, algorithm_key, use_repair, results, iterations):
         '''
-        Store the results for BC after repair for segments and links.
+        TODO: I'm not logging the behavioral characterstic stuff that I need to right now.
         '''
-        iterations = 25
         percent_completes = {}
 
         duplicates_found = 0
-        valid_levels= 0
+        valid_levels = 0
+        levels= []
         scores = []
+        modifications = []
+        characteristics_of_segments = []
+        characteristics_with_links = []
+        characteristics_with_repair = []
 
         while len(percent_completes) < iterations:
             path_length = 0
@@ -238,6 +262,7 @@ class GenerationPipeline():
             point = (int(start_split[0]), int(start_split[1]))
             level = bins[point][int(start_split[2])][1]
             path = [point]
+            segment_characteristics = [0 for _ in range(len(self.config.feature_descriptors))]
 
             while path_length < self.config.max_path_length:
                 previous_choice = next_choice
@@ -245,7 +270,7 @@ class GenerationPipeline():
                 valid_neighbors = []
 
                 for key in neighbors.keys():
-                    if neighbors[key]['percent_playable'] == 1.0 and key not in path:
+                    if neighbors[key][algorithm_key]['percent_playable'] == 1.0 and key not in path:
                         valid_neighbors.append(key)
 
                 if len(valid_neighbors) == 0:
@@ -256,7 +281,9 @@ class GenerationPipeline():
                 point = (int(start_split[0]), int(start_split[1]))
                 end = bins[point][int(start_split[2])][1]
 
-                level = level + dda_graph[previous_choice][next_choice]['link'] + end
+                segment = dda_graph[previous_choice][next_choice][algorithm_key]['link']
+                segment_characteristics = [segment_characteristics[i] + fd(level) for i, fd in enumerate(self.config.feature_descriptors)]
+                level = level + segment + end
 
                 path.append(next_choice)
                 path_length += 1
@@ -265,41 +292,54 @@ class GenerationPipeline():
             if str_path in percent_completes:
                 duplicates_found += 1
                 if duplicates_found > 1000:
-                    log.log_warning('Found over 1000 duplicates.')
+                    print('WARNING: Found over 1000 duplicates.')
                     break
             elif path_length > 2:
+                characteristics_with_links.append([fd(level) for fd in self.config.feature_descriptors])
+                
+                if use_repair:
+                    level, modifications_made = self.config.repair_level(level)
+                    characteristics_with_repair.append([fd(level) for fd in self.config.feature_descriptors])
+                else:
+                    modifications_made = 0
+                    characteristics_with_repair.append([])
+
                 score = self.config.get_percent_playable(level)
-                scores.append(score)
                 percent_completes[str_path] = score
-                update_progress(len(percent_completes) / iterations)
+                scores.append(score)
+                levels.append(level)
+                characteristics_of_segments.append([c_score / path_length for c_score in segment_characteristics])
+                modifications.append(modifications_made)
+
+                update_progress(len(levels) / iterations)
 
                 if score == 1.0:
                     valid_levels += 1
             else:
-                log.log_warning('Unable to find valid level. Trying again.')
+                print('WARNING: Unable to find valid level. Trying again.')
 
-        output_data.append('\nWalkthrough Results')
-        output_data.append(f'Result: {valid_levels} / {iterations}')
-        output_data.append(f'Min Scores: {min(scores)}')
-        output_data.append(f'Mean Scores: {sum(scores) / len(scores)}')
-        output_data.append(f'Max Scores: {max(scores)}')
-        output_data.append(f'Duplicates: {duplicates_found}')
+        output = {}
+        output['levels'] = levels
+        output['valid_levels'] = valid_levels
+        output['scores'] = scores
+        output['duplicates_found'] = duplicates_found
+        output['modifications'] = modifications
+        output['characteristics_of_segments'] = characteristics_of_segments
+        output['characteristics_with_links'] = characteristics_with_links
+        output['characteristics_with_repair'] = characteristics_with_repair
 
-        f = open(join(self.config.data_dir, 'random_walkthroughs.json'), 'w')
-        f.write(json_dumps(percent_completes, indent=2))
-        f.close()
+        if 'walkthrough' not in results:
+            results['walkthrough'] = {}
 
-        self.write_info_file(output_data)
+        results['walkthrough'][f'{algorithm_key}_{use_repair}'] = output
 
-        #######################################################################
-        print('Starting python graphing processes...\n\n')
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir])
-        Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.config.data_dir])
-        Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.config.data_dir])
+
 
     def __in_bounds(self, coordinate):
         return coordinate[0] >= 0 and coordinate[0] <= self.config.resolution and \
                coordinate[1] >= 0 and coordinate[1] <= self.config.resolution
+
+
 
     def run_flawed_agents(self):
         f = open(join(self.config.data_dir, 'dda_graph.json'), 'r')
@@ -356,6 +396,8 @@ class GenerationPipeline():
             f.close()
 
             Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.config.data_dir, flawed_agent])
+
+
 
     def write_info_file(self, output_data):
         file_path = join(self.config.data_dir, 'info.txt')

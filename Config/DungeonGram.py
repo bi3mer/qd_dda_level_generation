@@ -18,7 +18,7 @@ flawed_agents = [
 ]
 
 start_population_size = 10
-iterations = 20
+iterations = 50
 
 feature_names = ['Density', 'leniency']
 feature_descriptors = [density, leniency]
@@ -78,5 +78,5 @@ def get_fitness(level, percent_playable, agent=None):
     return bad_transitions + 1 - percent_playable
 
 def repair_level(level):
-    new_level = repair(columns_into_rows(level), False, True, False, False)
-    return rows_into_columns(new_level.split('\n'))
+    new_level, modifications_made = repair(columns_into_rows(level), False, True, False, False)
+    return rows_into_columns(new_level.split('\n')), modifications_made
