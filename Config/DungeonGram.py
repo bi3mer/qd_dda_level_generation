@@ -4,7 +4,7 @@ from Utility.DungeonGram.IO import get_levels
 from Utility.DungeonGram.Behavior import *
 from Utility.DungeonGram.Fitness import *
 from Utility.NGram import NGram
-from Utility.GridTools import columns_into_rows
+from Utility.GridTools import columns_into_rows, rows_into_columns
 from dungeongrams import *
 
 from os.path import join
@@ -76,3 +76,7 @@ def get_percent_playable(level, agent=None):
 def get_fitness(level, percent_playable, agent=None):
     bad_transitions = gram.count_bad_n_grams(level)
     return bad_transitions + 1 - percent_playable
+
+def repair_level(level):
+    new_level = repair(columns_into_rows(level), False, True, False, False)
+    return rows_into_columns(new_level.split('\n'))

@@ -1,6 +1,6 @@
 from .Extractor import *
 from .config import *
-from Utility.math import get_slope_and_intercept
+from Utility.Math import get_slope_and_intercept
 
 def linearity_with_heights(heights):
     '''

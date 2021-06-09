@@ -2,7 +2,7 @@ from Utility.Log import Log
 from Utility.GridTools import columns_into_grid_string
 from Utility.LinkerGeneration import generate_link_bfs, generate_link_mcts
 from MapElites import MapElites
-from Utility.math import *
+from Utility.Math import *
 from Utility import *
 
 from json import load as json_load, dumps as json_dumps
@@ -121,7 +121,7 @@ class GenerationPipeline():
         #######################################################################
         print('Building and validating MAP-Elites directed DDA graph...')
         DIRECTIONS = ((0,0), (0,1), (0,-1), (1, 0), (-1, 0))
-        KEYS = ['bfs', 'mcts', 'mcts_agent']
+        KEYS = ['bfs', 'mcts']
 
         dda_graph = {}
         bins = gram_search.bins
@@ -180,11 +180,9 @@ class GenerationPipeline():
                             if mcts_link == None:
                                 failures += 1
                             else:
-                                # print('WARNING: agent not yet implemented, link is empty for now...')
                                 successes += 1
-                                mcts_agent_link = None
 
-                            for key, link in zip(KEYS, [bfs_link, mcts_link, mcts_agent_link]):
+                            for key, link in zip(KEYS, [bfs_link, mcts_link]):
                                 if link == None:
                                     dda_graph[str_entry_one][str_entry_two][key] = {
                                         'percent_playable': -1,
@@ -223,6 +221,9 @@ class GenerationPipeline():
         #######################################################################
         print('Running validation on random set of links...')
         raise NotImplementedError('I\'m still not exactly sure how I will handle this.')
+        '''
+        Store the results for BC after repair for segments and links.
+        '''
         iterations = 25
         percent_completes = {}
 
