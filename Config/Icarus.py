@@ -14,8 +14,8 @@ data_dir = f'IcarusData'
 
 flawed_agents = []
 
-start_population_size = 50
-iterations = 100
+start_population_size = 500
+iterations = 10_000
 
 feature_names = ['density', 'leniency']
 feature_descriptors = [density, leniency]

@@ -232,7 +232,7 @@ class GenerationPipeline():
         iterations = 1000
         self.__run_walkthrough(bins, dda_graph, KEYS[0], False, results, iterations)
         self.__run_walkthrough(bins, dda_graph, KEYS[1], False, results, iterations)
-        self.__run_walkthrough(bins, dda_graph, KEYS[1], True, results, iterations)
+        # self.__run_walkthrough(bins, dda_graph, KEYS[1], True, results, iterations)
 
         f = open(join(self.config.data_dir, 'results.json'), 'w')
         f.write(json_dumps(results, indent=2))
@@ -273,8 +273,7 @@ class GenerationPipeline():
                 valid_neighbors = []
 
                 for key in neighbors.keys():
-                    # neighbors[key][algorithm_key]['percent_playable'] == 1.0
-                    if key not in path: 
+                    if key not in path and neighbors[key][algorithm_key]['percent_playable'] == 1.0: 
                         valid_neighbors.append(key)
 
                 if len(valid_neighbors) == 0:
