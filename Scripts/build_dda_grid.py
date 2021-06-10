@@ -4,65 +4,75 @@ import json
 import sys
 import os
 
-if len(sys.argv) == 3:
-    save_path = os.path.join(sys.argv[1], f'dda_grid_{sys.argv[2]}.pdf')
-    f = open(os.path.join(sys.argv[1], f'dda_graph_{sys.argv[2]}.json'), 'r')
-else:
-    save_path = os.path.join(sys.argv[1], f'dda_grid.pdf')
+def run(algorithm_name):
+    save_path = os.path.join(sys.argv[1], f'dda_grid_{algorithm_name}.pdf')
     f = open(os.path.join(sys.argv[1], f'dda_graph.json'), 'r')
-data =json.load(f)
-f.close()
+    data = json.load(f)
+    f.close()
 
-graph = nx.DiGraph()
-valid_edges = 0
-edge_count = 0
-x_points = []
-y_points = []
+    graph = nx.DiGraph()
+    x_points = []
+    y_points = []
 
-for src in data:
-    x,y = src[1:-1].split(',')
-    x = int(x)
-    y = int(y)
+    seen = set()
 
-    x_points.append(x)
-    y_points.append(y)
-    graph.add_node(src, pos=(x,y))
+    for src in data:
+        x,y,_ = src.split(',')
+        x = int(x)
+        y = int(y)
 
-    if x == 0 and y == 0:
-        edge_count += 2
-    elif x == 0 or y == 0:
-        edge_count += 3
-    else:
-        edge_count += 4
+        pos = (x,y)
+        if pos in seen:
+            continue
+        else:
+            seen.add(pos)
 
-for src in data:
-    neighbors = data[src]
-    for dst in neighbors:
-        if neighbors[dst] == 1.0:
-            valid_edges += 1
-            graph.add_edge(src, dst)
+        index = 0
+        k = f'{x},{y},{index}'
+        keys = []
+        while k in data:
+            keys.append(k)
+            index += 1
+            k = f'{x},{y},{index}'
 
-color_map = []
-for res in graph.in_degree():
-    node_key, in_edges = res
-    if in_edges == 0:
-        color_map.append('gray')
-    elif graph.out_degree(node_key) == 0:
-        color_map.append('green')
-    else:
-        color_map.append('brown')
+        x_points.append(x)
+        y_points.append(y)
+        graph.add_node(pos, pos=pos)
 
-min_cor = min(min(x_points), min(y_points)) - 1
-max_cor = max(max(x_points), max(y_points)) + 1
+        for k in keys:
+            for dst in data[k]:
+                if data[k][dst][algorithm_name]['percent_playable'] == 1.0:
+                    dst_x,dst_y,_ = dst.split(',')
+                    dst_pos = (int(dst_x), int(dst_y))
+                    if not graph.has_node(dst_pos):
+                        graph.add_node(dst_pos, pos=dst_pos)
 
-pos = nx.get_node_attributes(graph, 'pos')
-plt.figure(figsize=(12,12))
-plt.xlim(min_cor, max_cor)
-plt.ylim(min_cor, max_cor)
+                    graph.add_edge(pos, dst_pos)
 
-nx.draw(graph, pos, node_color=color_map, node_size=60, with_labels=False, arrowsize=15) 
-# plt.show()
-plt.savefig(save_path, bbox_inches="tight") 
+    color_map = []
+    for res in graph.in_degree():
+        node_key, in_edges = res
+        if in_edges == 0:
+            color_map.append('gray')
+        elif graph.out_degree(node_key) == 0:
+            color_map.append('green')
+        else:
+            color_map.append('brown')
+
+    min_cor = min(min(x_points), min(y_points)) - 1
+    max_cor = max(max(x_points), max(y_points)) + 1
+
+    pos = nx.get_node_attributes(graph, 'pos')
+    plt.figure(figsize=(8,8))
+    plt.xlim(min_cor, max_cor)
+    plt.ylim(min_cor, max_cor)
+
+    nx.draw(graph, pos, node_color=color_map, node_size=60, with_labels=False, arrowsize=15) 
+    # plt.show()
+    plt.savefig(save_path, bbox_inches="tight") 
+
+run('bfs')
+run('mcts')
 
 # nodes = set()
 # for path in list(nx.bfs_edges(graph, '(0, 0)')):
