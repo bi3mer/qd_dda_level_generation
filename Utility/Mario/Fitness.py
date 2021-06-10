@@ -2,7 +2,7 @@ from .Extractor import max_height, heights as col_heights
 from .SummervilleAgent import percent_completable
 from Utility.GridTools import columns_into_rows
 
-def percent_playable(columns, start_position):
+def summerville_helper(columns, start_position):
     '''
     This uses an A* agent to tell if a level is playable. It should be pretty
     close to perfect.
@@ -47,24 +47,26 @@ def naive_percent_playable(columns):
 
     return i / len(columns)
 
-def summerville_fitness(grammar):
+def percent_playable(columns):
     length = len('X-------------')
+    columns.insert(0, 'X-------------')
+    columns.insert(0, 'X-------------')
+    columns.append('X-------------')
+    columns.append('X-------------')
+
+    fitness = summerville_helper(columns_into_rows(columns), (1, length - 2, -1))
+
+    columns.pop(0)
+    columns.pop(0)
+    columns.pop()
+    columns.pop()
+
+    return fitness
+
+def summerville_fitness(grammar):
     def slow_fitness(columns):
         bad_transitions = grammar.count_bad_n_grams(columns)
-
-        columns.insert(0, 'X-------------')
-        columns.insert(0, 'X-------------')
-        columns.append('X-------------')
-        columns.append('X-------------')
-
-        fitness = percent_playable(columns_into_rows(columns), (1, length - 2, -1))
-
-        columns.pop(0)
-        columns.pop(0)
-        columns.pop()
-        columns.pop()
-
-        return bad_transitions + 1 - fitness
+        return bad_transitions + 1 - percent_playable(columns)
     return slow_fitness
 
 def naive_fitness(grammar):

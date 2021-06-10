@@ -129,6 +129,7 @@ class GenerationPipeline():
         bins = gram_search.bins
         keys = set(bins.keys())
 
+
         i = 0
         link_count = 0
 
@@ -136,29 +137,35 @@ class GenerationPipeline():
         successes = 0
         failures  = 0
         for k in keys: # iterate through keys
+            if key == (6,16):
+                print('a')
+
             f1_values = [val*(self.config.feature_dimensions[i][1] - self.config.feature_dimensions[i][0])/100 + self.config.feature_dimensions[i][0] for i, val in enumerate(k)]
             for entry_index, entry in enumerate(bins[k]): # iterate through elites
                 if entry[0] != 0.0:
                     continue
+                
+                str_entry_one = f'{k[0]},{k[1]},{entry_index}'
+                if str_entry_one not in dda_graph:
+                    dda_graph[str_entry_one] = {}
 
                 for dir in DIRECTIONS:
                     neighbor = (k[0] + dir[0], k[1] + dir[1])
                     while neighbor not in bins:
                         neighbor = (neighbor[0] + dir[0], neighbor[1] + dir[1])
+                        
                         if not self.__in_bounds(neighbor):
                             break
 
-                    if self.__in_bounds(neighbor) and neighbor in bins:
-                        str_entry_one = f'{k[0]},{k[1]},{entry_index}'
-                        
-                        if str_entry_one not in dda_graph:
-                            dda_graph[str_entry_one] = {}
-                        
+                    if neighbor in bins:
                         start = entry[1]
                         for n_index, n_entry in enumerate(bins[neighbor]):
                             # we don't want the possibility for something to connect to itself.config.
                             if dir == (0,0) and n_index == entry_index:
-                                break
+                                continue
+
+                            if n_entry[0] != 0.0:
+                                continue
                             
                             str_entry_two = f'{neighbor[0]},{neighbor[1]},{n_index}'
                             end = n_entry[1]
@@ -232,7 +239,6 @@ class GenerationPipeline():
         f.write(json_dumps(results, indent=2))
         f.close()
 
-
         #######################################################################
         print('Starting python graphing processes...\n\n')
         Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir])
@@ -241,9 +247,6 @@ class GenerationPipeline():
 
     
     def __run_walkthrough(self, bins, dda_graph, algorithm_key, use_repair, results, iterations):
-        '''
-        TODO: I'm not logging the behavioral characterstic stuff that I need to right now.
-        '''
         percent_completes = {}
 
         duplicates_found = 0
@@ -263,6 +266,7 @@ class GenerationPipeline():
             level = bins[point][int(start_split[2])][1]
             path = [point]
             segment_characteristics = [0 for _ in range(len(self.config.feature_descriptors))]
+            previous_choice = None
 
             while path_length < self.config.max_path_length:
                 previous_choice = next_choice
@@ -270,7 +274,8 @@ class GenerationPipeline():
                 valid_neighbors = []
 
                 for key in neighbors.keys():
-                    if neighbors[key][algorithm_key]['percent_playable'] == 1.0 and key not in path:
+                    # neighbors[key][algorithm_key]['percent_playable'] == 1.0
+                    if key not in path: 
                         valid_neighbors.append(key)
 
                 if len(valid_neighbors) == 0:
@@ -316,7 +321,7 @@ class GenerationPipeline():
                 if score == 1.0:
                     valid_levels += 1
             else:
-                print('WARNING: Unable to find valid level. Trying again.')
+                print(f'WARNING: Unable to find valid level for {algorithm_key}_{use_repair}. Trying again. ')
 
         output = {}
         output['levels'] = levels

@@ -21,8 +21,8 @@ flawed_agents = [
     'NO_SPEED'
 ]
 
-start_population_size = 10
-iterations = 100
+start_population_size = 25
+iterations = 250
 
 feature_names = ['linearity', 'leniency']
 feature_descriptors = [percent_linearity, percent_leniency]
@@ -71,7 +71,7 @@ title = ''
 max_path_length = 5
 
 def get_percent_playable(level, agent=None):
-    return fitness(level)
+    return percent_playable(level)
 
 def get_fitness(level, percent_playable, agent=None):
     bad_n_grams = gram.count_bad_n_grams(level)
