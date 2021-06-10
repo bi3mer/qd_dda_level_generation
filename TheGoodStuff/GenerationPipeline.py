@@ -185,8 +185,7 @@ class GenerationPipeline():
                             }
 
                             bfs_link = generate_link_bfs(self.config.gram, start, end, 0)
-                            # mcts_link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
-                            mcts_link = bfs_link # TODO: remove this and uncomment above asap
+                            mcts_link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
                             if mcts_link == None:
                                 failures += 1
                             else:
@@ -230,7 +229,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        iterations = 5
+        iterations = 1000
         self.__run_walkthrough(bins, dda_graph, KEYS[0], False, results, iterations)
         self.__run_walkthrough(bins, dda_graph, KEYS[1], False, results, iterations)
         self.__run_walkthrough(bins, dda_graph, KEYS[1], True, results, iterations)
