@@ -212,7 +212,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        iterations = 50
+        iterations = 1000
         self.__run_walkthrough(bins, dda_graph, KEYS[0], False, results, iterations)
         self.__run_walkthrough(bins, dda_graph, KEYS[1], False, results, iterations)
         # self.__run_walkthrough(bins, dda_graph, KEYS[1], True, results, iterations)
