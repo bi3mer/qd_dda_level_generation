@@ -17,8 +17,7 @@ class GenerationPipeline():
         self.only_map_elites = only_map_elites
 
 
-
-    def run(self):
+    def run(self, seed):
         #######################################################################
         level_dir =  join(self.config.data_dir, 'levels')
 
@@ -55,7 +54,7 @@ class GenerationPipeline():
             self.config.n_mutator,
             self.config.n_crossover,
             self.config.elites_per_bin,
-            rng_seed=self.config.seed
+            rng_seed=seed
         )
         gram_search.run(self.config.iterations)
 

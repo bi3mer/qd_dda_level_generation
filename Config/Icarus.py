@@ -42,7 +42,6 @@ uses_separate_simulation = False
 
 start_strand_size = 25
 max_strand_size = 25
-seed = 0
 
 mutation_values = list(unigram_keys)
 mutator = Mutate(mutation_values, 0.02)

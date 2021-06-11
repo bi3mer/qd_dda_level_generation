@@ -45,7 +45,6 @@ unigram_keys.difference_update(pruned) # remove any n-gram dead ends from unigra
 
 start_strand_size = 15
 max_strand_size = 15
-seed = 0
 
 mutation_values = list(unigram_keys)
 mutator = Mutate(mutation_values, 0.02)
