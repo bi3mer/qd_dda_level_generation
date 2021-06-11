@@ -4,7 +4,9 @@ import json
 import sys
 import os
 
+
 def run(algorithm_name):
+    sys.argv = ['', 'MarioData']
     save_path = os.path.join(sys.argv[1], f'dda_grid_{algorithm_name}.pdf')
     f = open(os.path.join(sys.argv[1], f'dda_graph.json'), 'r')
     data = json.load(f)
@@ -63,11 +65,22 @@ def run(algorithm_name):
     max_cor = max(max(x_points), max(y_points)) + 1
 
     pos = nx.get_node_attributes(graph, 'pos')
-    plt.figure(figsize=(8,8))
+    plt.figure(figsize=(15,15))
     plt.xlim(min_cor, max_cor)
     plt.ylim(min_cor, max_cor)
 
     nx.draw(graph, pos, node_color=color_map, node_size=60, with_labels=False, arrowsize=15) 
+    # nodes = nx.draw_networkx_nodes(graph, pos, node_size=60, node_color=color_map)
+    # edges = nx.draw_networkx_edges(
+    #     graph,
+    #     pos,
+        # node_size=20,
+        # arrowstyle="->",
+        # arrowsize=10,
+        # edge_color=edge_colors,
+        # edge_cmap=cmap,
+        # width=2,
+    # )
     # plt.show()
     plt.savefig(save_path, bbox_inches="tight") 
 

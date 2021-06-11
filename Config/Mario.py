@@ -22,13 +22,13 @@ flawed_agents = [
 ]
 
 start_population_size = 500
-iterations = 10_000
+iterations = 20_000
 
 feature_names = ['linearity', 'leniency']
 feature_descriptors = [percent_linearity, percent_leniency]
 feature_dimensions = [[0, 1], [0, 1]] 
 
-elites_per_bin = 1
+elites_per_bin = 4
 resolution = 40
 
 uses_separate_simulation = False

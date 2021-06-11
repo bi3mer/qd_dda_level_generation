@@ -30,8 +30,22 @@ for c in configs:
 
     for row in content:
         split_line = row.strip().split(',')
-        worst_performance = max(worst_performance, float(split_line[2]))
-        matrix[int(split_line[1])][int(split_line[0])] = float(split_line[2])
+        worst_performance = max(worst_performance, float(split_line[3]))
+
+        temp = matrix[int(split_line[1])][int(split_line[0])]
+            
+        if float(split_line[3]) == 0.0:
+            if matrix[int(split_line[1])][int(split_line[0])] is np.nan:
+                matrix[int(split_line[1])][int(split_line[0])] = 0.0
+
+            matrix[int(split_line[1])][int(split_line[0])] += 1
+    
+    num_elites = int(sys.argv[2])
+    assert num_elites > 0
+    for y in range(resolution + 1):
+        for x in range(resolution + 1):
+            if not (matrix[y][x] is np.nan):
+                matrix[y][x] /= 4
 
     matrix = np.array(matrix)
     mask = np.zeros_like(matrix)
@@ -42,13 +56,14 @@ for c in configs:
 
     matrices.append(matrix)
 
-color_bar_label = 'Fitness'
-colors = [
-    [0.0, "green"],
-    [0.00000001, "#ff000011"],
-    [1.0, "#ff0000ff"],
-]
-cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
+color_bar_label = 'Percent Elites Found Per Bin'
+# colors = [
+#     [0.0, "green"],
+#     [0.00000001, "#ff000011"],
+#     [1.0, "#ff0000ff"],
+# ]
+# cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
+cmap = 'Greens'
 
 for config, matrix in zip_longest(configs, matrices):
     x_dimensions, y_dimensions = config['feature_dimensions']
@@ -63,7 +78,7 @@ for config, matrix in zip_longest(configs, matrices):
         cmap=cmap,
         cbar_kws={'label': color_bar_label},
         vmin=0,
-        vmax=worst_performance)
+        vmax=1.0)
 
     ax.set(xlabel=config['x_label'], ylabel=config['y_label'])
     ax.set_xticks(ax.get_xticks()[::5])

@@ -15,7 +15,7 @@ data_dir = f'IcarusData'
 flawed_agents = []
 
 start_population_size = 500
-iterations = 10_000
+iterations = 20_000
 
 feature_names = ['density', 'leniency']
 feature_descriptors = [density, leniency]
@@ -34,7 +34,7 @@ pruned = gram.fully_connect() # remove dead ends from grammar
 unigram_keys.difference_update(pruned) # remove any n-gram dead ends from unigram
 
 resolution = 40
-elites_per_bin = 1
+elites_per_bin = 4
 fitness = build_slow_fitness_function(gram)
 minimize_performance = True
 uses_separate_simulation = False

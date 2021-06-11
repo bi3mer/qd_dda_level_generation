@@ -67,57 +67,37 @@ class GenerationPipeline():
         bins = gram_search.bins
         f = open(join(self.config.data_dir, 'data.csv'), 'w')
         csv_writer = writer(f)
-        csv_writer.writerow(self.config.feature_names + ['performance'])
+        csv_writer.writerow(self.config.feature_names + ['index', 'performance'])
         
-        searched = 0
-        total = self.config.resolution ** 2
-        for x in range(self.config.resolution):
-            for y in range(self.config.resolution): 
-                key = (x, y)
-                found = []
-                if key in bins:
-                    for level_index, info in enumerate(bins[key]): # for each elite in the bin
-                        # Mario uses a separate simulation but the others do not. 
-                        # The simulation does not have to be re-run.
-                        level = info[1]
+        keys = list(bins.keys())
+        for progress, key in enumerate(keys):
+            for index, entry in enumerate(bins[key]):
+                fitness = entry[0]
+                level = entry[1]
 
-                        if self.config.uses_separate_simulation:
-                            playability = self.config.get_percent_playable(level)
-                            fitness = self.config.get_fitness(level, playability)
-                        else: 
-                            fitness = info[0]
+                fitnesses.append(fitness)
+                if fitness == 0.0:
+                    valid_levels += 1
+                else:
+                    invalid_levels +=1 
+                
+                csv_writer.writerow(list(key) + [index, fitness])
 
-                        fitnesses.append(fitness)
-
-                        if fitness == 0.0:
-                            found.append((level, fitness, fitness))
-                            valid_levels += 1
-                        else:
-                            invalid_levels += 1
-
-                        csv_writer.writerow(list(key) + [fitness])
-
-                        level_file = open(join(level_dir, f'{x}_{y}_{level_index}.txt'), 'w')
-                        level_file.write(columns_into_grid_string(level))
-                        level_file.close()
-
-                searched += 1
-                update_progress(searched / total)
+            update_progress(progress / len(keys)) 
 
         f.close()
         results = {
             'valid_levels': valid_levels,
             'invalid_levels': invalid_levels,
             'total_levels': valid_levels + invalid_levels,
-            'fitness': fitness,
+            'fitness': fitnesses,
             'mean_fitness': sum(fitnesses) / len(fitnesses)
         }
 
         #######################################################################
         if self.only_map_elites:
             self.write_info_file(results)
-            Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir])
-            Popen(['python3', join('Scripts', 'build_combined_map_elites.py'), self.config.data_dir])
+            Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir, str(self.config.elites_per_bin)])
             return
 
         #######################################################################
