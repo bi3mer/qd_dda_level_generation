@@ -83,6 +83,10 @@ class GenerationPipeline():
                 
                 csv_writer.writerow(list(key) + [index, fitness])
 
+                level_file = open(join(level_dir, f'{key[1]}_{key[0]}_{index}.txt'), 'w')
+                level_file.write(columns_into_grid_string(level))
+                level_file.close()
+
             update_progress(progress / len(keys)) 
 
         f.close()
@@ -209,7 +213,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Running validation on random set of links...')
-        iterations = 1000
+        iterations = 50
         self.__run_walkthrough(bins, dda_graph, KEYS[0], False, results, iterations)
         self.__run_walkthrough(bins, dda_graph, KEYS[1], False, results, iterations)
         # self.__run_walkthrough(bins, dda_graph, KEYS[1], True, results, iterations)
@@ -220,7 +224,7 @@ class GenerationPipeline():
 
         #######################################################################
         print('Starting python graphing processes...\n\n')
-        Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir])
+        Popen(['python3', join('Scripts', 'build_map_elites.py'), self.config.data_dir, str(self.config.elites_per_bin)])
         Popen(['python3', join('Scripts', 'build_dda_grid.py'), self.config.data_dir])
 
 

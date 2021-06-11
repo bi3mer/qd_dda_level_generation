@@ -17,8 +17,6 @@ def build_slow_fitness_function(grammar):
         play_slices.append(play_slices[-1])
 
         levelStr = list(reversed(play_slices))
-        fitness = percent_completable((1, len(play_slices) - 2, -1), levelStr);
-
-        return bad_transitions + 1 - fitness
+        return percent_completable((1, len(play_slices) - 2, -1), levelStr)
 
     return slow_fitness

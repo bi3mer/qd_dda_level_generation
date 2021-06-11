@@ -6,7 +6,6 @@ import os
 
 
 def run(algorithm_name):
-    sys.argv = ['', 'MarioData']
     save_path = os.path.join(sys.argv[1], f'dda_grid_{algorithm_name}.pdf')
     f = open(os.path.join(sys.argv[1], f'dda_graph.json'), 'r')
     data = json.load(f)
@@ -82,6 +81,7 @@ def run(algorithm_name):
         # width=2,
     # )
     # plt.show()
+    print(f'Saving to: {save_path}')
     plt.savefig(save_path, bbox_inches="tight") 
 
 run('bfs')

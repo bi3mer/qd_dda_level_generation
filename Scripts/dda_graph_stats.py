@@ -38,19 +38,18 @@ for alg in ['bfs', 'mcts']:
     playable = []
     for src in data:        
         for dst in data[src]:
-            link_lengths.append(len(data[src][dst][alg]['link']))
+            if data[src][dst][alg]['percent_playable'] != -1:
+                link_lengths.append(len(data[src][dst][alg]['link']))
 
-            if link_lengths[-1] == 0:
-                target_bc.append(data[src][dst]['targets'])
-                alg_bc.append(target_bc[-1])
-            elif data[src][dst][alg]['percent_playable'] == -1:
-                # skip since no valid link was found
-                pass
-            else:
-                target_bc.append(data[src][dst]['targets'])
-                alg_bc.append(data[src][dst][alg]['behavioral_characteristics'])
+                if link_lengths[-1] == 0:
+                    target_bc.append(data[src][dst]['targets'])
+                    alg_bc.append(target_bc[-1])
+                else:
+                    target_bc.append(data[src][dst]['targets'])
+                    alg_bc.append(data[src][dst][alg]['behavioral_characteristics'])
+                
+                playable.append(data[src][dst][alg]['percent_playable'])
 
-            playable.append(data[src][dst][alg]['percent_playable'])
     
     print_list_stats(link_lengths, 'Links')
 
