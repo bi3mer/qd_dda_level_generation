@@ -8,3 +8,7 @@ def clear_directory(directory_name):
     else:
         rmtree(directory_name)
         mkdir(directory_name)
+
+def make_if_does_not_exist(directory_name):
+    if not isdir(directory_name):
+        mkdir(directory_name)

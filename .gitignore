@@ -132,3 +132,4 @@ dmypy.json
 MarioData*
 DungeonData*
 IcarusData*
+.vscode/

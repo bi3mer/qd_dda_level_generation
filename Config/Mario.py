@@ -21,8 +21,11 @@ flawed_agents = [
     'NO_SPEED'
 ]
 
-start_population_size = 500
-iterations = 20_000
+# start_population_size = 500
+# iterations = 20_000
+
+start_population_size = 25
+iterations = 250
 
 feature_names = ['linearity', 'leniency']
 feature_descriptors = [percent_linearity, percent_leniency]
