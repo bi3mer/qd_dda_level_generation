@@ -321,12 +321,6 @@ class GenerationPipeline():
 
 
 
-    def __in_bounds(self, coordinate):
-        return coordinate[0] >= 0 and coordinate[0] <= self.config.resolution and \
-               coordinate[1] >= 0 and coordinate[1] <= self.config.resolution
-
-
-
     def run_flawed_agents(self):
         f = open(join(self.config.data_dir, 'dda_graph.json'), 'r')
         grid = json_load(f)

@@ -40,7 +40,8 @@ if args.generate_corpus:
     gc = GenerateCorpus(config)
     gc.run(args.seed)
 elif args.generate_graph_test:
-    raise NotImplementedError('generate graph not implemented yet.')
+   ggt = GenerateLevelGraphTest(config, args.seed)
+   ggt.run()
 elif args.generate_graph:
     raise NotImplementedError('generate graph not implemented yet. Work has not shown which linking method is best')
 elif args.walkthrough:

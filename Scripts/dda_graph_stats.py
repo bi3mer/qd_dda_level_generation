@@ -1,4 +1,5 @@
 import statistics
+import itertools
 import json
 import sys
 import os
@@ -15,54 +16,90 @@ def median(number_list):
 
     return m
 
-def print_list_stats(l, title):
-    print(title)
-    print(f'min: {min(l)}')
-    print(f'mean: {sum(l) / len(l)}')
-    print(f'median: {median(l)}')
-    print(F'max: {max(l)}')
-    print(f'std: {statistics.stdev(l)}')
-    print()
+def get_stats(l):
+    return [min(l), sum(l) / len(l), median(l), max(l), statistics.stdev(l)]
 
+stats = {
+    'bfs': {
+        'link_lengths': [],
+        'playable': [],
+        'bc_targ': [],
+        'bc_found': []
+    },
+    'mcts': {
+        'link_lengths': [],
+        'playable': [],
+        'bc_targ': [],
+        'bc_found': [] 
+    }
+}
 
 f = open(os.path.join(sys.argv[1], f'dda_graph.json'), 'r')
 data = json.load(f)
 f.close()
 
 for alg in ['bfs', 'mcts']:
-    print(alg.upper())
-    
-    link_lengths = []
-    target_bc = []
-    alg_bc = []
-    playable = []
     for src in data:        
         for dst in data[src]:
             if data[src][dst][alg]['percent_playable'] != -1:
-                link_lengths.append(len(data[src][dst][alg]['link']))
+                stats[alg]['link_lengths'].append(len(data[src][dst][alg]['link']))
 
-                if link_lengths[-1] == 0:
-                    target_bc.append(data[src][dst]['targets'])
-                    alg_bc.append(target_bc[-1])
+                if stats[alg]['link_lengths'][-1] == 0:
+                    stats[alg]['bc_targ'].append(data[src][dst]['targets'])
+                    stats[alg]['bc_found'].append(stats[alg]['bc_targ'][-1])
                 else:
-                    target_bc.append(data[src][dst]['targets'])
-                    alg_bc.append(data[src][dst][alg]['behavioral_characteristics'])
+                    stats[alg]['bc_targ'].append(data[src][dst]['targets'])
+                    stats[alg]['bc_found'].append(data[src][dst][alg]['behavioral_characteristics'])
                 
-                playable.append(data[src][dst][alg]['percent_playable'])
+                stats[alg]['playable'].append(data[src][dst][alg]['percent_playable'])
 
+
+table = [[
+    'min link',
+    'mean link', 
+    'median link',
+    'max link', 
+    'std link',
     
-    print_list_stats(link_lengths, 'Links')
+    'min BC 1',
+    'mean BC 1', 
+    'median BC 1',
+    'max BC 1', 
+    'std BC 1',
+    
+    'min BC 2',
+    'mean BC 2', 
+    'median BC 2',
+    'max BC 2', 
+    'std BC 1',
+    
+    'min playable',
+    'mean playable', 
+    'median playable',
+    'max playable', 
+    'std playable',
+    
+]]
 
-    print('Behavioral Characteristics')
-    bc_difference = [[] for _ in range(len(target_bc[0]))]
-    for target, alg in zip(target_bc, alg_bc):
+for alg in ['bfs', 'mcts']:
+    alg_stats = []
+    alg_stats.append(get_stats(stats[alg]['link_lengths']))
+
+    bc_difference = [[] for _ in range(len(stats[alg]['bc_targ'][0]))]
+    for target, actual in zip(stats[alg]['bc_targ'], stats[alg]['bc_found']):
         for i in range(len(target)):
-            bc_difference[i].append(abs(target[i] - alg[i]))
+            bc_difference[i].append(abs(target[i] - actual[i]))
 
     for i, differences in enumerate(bc_difference):
-        print_list_stats(differences, f'BC {i}:')
+        alg_stats.append(get_stats(differences))
 
-    print_list_stats(playable, 'Playable')
+    alg_stats.append(get_stats(stats[alg]['playable']))
+    table.append(list(itertools.chain(*alg_stats)))
 
-    print()
-    print()
+# transpose
+table = [[table[j][i] for j in range(len(table))] for i in range(len(table[0]))]
+
+
+print('\t\ttBFS\tMCTS')
+for row in table:
+    print(f'{row[0]}\t{row[1]:.4f}\t{row[2]:.4f}')

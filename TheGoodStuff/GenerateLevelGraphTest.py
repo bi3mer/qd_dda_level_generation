@@ -1,20 +1,53 @@
+from os.path import join, exists, isdir
 from random import seed
 
-class GenerationLevelGraphTest:
+from Utility.LinkerGeneration import *
+from Utility import rows_into_columns, update_progress
+import json
+
+class GenerateLevelGraphTest:
     def __init__(self, config, __seed):
         self.config = config
         seed(__seed)
 
-    def run(self, runs):
+    def __in_bounds(self, coordinate):
+        return coordinate[0] >= 0 and coordinate[0] <= self.config.resolution and \
+               coordinate[1] >= 0 and coordinate[1] <= self.config.resolution
+
+    def run(self):
+        #######################################################################
+        print('loading bins...')
+        level_dir =  join(self.config.data_dir, 'levels')
+        if not exists(level_dir) or not isdir(level_dir):
+            print(f'{level_dir} is not made. Run --generate-corpus first.')
+
+        bins = {}
+        f = open(f'{self.config.data_file}_generate_corpus_data.csv')
+        f.readline() # skip header
+        for line in f.readlines():
+            result = line.strip().split(',')
+            performance = float(result[-1])
+            if performance != 0.0:
+                continue
+
+            key = tuple([int(num) for num in result[:-2]])
+            index = int(result[-2])
+            if key not in bins:
+                bins[key] = []
+
+            level_file = open(join(level_dir, f'{key[1]}_{key[0]}_{index}.txt'), 'r')
+            bins[key].append(rows_into_columns(level_file.readlines()))
+            level_file.close()
+
+        f.close()
+
         #######################################################################
         print('Building and validating MAP-Elites directed DDA graph...')
         DIRECTIONS = ((0,0), (0,1), (0,-1), (1, 0), (-1, 0))
         KEYS = ['bfs', 'mcts']
 
         dda_graph = {}
-        bins = gram_search.bins
         keys = set(bins.keys())
-
 
         i = 0
         link_count = 0
@@ -28,9 +61,6 @@ class GenerationLevelGraphTest:
 
             f1_values = [val*(self.config.feature_dimensions[i][1] - self.config.feature_dimensions[i][0])/100 + self.config.feature_dimensions[i][0] for i, val in enumerate(k)]
             for entry_index, entry in enumerate(bins[k]): # iterate through elites
-                if entry[0] != 0.0:
-                    continue
-                
                 str_entry_one = f'{k[0]},{k[1]},{entry_index}'
                 if str_entry_one not in dda_graph:
                     dda_graph[str_entry_one] = {}
@@ -44,17 +74,14 @@ class GenerationLevelGraphTest:
                             break
 
                     if neighbor in bins:
-                        start = entry[1]
+                        start = entry
                         for n_index, n_entry in enumerate(bins[neighbor]):
                             # we don't want the possibility for something to connect to itself.config.
                             if dir == (0,0) and n_index == entry_index:
                                 continue
 
-                            if n_entry[0] != 0.0:
-                                continue
-                            
                             str_entry_two = f'{neighbor[0]},{neighbor[1]},{n_index}'
-                            end = n_entry[1]
+                            end = n_entry
                             link_count += 1
 
                             # this is how I i took the score and put it into the clamped range. 
@@ -72,6 +99,8 @@ class GenerationLevelGraphTest:
 
                             bfs_link = generate_link_bfs(self.config.gram, start, end, 0)
                             mcts_link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
+                            dfs_link = None
+                            greedy_bfs = None
                             if mcts_link == None:
                                 failures += 1
                             else:
@@ -102,13 +131,7 @@ class GenerationLevelGraphTest:
             i += 1
             update_progress(i/len(keys))
                 
-        print(f'Link Connections Found: {successes} / {successes + failures}')
+        print(f'MCTS Link Connections Found: {successes} / {successes + failures}')
         f = open(join(self.config.data_dir, 'dda_graph.json'), 'w')
-        f.write(json_dumps(dda_graph, indent=1))
+        f.write(json.dumps(dda_graph, indent=1))
         f.close()
-
-        results['possible_links'] = link_count
-        results['mcts'] = {
-            'success': successes,
-            'failure': failures
-        }
