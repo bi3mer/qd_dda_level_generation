@@ -22,7 +22,6 @@ class GenerateCorpus():
 
         #######################################################################
         print('writing config file for graphing')
-
         config = {
             'data_file': f'{self.config.data_file}_generate_corpus_data.csv',
             'x_label': self.config.x_label,

@@ -5,10 +5,11 @@ import argparse
 import sys
 
 parser = argparse.ArgumentParser(description='Level Generation Pipeline.')
-parser.add_argument('--seed', help='Set seed for generation')
+parser.add_argument('--seed', type=int, default=0, help='Set seed for generation')
 parser.add_argument(
     '--runs', 
     type=int,
+    default=10,
     help='Set the # of runs. Walkthrough is the number of walks and average generates it the # of corpuses generated.')
 
 game_group = parser.add_mutually_exclusive_group(required=True)
@@ -43,7 +44,8 @@ elif args.generate_graph:
 elif args.walkthrough:
     raise NotImplementedError('walkthrough not implemented yet.')
 elif args.average_generated:
-    raise NotImplementedError('generate graph not implemented yet.')
+    ag = AverageGenerated(config, args.seed)
+    ag.run(args.runs)
 else:
     parser.print_help(sys.stderr)
     sys.exit(-1)
