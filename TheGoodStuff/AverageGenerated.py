@@ -14,7 +14,7 @@ class AverageGenerated:
         counts = []
 
         for i in range(runs):
-            print(f'\n\n{i}/{runs}')
+            print(f'{i+1}/{runs}')
 
             search = build_map_elites(i)
             counts.append(search.run(iterations))
@@ -30,7 +30,8 @@ class AverageGenerated:
             print('Storing levels...')
             levels_dir = join(level_path, f'run_{i}')
             clear_directory(levels_dir)
-            save_map_elites_to_dir(search.bins, levels_dir)            
+            save_map_elites_to_dir(search.bins, levels_dir)
+            print()     
         
         return bins, counts, search
 
@@ -65,12 +66,7 @@ class AverageGenerated:
         )
 
         #######################################################################
-        print('Saving results')
-        f = open(join(self.config.data_dir, 'counts.json'), 'w')
-        f.write(json_dumps(ng_counts, indent=2))
-
-        #######################################################################
-        print('Saving Bins...')
+        print('Saving Results and Bins...')
         f = open(join(self.config.data_dir, 'bins.json'), 'w')
         f.write(json_dumps({
             'runs': runs,
@@ -81,7 +77,11 @@ class AverageGenerated:
         }, indent=2))
         f.close()
 
+        print('Saving results')
+        f = open(join(self.config.data_dir, 'counts.json'), 'w')
+        f.write(json_dumps(ng_counts, indent=2))
+        f.close()
+
         #######################################################################
         print('Starting Plotters...')
         call(['python3', join('Scripts', 'build_counts_graph.py'), self.config.data_dir, str(self.config.start_population_size)])
-        call(['python3', join('Scripts', 'build_counts_grid.py'), self.config.data_dir])

@@ -19,6 +19,7 @@ game_group.add_argument('--icarus', action='store_true', help='Run Icarus')
 
 type_group = parser.add_mutually_exclusive_group(required=True)
 type_group.add_argument('--generate-corpus', action='store_true', help='Generate a corpus')
+type_group.add_argument('--generate-graph-test', action='store_true', help='Generate a graph with a corpus built from --corpus')
 type_group.add_argument('--generate-graph', action='store_true', help='Generate a graph with a corpus built from --corpus')
 type_group.add_argument('--walkthrough', action='store_true', help='Walkthrough a graph built with --generate-graph')
 type_group.add_argument('--average-generated', action='store_true', help='Generate a set of corpuses to get the average # levels generated.')
@@ -38,8 +39,10 @@ elif args.icarus:
 if args.generate_corpus:
     gc = GenerateCorpus(config)
     gc.run(args.seed)
-elif args.generate_graph:
+elif args.generate_graph_test:
     raise NotImplementedError('generate graph not implemented yet.')
+elif args.generate_graph:
+    raise NotImplementedError('generate graph not implemented yet. Work has not shown which linking method is best')
 elif args.walkthrough:
     raise NotImplementedError('walkthrough not implemented yet.')
 elif args.run_flawed_agents:

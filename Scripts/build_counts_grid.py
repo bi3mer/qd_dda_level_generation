@@ -7,6 +7,8 @@ import json
 import sys
 import os
 
+raise DeprecationWarning('This was used for the PCG Workshop 2021 but is now out of date.')
+
 
 f = open(os.path.join(sys.argv[1], 'bins.json'))
 data = json.load(f)

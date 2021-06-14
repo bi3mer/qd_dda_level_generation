@@ -28,3 +28,5 @@ def save_map_elites_to_dir(bins, directory_name):
             level_file.close()
 
         update_progress(progress / len(keys)) 
+    update_progress(1)
+    

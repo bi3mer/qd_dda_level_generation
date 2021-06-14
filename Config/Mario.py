@@ -18,8 +18,8 @@ flawed_agents = [
 # start_population_size = 500
 # iterations = 20_000
 
-start_population_size = 500
-iterations = 50_000
+start_population_size = 25
+iterations = 50
 
 feature_names = ['linearity', 'leniency']
 feature_descriptors = [percent_linearity, percent_leniency]
