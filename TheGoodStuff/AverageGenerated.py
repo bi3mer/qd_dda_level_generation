@@ -2,8 +2,6 @@ from MapElites import MapElites
 from Utility import *
 
 from json import dumps as json_dumps
-from os.path import join, exists
-from os import mkdir
 from subprocess import call
 
 class AverageGenerated:

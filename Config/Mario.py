@@ -3,14 +3,8 @@ from Utility.Mario.IO import get_levels
 from Utility.Mario.Behavior import *
 from Utility.Mario.Fitness import *
 from Utility.NGram import NGram
-from Utility.GridTools import columns_into_grid_string
 
-from subprocess import Popen
-from pathlib import Path
-from atexit import register
-from shutil import rmtree
 from os.path import join
-from os import mkdir, remove, listdir
 
 data_dir = f'MarioData'
 

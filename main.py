@@ -22,6 +22,7 @@ type_group.add_argument('--generate-corpus', action='store_true', help='Generate
 type_group.add_argument('--generate-graph', action='store_true', help='Generate a graph with a corpus built from --corpus')
 type_group.add_argument('--walkthrough', action='store_true', help='Walkthrough a graph built with --generate-graph')
 type_group.add_argument('--average-generated', action='store_true', help='Generate a set of corpuses to get the average # levels generated.')
+type_group.add_argument('--run-flawed-agents', action='store_true', help='Walkthrough graph built with --generate-graph with a set of flawed agents.')
 # parser.add_argument('--run-flawed-agents', action='store_true', help='Assumes pipeline already run. Will run flawed agents on the grid.')
 
 
@@ -39,10 +40,10 @@ if args.generate_corpus:
     gc.run(args.seed)
 elif args.generate_graph:
     raise NotImplementedError('generate graph not implemented yet.')
-elif args.generate_graph:
-    raise NotImplementedError('generate graph not implemented yet.')
 elif args.walkthrough:
     raise NotImplementedError('walkthrough not implemented yet.')
+elif args.run_flawed_agents:
+    raise NotImplementedError('run flawed agents not implemented yet.')
 elif args.average_generated:
     ag = AverageGenerated(config, args.seed)
     ag.run(args.runs)
