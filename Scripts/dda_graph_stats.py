@@ -24,13 +24,18 @@ stats = {
         'link_lengths': [],
         'playable': [],
         'bc_targ': [],
-        'bc_found': []
+        'bc_found': [],
+        'mcts': [],
+        'percent_playable': 0
     },
     'mcts': {
         'link_lengths': [],
         'playable': [],
         'bc_targ': [],
-        'bc_found': [] 
+        'bc_found': [],
+        'mcts': [],
+        'percent_playable': 0
+
     }
 }
 
@@ -39,6 +44,9 @@ data = json.load(f)
 f.close()
 
 for alg in ['bfs', 'mcts']:
+    links = 0
+    playable_links = 0
+
     for src in data:        
         for dst in data[src]:
             if data[src][dst][alg]['percent_playable'] != -1:
@@ -48,10 +56,21 @@ for alg in ['bfs', 'mcts']:
                     stats[alg]['bc_targ'].append(data[src][dst]['targets'])
                     stats[alg]['bc_found'].append(stats[alg]['bc_targ'][-1])
                 else:
-                    stats[alg]['bc_targ'].append(data[src][dst]['targets'])
-                    stats[alg]['bc_found'].append(data[src][dst][alg]['behavioral_characteristics'])
+                    target = data[src][dst]['targets']
+                    found = data[src][dst][alg]['behavioral_characteristics']
+
+                    stats[alg]['bc_targ'].append(target)
+                    stats[alg]['bc_found'].append(found)
+                    stats[alg]['mcts'].append(sum([(target[i] - found[i])**2 for i in range(len(target))]))
                 
                 stats[alg]['playable'].append(data[src][dst][alg]['percent_playable'])
+
+                links += 1
+                if data[src][dst][alg]['percent_playable'] == 1.0:
+                    playable_links += 1
+
+
+    stats[alg]['percent_playable'] = playable_links / links
 
 
 table = [[
@@ -61,24 +80,31 @@ table = [[
     'max link', 
     'std link',
     
-    'min BC 1',
+    '\nmin BC 1',
     'mean BC 1', 
     'median BC 1',
     'max BC 1', 
     'std BC 1',
     
-    'min BC 2',
+    '\nmin BC 2',
     'mean BC 2', 
     'median BC 2',
     'max BC 2', 
     'std BC 1',
+
+    '\nmin BC^2',
+    'mean BC^2', 
+    'median BC^2',
+    'max BC^2', 
+    'std BC^1',
     
-    'min playable',
+    '\nmin playable',
     'mean playable', 
     'median playable',
     'max playable', 
     'std playable',
-    
+
+    '\n% beatable',
 ]]
 
 for alg in ['bfs', 'mcts']:
@@ -93,13 +119,15 @@ for alg in ['bfs', 'mcts']:
     for i, differences in enumerate(bc_difference):
         alg_stats.append(get_stats(differences))
 
+    alg_stats.append(get_stats(stats[alg]['mcts']))
     alg_stats.append(get_stats(stats[alg]['playable']))
     table.append(list(itertools.chain(*alg_stats)))
+    table[-1].append(stats[alg]['percent_playable'])
 
 # transpose
 table = [[table[j][i] for j in range(len(table))] for i in range(len(table[0]))]
 
 
-print('\t\ttBFS\tMCTS')
+print('\t\tBFS\tMCTS')
 for row in table:
     print(f'{row[0]}\t{row[1]:.4f}\t{row[2]:.4f}')
