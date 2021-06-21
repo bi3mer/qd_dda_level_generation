@@ -5,7 +5,7 @@ from Utility.LinkerGeneration import *
 from Utility import rows_into_columns, update_progress
 import json
 
-class GenerateLevelGraphTest:
+class GenerateLinks:
     def __init__(self, config, __seed):
         self.config = config
         seed(__seed)

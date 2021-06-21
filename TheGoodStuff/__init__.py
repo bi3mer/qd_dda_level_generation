@@ -1,4 +1,4 @@
 from .GenerationPipeline import GenerationPipeline
 from .GenerateCorpus import GenerateCorpus
 from .AverageGenerated import AverageGenerated
-from .GenerateLevelGraphTest import GenerateLevelGraphTest
+from .GenerateLinks import GenerateLinks

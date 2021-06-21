@@ -2,12 +2,40 @@ from collections import deque
 from math import sqrt, log, exp
 
 ##################################### BFS #####################################
+def generate_link_dfs(grammar, start, end, additional_columns):
+    if additional_columns == 0 and grammar.sequence_is_possible(start + end):
+        return []
+
+    start_link = grammar.generate(start, additional_columns)
+    min_path = start + start_link
+
+    start = tuple(min_path[-(grammar.n - 1):])
+    stack = [start]
+    end_prior = tuple(end[:grammar.n - 1])
+    seen = set()
+
+    while len(stack):
+        current_path = stack.pop()
+        prior = current_path[-(grammar.n - 1):]
+        output = grammar.get_weighted_output(prior)
+        if output != None:
+            for new_token in reversed(output):
+                new_prior = tuple(prior[1:]) + (new_token,)
+                if new_prior == end_prior:
+                    return start_link + list(current_path[:-(grammar.n - 1)])
+                elif new_prior in seen:
+                    continue
+                else:
+                    new_path = current_path + (new_token,)
+                    seen.add(new_prior)
+                    stack.append(new_path)
+
+    return None
+
+##################################### BFS #####################################
 def generate_link_bfs(grammar, start, end, additional_columns):
     '''
     Based off of: https://www.redblobgames.com/pathfinding/a-star/introduction.html
-
-    @TODO: This should really not rely so heavily on splits and all that nonsense.
-    The datastructures can definitely be simplified and improved. 
     '''
     if additional_columns == 0 and grammar.sequence_is_possible(start + end):
         return []
