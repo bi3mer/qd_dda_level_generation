@@ -1,4 +1,4 @@
-from Utility.LinkerGeneration import generate_link_bfs, generate_link_dfs
+from Utility.LinkerGeneration import generate_link_bfs
 from random import randrange, random
 
 class NGramMutate:
@@ -23,12 +23,8 @@ class NGramMutate:
             assert self.gram.sequence_is_possible(start)
             assert self.gram.sequence_is_possible(end)
             
-            link = generate_link_dfs(self.gram, start, end, 1)
+            link = generate_link_bfs(self.gram, start, end, 1)
             path = start + link + end
-
-            if not self.gram.sequence_is_possible(path):
-                print(start)
-                print(end)
 
             assert self.gram.sequence_is_possible(path)
 

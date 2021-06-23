@@ -120,9 +120,6 @@ class GenerationPipeline():
         successes = 0
         failures  = 0
         for k in keys: # iterate through keys
-            if key == (6,16):
-                print('a')
-
             f1_values = [val*(self.config.feature_dimensions[i][1] - self.config.feature_dimensions[i][0])/100 + self.config.feature_dimensions[i][0] for i, val in enumerate(k)]
             for entry_index, entry in enumerate(bins[k]): # iterate through elites
                 if entry[0] != 0.0:
