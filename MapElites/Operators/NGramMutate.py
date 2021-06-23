@@ -1,18 +1,14 @@
-from Utility.LinkerGeneration import generate_link_bfs
+from Utility.LinkerGeneration import generate_link_bfs, generate_link_dfs
 from random import randrange, random
 
 class NGramMutate:
     __slots__ = [
         'standard_deviation', 'mutation_values', 'mutation_rate', 
-        'max_length', 'gram', 'max_attempts']
+        'max_length', 'gram']
 
-    def __init__(self, mutation_rate, gram, max_length, max_attempts=10):
-        '''
-        max length should be longer than the original strand length.
-        '''
+    def __init__(self, mutation_rate, gram, max_length):
         self.mutation_rate = mutation_rate
         self.max_length = max_length
-        self.max_attempts = max_attempts
         self.gram = gram
 
     def mutate(self, strand):
@@ -20,17 +16,22 @@ class NGramMutate:
             return None
 
         if random() < self.mutation_rate:
-            path = None
-            attempts = 0
-            while path == None and attempts < self.max_attempts:
-                attempts += 1
-                point = randrange(self.gram.n, len(strand) - self.gram.n)
-                start =  strand[:point]
-                end = strand[point + 1:]
-                path = start + generate_link_bfs(self.gram, start, end, 1) + end
+            point = randrange(self.gram.n - 1, len(strand) - self.gram.n - 1)
+            start =  strand[:point]
+            end = strand[point + 1:]
 
-            if path == None:
-                return None
+            assert self.gram.sequence_is_possible(start)
+            assert self.gram.sequence_is_possible(end)
+            
+            link = generate_link_dfs(self.gram, start, end, 1)
+            path = start + link + end
+
+            if not self.gram.sequence_is_possible(path):
+                print(start)
+                print(end)
+
+            assert self.gram.sequence_is_possible(path)
+
             return path[:self.max_length]
         
         return strand

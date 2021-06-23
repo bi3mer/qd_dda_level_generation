@@ -62,8 +62,8 @@ class NGram():
         prior = deque([], maxlen=self.n - 1)
 
         for token in sequence:
-            key = tuple(prior)
             if len(prior) == prior.maxlen:
+                key = tuple(prior)
                 if key not in self.grammar:
                     return False
 

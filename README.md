@@ -16,9 +16,10 @@ git submodule update
 I recommend using [PyPy3](https://www.pypy.org/) otherwise it will take a pretty longtime to run.
 
 ```bash
-pypy3 main.py --mario # run Mario pipeline
-pypy3 main.py --dungeongram # run DungeonGrams pipeline
+pypy3 main.py --help
 ```
+
+If you are doing a full run where you are confident that the code is going to work, then PyPy can be made a bit faster with the -O flag before `main.py`.
 
 ## Note To Self
 
