@@ -1,5 +1,5 @@
 from dungeongrams.dungeongrams import *
-from MapElites.Operators import *
+from Optimization.Operators import *
 from Utility.DungeonGram.IO import get_levels
 from Utility.DungeonGram.Behavior import *
 from Utility.DungeonGram.Fitness import *
@@ -17,7 +17,7 @@ flawed_agents = [
     'no_speed'
 ]
 
-start_population_size = 20
+start_population_size = 100
 iterations = 100
 
 feature_names = ['Density', 'leniency']
@@ -27,9 +27,10 @@ feature_dimensions = [[0, 1.0], [0, 0.5]]
 resolution = 20
 elites_per_bin = 4
 fitness = lambda lvl: get_fitness(lvl, get_percent_playable(lvl))
-minimize_performance = True
+minimize_performance = False
 
 uses_separate_simulation = False
+is_vertical = False
 
 n = 3
 gram = NGram(n)
@@ -47,13 +48,13 @@ start_strand_size = 15
 max_strand_size = 15
 
 mutation_values = list(unigram_keys)
-mutator = Mutate(mutation_values, 0.02)
+mutate = Mutate(mutation_values, 0.02)
 crossover = SinglePointCrossover()
 population_generator = PopulationGenerator(mutation_values, start_strand_size)
 
-n_mutator = NGramMutate(0.02, gram, max_strand_size)
-n_crossover = NGramCrossover(gram, start_strand_size, max_strand_size)
-n_population_generator = NGramPopulationGenerator(gram, start_strand_size)
+# n_mutator = NGramMutate(0.02, gram, max_strand_size)
+# n_crossover = NGramCrossover(gram, start_strand_size, max_strand_size)
+# n_population_generator = NGramPopulationGenerator(gram, start_strand_size)
 
 map_elites_config = join(data_dir, 'config_map_elites')
 data_file = join(data_dir, 'data')
@@ -79,3 +80,5 @@ def get_fitness(level, percent_playable, agent=None):
 def repair_level(level):
     new_level, modifications_made = repair(columns_into_rows(level), False, True, False, False)
     return rows_into_columns(new_level.split('\n')), modifications_made
+
+fitness = get_percent_playable

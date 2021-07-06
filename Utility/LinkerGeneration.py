@@ -1,5 +1,6 @@
 from collections import deque
 from math import sqrt, log, exp
+from random import random
 
 ##################################### BFS #####################################
 def generate_link_dfs(grammar, start, end, additional_columns):
@@ -19,7 +20,7 @@ def generate_link_dfs(grammar, start, end, additional_columns):
     while len(stack):
         current_path = stack.pop()
         prior = tuple(current_path[-(grammar.n - 1):])
-        output = grammar.get_weighted_output(prior)
+        output = grammar.get_weighted_output_list(prior)
         if output != None:
             for new_token in reversed(output):
                 new_prior = tuple(prior[1:]) + (new_token,)
@@ -44,7 +45,7 @@ def generate_link_bfs(grammar, start, end, additional_columns):
         return []
 
     # generate path of minimum length with an n-ram
-    start_link = grammar.generate(start, additional_columns)
+    start_link = grammar.generate(tuple(start), additional_columns)
     min_path = start + start_link
 
     # BFS to find the ending prior
@@ -62,7 +63,7 @@ def generate_link_bfs(grammar, start, end, additional_columns):
         prior = node[0]
         path_length = node[1]
 
-        output = grammar.get_unweighted_output(prior)
+        output = grammar.get_unweighted_output_list(prior)
         if output != None:
             for new_column in output:
                 new_node = (tuple(prior[1:]) + (new_column,), path_length + 1)
@@ -110,6 +111,10 @@ B = 4
 # tradeoff between exploration and exploitation.
 C = sqrt(2)
 
+def get_level_score(level, feature_dimensions, feature_targets):
+    score = sum([(feature_targets[i] - feature_dimensions[i](level))**2 for i in range(len(feature_dimensions))])
+    return 1/(1 + exp(-score))
+
 def best_child_node(node, t, end_prior, require_seen=False):
     best_index = -1
     best_uct = -1
@@ -136,7 +141,8 @@ def generate_link_mcts(
     feature_targets,
     after_found_simulations=5_000,
     max_simulations=50_000,
-    max_path_size=30):
+    max_path_size=30, 
+    eps=0.1):
     '''
     Based off of work from Summerville, MCMCTS 4 SMB.
 
@@ -191,7 +197,7 @@ def generate_link_mcts(
         # of the target values for the feature dimensions and what is actually found.
         # The sigmoid of the result is used to guarantee a value between 0 and 1.
         p = node[P]
-        output_new_tokens = grammar.get_unweighted_output(p)
+        output_new_tokens = grammar.get_unweighted_output_list(p)
 
         for new_token in output_new_tokens:
             new_p = p[1:] + (new_token,)
@@ -203,17 +209,25 @@ def generate_link_mcts(
             if not seen:
                 level.append(new_token)
                 prior = new_p
-                while len(level) < max_path_size and not seen:
-                    next_token = grammar.get_output(prior)
+                while len(level) < max_path_size and not prior == end_prior:
+                    if random() < eps:
+                        next_token = grammar.get_unweighted_output(prior)
+                    else:
+                        next_token = None
+                        best_score = 100
+                        for token in grammar.get_unweighted_output_list(prior):
+                            current_score = get_level_score(level + [token], feature_dimensions, feature_targets)
+                            if current_score < best_score:
+                                next_token = token
+                                best_score = current_score
+
                     level.append(next_token)
                     prior = prior[1:] + (next_token,)
-                    # seen = new_p == end_prior
 
             seen &= path_size >= grammar.n # link cannot be empty
 
             root[S] |= seen
-            score = sum([(feature_targets[i] - feature_dimensions[i](level))**2 for i in range(len(feature_dimensions))])
-            score = 1/(1 + exp(-score))
+            score = get_level_score(level, feature_dimensions, feature_targets)
             node[B].append([score, 1, seen, new_p, []])
 
             node = root
@@ -236,3 +250,9 @@ def generate_link_mcts(
         return link[:-(grammar.n - 1)]
 
     return None
+
+# BFS but for however many nodes MCTS runs for. Keep best path found. 
+# MCTS with meta search
+# if fail, run repair
+# BFS test segment + link + segment. Fail, keep going.
+# repair can only edit the link. Needs built in restrictions.

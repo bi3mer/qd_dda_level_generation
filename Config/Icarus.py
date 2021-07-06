@@ -1,5 +1,5 @@
 from dungeongrams.dungeongrams import *
-from MapElites.Operators import *
+from Optimization.Operators import *
 from Utility.Icarus.IO import get_levels
 from Utility.Icarus.Behavior import *
 from Utility.Icarus.Fitness import *
@@ -14,8 +14,8 @@ data_dir = f'IcarusData'
 
 flawed_agents = []
 
-start_population_size = 50
-iterations = 250
+start_population_size = 100
+iterations = 100
 
 feature_names = ['density', 'leniency']
 feature_descriptors = [density, leniency]
@@ -36,21 +36,22 @@ unigram_keys.difference_update(pruned) # remove any n-gram dead ends from unigra
 resolution = 40
 elites_per_bin = 4
 
-fitness = lambda level: get_fitness(level, get_percent_playable(level))
-minimize_performance = True
+# fitness = lambda level: get_fitness(level, get_percent_playable(level))
+minimize_performance = False
 uses_separate_simulation = False
+is_vertical = True
 
 start_strand_size = 25
 max_strand_size = 25
 
 mutation_values = list(unigram_keys)
-mutator = Mutate(mutation_values, 0.02)
+mutate = Mutate(mutation_values, 0.02)
 crossover = SinglePointCrossover()
 population_generator = PopulationGenerator(mutation_values, start_strand_size)
 
-n_mutator = NGramMutate(0.02, gram, max_strand_size)
-n_crossover = NGramCrossover(gram, start_strand_size, max_strand_size)
-n_population_generator = NGramPopulationGenerator(gram, start_strand_size)
+# n_mutator = NGramMutate(0.02, gram, max_strand_size)
+# n_crossover = NGramCrossover(gram, start_strand_size, max_strand_size)
+# n_population_generator = NGramPopulationGenerator(gram, start_strand_size)
 
 map_elites_config = join(data_dir, 'config_map_elites')
 data_file = join(data_dir, 'data')
@@ -68,3 +69,5 @@ def get_percent_playable(level, agent=None):
 def get_fitness(level, percent_playable, agent=None):
     bad_n_grams = gram.count_bad_n_grams(level)
     return bad_n_grams + 1 - percent_playable
+
+fitness = get_percent_playable

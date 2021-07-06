@@ -1,4 +1,4 @@
-from MapElites import MapElites
+from Optimization import MapElites
 from Utility import *
 
 from json import dumps as json_dumps

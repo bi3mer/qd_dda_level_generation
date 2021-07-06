@@ -1,5 +1,5 @@
 from Utility.GridTools import columns_into_grid_string
-from MapElites import MapElites
+from Optimization import MapElites
 from Utility.Math import *
 from Utility import *
 
@@ -45,9 +45,9 @@ class GenerateCorpus():
             self.config.resolution,
             self.config.fitness,
             self.config.minimize_performance,
-            self.config.n_population_generator,
-            self.config.n_mutator,
-            self.config.n_crossover,
+            self.config.population_generator,
+            self.config.mutator,
+            self.config.crossover,
             self.config.elites_per_bin,
             rng_seed=seed
         )

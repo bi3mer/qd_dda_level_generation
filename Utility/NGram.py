@@ -1,5 +1,5 @@
 from collections import deque
-from random import choices
+from random import choices, choice
 from itertools import chain
 
 class NGram():
@@ -28,11 +28,15 @@ class NGram():
     def has_next_step(self, sequence):
         return tuple(sequence) in self.grammar
 
-    def get_output(self, sequence):
+    def get_weighted_output(self, sequence):
         unigram = self.grammar[sequence]
         return choices(list(unigram.keys()), weights=unigram.values())[0]
 
-    def get_weighted_output(self, sequence):
+    def get_unweighted_output(self, sequence):
+        unigram = self.grammar[sequence]
+        return choice(list(unigram.keys()))
+
+    def get_weighted_output_list(self, sequence):
         if sequence not in self.grammar:
             return None
 
@@ -41,7 +45,7 @@ class NGram():
         keys.sort(key=lambda k: -unigram[k])
         return keys
 
-    def get_unweighted_output(self, sequence):
+    def get_unweighted_output_list(self, sequence):
         if sequence not in self.grammar:
             return None
             
@@ -52,7 +56,7 @@ class NGram():
         output = []
 
         while len(output) < size and self.has_next_step(prior):
-            new_token = self.get_output(prior)
+            new_token = self.get_weighted_output(prior)
             output.append(new_token)
             prior = tuple(prior[1:]) + (new_token,)
 
