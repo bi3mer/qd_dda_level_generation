@@ -4,6 +4,7 @@ from Utility.Math import median, mean
 from Utility.LinkerGeneration import *
 
 from itertools import chain, repeat
+from statistics import stdev
 from random import seed, choices
 from os.path import join
 from os import listdir
@@ -19,16 +20,16 @@ class RandomWalkthrough:
 
     def __combine(self, segments, algorithm):
         if algorithm == None:
-            return list(chain(*segments)), [0 for _ in repeat(None, len(segments))], [-1 for _ in repeat(None, len(segments))]
+            return list(chain(*segments)), [[] for _ in repeat(None, len(segments))], [[0 for __ in repeat(None, len(self.config.feature_names))] for _ in repeat(None, len(segments))]
 
         level = segments[0]
-        link_lengths = []
+        links = []
         bc = []
         for i in range(1, len(segments)):
             link = algorithm(self.config.gram, level, segments[i], 0)
             
             if len(link) == 0:
-                bc.append([-1 for _ in repeat(None, len(segments) - 1)])
+                bc.append([0 for _ in repeat(None, len(segments) - 1)])
             else:
                 bc_link = [alg(link) for alg in self.config.feature_descriptors]
                 bc_0 = [alg(segments[i - 1]) for alg in self.config.feature_descriptors]
@@ -37,10 +38,10 @@ class RandomWalkthrough:
                 
                 bc.append([abs(bc_link[j] - bc_mean[j]) for j in range(len(bc_mean))])
 
-            link_lengths.append(link)
+            links.append(link)
 
 
-        return level, link_lengths, bc
+        return level, links, bc
 
     def run(self, levels_to_generate, num_segments):
         print('getting segments')
@@ -56,17 +57,17 @@ class RandomWalkthrough:
         print('Generating random level combinations')
         stats = {
             'no_link': {
-                'lengths': [],
+                'links': [],
                 'behavioral_characteristics': [],
                 'completability': []
             },
             'bfs': {
-                'lengths': [],
+                'links': [],
                 'behavioral_characteristics': [],
                 'completability': []
             },
             'dfs': {
-                'lengths': [],
+                'links': [],
                 'behavioral_characteristics': [],
                 'completability': []
             },
@@ -81,9 +82,9 @@ class RandomWalkthrough:
         for i in range(levels_to_generate):
             segments = choices(levels, k=num_segments)
             for key in link_generator:
-                level, link_lengths, bc = link_generator[key](segments)
+                level, links, bc = link_generator[key](segments)
 
-                stats[key]['lengths'].append(link_lengths)
+                stats[key]['links'].append(links)
                 stats[key]['behavioral_characteristics'].append(bc)
                 stats[key]['completability'].append(self.config.get_percent_playable(level))
 
@@ -95,6 +96,93 @@ class RandomWalkthrough:
         dump(stats, f, indent=2)
         f.close()
 
-        print('Results')
-        # https://www.educba.com/python-print-table/
-        # use format() or tabulate()
+        print('Link Lengths')
+        keys = list(link_generator.keys())
+        headers = ['', 'min', 'mean', 'median', 'max', 'std']
+        playability_table = []
+        for k in keys:
+            row = [k]
+            scores = []
+            for links in stats[k]['links']:
+                for l in links:
+                    scores.append(len(l))
+
+            row.append(round(min(scores), 3))
+            row.append(round(mean(scores), 3))
+            row.append(round(median(scores), 3))
+            row.append(round(max(scores), 3))
+            row.append(round(stdev(scores), 3))
+            playability_table.append(row)
+                
+        format_row = "{:>8}" * (len(headers))
+        print(format_row.format(*headers))
+        for _, row in zip(headers, playability_table):
+            print(format_row.format(*row))
+
+        print()
+        print('Completability')
+        headers = ['', 'min', 'mean', 'median', 'max', 'std']
+        playability_table = []
+        for k in keys:
+            row = [k]
+            scores = []
+            for s in stats[k]['completability']:
+                scores.append(s)
+
+            row.append(round(min(scores), 3))
+            row.append(round(mean(scores), 3))
+            row.append(round(median(scores), 3))
+            row.append(round(max(scores), 3))
+            row.append(round(stdev(scores), 3))
+            playability_table.append(row)
+                
+        format_row = "{:>8}" * (len(headers))
+        print(format_row.format(*headers))
+        for _, row in zip(headers, playability_table):
+            print(format_row.format(*row))
+
+        print()
+        print(self.config.feature_names[0])
+        headers = ['', 'min', 'mean', 'median', 'max', 'std']
+        playability_table = []
+        for k in keys:
+            row = [k]
+            scores = []
+            for bc_scores in stats[k]['behavioral_characteristics']:
+                for link_score in bc_scores:
+                    scores.append(link_score[0])
+
+            row.append(round(min(scores), 3))
+            row.append(round(mean(scores), 3))
+            row.append(round(median(scores), 3))
+            row.append(round(max(scores), 3))
+            row.append(round(stdev(scores), 3))
+            playability_table.append(row)
+                
+        format_row = "{:>8}" * (len(headers))
+        print(format_row.format(*headers))
+        for _, row in zip(headers, playability_table):
+            print(format_row.format(*row))
+
+        print()
+        print(self.config.feature_names[1])
+        headers = ['', 'min', 'mean', 'median', 'max', 'std']
+        playability_table = []
+        for k in keys:
+            row = [k]
+            scores = []
+            for bc_scores in stats[k]['behavioral_characteristics']:
+                for link_score in bc_scores:
+                    scores.append(link_score[1])
+
+            row.append(round(min(scores), 3))
+            row.append(round(mean(scores), 3))
+            row.append(round(median(scores), 3))
+            row.append(round(max(scores), 3))
+            row.append(round(stdev(scores), 3))
+            playability_table.append(row)
+                
+        format_row = "{:>8}" * (len(headers))
+        print(format_row.format(*headers))
+        for _, row in zip(headers, playability_table):
+            print(format_row.format(*row))
