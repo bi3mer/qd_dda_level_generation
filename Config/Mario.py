@@ -55,7 +55,7 @@ max_strand_size = 25
 # crossover = SinglePointCrossover()
 # population_generator = PopulationGenerator(mutation_values, start_strand_size)
 
-mutator = NGramMutate(0.02, gram, max_strand_size)
+mutate = NGramMutate(0.02, gram, max_strand_size)
 crossover = NGramCrossover(gram, start_strand_size, max_strand_size)
 population_generator = NGramPopulationGenerator(gram, start_strand_size)
 
