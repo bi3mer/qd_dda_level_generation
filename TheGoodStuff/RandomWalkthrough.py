@@ -49,10 +49,9 @@ class RandomWalkthrough:
         level_dir = join(self.config.data_dir, 'levels')
         for level_file_name in listdir(level_dir):
             f = open(join(level_dir, level_file_name))
-            if self.config.is_vertical:
-                levels.append(rows_into_columns([l.strip() for l in reversed(f.readlines())]))
-            else:
-                levels.append(rows_into_columns(f.readlines()))
+            levels.append(rows_into_columns(f.readlines()))
+            assert self.config.gram.sequence_is_possible(levels[-1])
+            f.close()
 
         print('Generating random level combinations')
         stats = {

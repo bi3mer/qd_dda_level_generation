@@ -46,7 +46,7 @@ class GenerateCorpus():
             self.config.fitness,
             self.config.minimize_performance,
             self.config.population_generator,
-            self.config.mutator,
+            self.config.mutate,
             self.config.crossover,
             self.config.elites_per_bin,
             rng_seed=seed

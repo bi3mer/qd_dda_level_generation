@@ -18,7 +18,7 @@ flawed_agents = [
 ]
 
 start_population_size = 100
-iterations = 100
+iterations = 1000
 
 feature_names = ['Density', 'leniency']
 feature_descriptors = [density, leniency]
@@ -48,13 +48,13 @@ start_strand_size = 15
 max_strand_size = 15
 
 mutation_values = list(unigram_keys)
-mutate = Mutate(mutation_values, 0.02)
-crossover = SinglePointCrossover()
-population_generator = PopulationGenerator(mutation_values, start_strand_size)
+# mutate = Mutate(mutation_values, 0.02)
+# crossover = SinglePointCrossover()
+# population_generator = PopulationGenerator(mutation_values, start_strand_size)
 
-# n_mutator = NGramMutate(0.02, gram, max_strand_size)
-# n_crossover = NGramCrossover(gram, start_strand_size, max_strand_size)
-# n_population_generator = NGramPopulationGenerator(gram, start_strand_size)
+mutate = NGramMutate(0.02, gram, max_strand_size)
+crossover = NGramCrossover(gram, start_strand_size, max_strand_size)
+population_generator = NGramPopulationGenerator(gram, start_strand_size)
 
 map_elites_config = join(data_dir, 'config_map_elites')
 data_file = join(data_dir, 'data')
