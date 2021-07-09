@@ -26,16 +26,25 @@ class RandomWalkthrough:
         links = []
         bc = []
         for i in range(1, len(segments)):
-            link = algorithm(self.config.gram, level, segments[i], 0)
+            bc_0 = [alg(segments[i - 1]) for alg in self.config.feature_descriptors]
+            bc_1 = [alg(segments[i]) for alg in self.config.feature_descriptors]
+            bc_mean = [(bc_0[j] + bc_1[j])/2 for j in range(len(bc_0))]
+            if algorithm == generate_link_mcts:
+                link = algorithm(self.config.gram, level, segments[i], self.config.feature_descriptors, bc_mean)
+            else:
+                link = algorithm(self.config.gram, level, segments[i], 0)
             
+            if link == None:
+                print(level)
+                print(segments[i])
+                print(bc_mean)
+                # import sys
+                # sys.exit(-1)
+
             if len(link) == 0:
                 bc.append([0 for _ in repeat(None, len(segments) - 1)])
             else:
                 bc_link = [alg(link) for alg in self.config.feature_descriptors]
-                bc_0 = [alg(segments[i - 1]) for alg in self.config.feature_descriptors]
-                bc_1 = [alg(segments[i]) for alg in self.config.feature_descriptors]
-                bc_mean = [(bc_0[j] + bc_1[j])/2 for j in range(len(bc_0))]
-                
                 bc.append([abs(bc_link[j] - bc_mean[j]) for j in range(len(bc_mean))])
 
             links.append(link)
@@ -70,14 +79,21 @@ class RandomWalkthrough:
                 'behavioral_characteristics': [],
                 'completability': []
             },
+            'mcts': {
+                'links': [],
+                'behavioral_characteristics': [],
+                'completability': []
+            },
         }
 
         link_generator = {
             'no_link': lambda segments: self.__combine(segments, None),
             'bfs': lambda segments: self.__combine(segments, generate_link_bfs),
             'dfs': lambda segments: self.__combine(segments, generate_link_dfs),
+            'mcts': lambda segments: self.__combine(segments, generate_link_mcts),
         }
 
+        update_progress(0)
         for i in range(levels_to_generate):
             segments = choices(levels, k=num_segments)
             for key in link_generator:

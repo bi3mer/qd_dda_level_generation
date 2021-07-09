@@ -1,6 +1,7 @@
 from collections import deque
 from math import sqrt, log, exp
-from random import random
+from random import random, choice, randint
+from itertools import repeat
 
 ##################################### BFS #####################################
 def generate_link_dfs(grammar, start, end, additional_columns):
@@ -115,21 +116,29 @@ def get_level_score(level, feature_dimensions, feature_targets):
     score = sum([(feature_targets[i] - feature_dimensions[i](level))**2 for i in range(len(feature_dimensions))])
     return 1/(1 + exp(-score))
 
-def best_child_node(node, t, end_prior, require_seen=False):
-    best_index = -1
-    best_uct = -1
-    for i, child in enumerate(node[B]):
-        if require_seen and not child[S]:
-            continue 
+def best_child_node(node, t, end_prior, eps, require_seen=False):
+    '''
+    Since we have a maximum path length, epsilon greedy is necessary since there is
+    a chance that the same path will be taken everytime that cannot be computed
+    due to length.
+    '''
+    if random() < eps:
+        best_index = randint(0, len(node[B]) - 1)
+    else:
+        best_index = -1
+        best_uct = -1
+        for i, child in enumerate(node[B]):
+            if require_seen and not child[S]:
+                continue 
 
-        if not require_seen and child[S] == end_prior:
-            continue
-        
-        # uct = (w/n) + C*sqrt(log(t)/n)
-        uct = (child[W]/child[N]) + C*sqrt(log(t)/child[N])
-        if uct > best_uct:
-            best_index = i
-            best_uct = uct
+            if not require_seen and child[S] == end_prior:
+                continue
+            
+            # uct = (w/n) + C*sqrt(log(t)/n)
+            uct = (child[W]/child[N]) + C*sqrt(log(t)/child[N])
+            if uct > best_uct:
+                best_index = i
+                best_uct = uct
 
     return best_index
 
@@ -140,7 +149,7 @@ def generate_link_mcts(
     feature_dimensions, 
     feature_targets,
     after_found_simulations=5_000,
-    max_simulations=50_000,
+    max_simulations=1_000_000,
     max_path_size=30, 
     eps=0.1):
     '''
@@ -162,11 +171,12 @@ def generate_link_mcts(
     # initialization
     root = [0, 0, False, tuple(start[-(grammar.n - 1):]), []]
     end_prior = tuple(end[:grammar.n - 1])
-    t = 1
-
+    
     # t represents the total number of simulations and is used in the upper
     # confidence bound applied to tress (UCT).
-    for t in range(1, max_simulations):
+    t = 1
+
+    for _ in repeat(None, max_simulations):
         if root[S]:
             if after_found_simulations <= 0:
                 break
@@ -183,7 +193,7 @@ def generate_link_mcts(
         path_size = 0
 
         while len(node[B]) != 0:
-            best_index = best_child_node(node, t, end_prior)
+            best_index = best_child_node(node, t, end_prior, eps)
             
             history.append(best_index)
             node = node[B][best_index]
@@ -192,6 +202,9 @@ def generate_link_mcts(
 
             if path_size > max_path_size:
                 break
+
+        if path_size > max_path_size:
+            continue
 
         # At leaf, build a new child node. The score is the sum of squares difference
         # of the target values for the feature dimensions and what is actually found.
@@ -214,17 +227,18 @@ def generate_link_mcts(
                         next_token = grammar.get_unweighted_output(prior)
                     else:
                         next_token = None
+                        
                         best_score = 100
                         for token in grammar.get_unweighted_output_list(prior):
                             current_score = get_level_score(level + [token], feature_dimensions, feature_targets)
                             if current_score < best_score:
                                 next_token = token
                                 best_score = current_score
-
+                    
                     level.append(next_token)
                     prior = prior[1:] + (next_token,)
 
-            seen &= path_size >= grammar.n # link cannot be empty
+            # seen &= path_size >= grammar.n # link cannot be empty
 
             root[S] |= seen
             score = get_level_score(level, feature_dimensions, feature_targets)
@@ -239,11 +253,12 @@ def generate_link_mcts(
             node[W] += score
             node[N] += 1
             node[S] |= seen
+            t += 1
 
     if root[S]:
         link = []
         while root[P] != end_prior:
-            best_index = best_child_node(root, t, end_prior, require_seen=True)
+            best_index = best_child_node(root, t, end_prior, -1, require_seen=True)
             root = root[B][best_index]
             link.append(root[P][-1])
 
