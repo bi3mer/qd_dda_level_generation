@@ -1,5 +1,5 @@
 from Utility.NGram import NGram
-from Utility.GridTools import columns_into_rows, rows_into_columns
+from Utility.GridTools import columns_into_grid_string, rows_into_columns
 
 from Utility import DungeonGram
 from Utility import Icarus
@@ -15,43 +15,19 @@ parser.add_argument('--file',type=str, help='path to level file', required=True)
 args = parser.parse_args()
 
 f = open(args.file)
-lvl = [l.strip() for l in f.readlines()]
+lvl = rows_into_columns([l.strip() for l in f.readlines()])
 f.close()
 
 if args.dungeongram:
-    from BinsPerEpoch.DungeonGramBinsPerEpoch import DungeonGramBinsPerEpoch
-    from Utility.DungeonGram.IO import get_levels
-    n = 3
-    gram = NGram(n)
-    levels = get_levels()
-    for level in levels:
-        gram.add_sequence(level)
-
-    lvl = rows_into_columns(lvl)
-    dg = DungeonGramBinsPerEpoch()
-    f = lambda lvl: dg.get_fitness(lvl, dg.get_percent_playable(lvl))
+    from Config import DungeonGram
+    config = DungeonGram
 elif args.mario:
-    from Utility.Mario.Fitness import build_slow_fitness_function
-    from Utility.Mario.IO import get_levels
-    n = 3
-    gram = NGram(n)
-    levels = get_levels()
-    for level in levels:
-        gram.add_sequence(level)
-
-    lvl = rows_into_columns(lvl)
-    f = build_slow_fitness_function(gram)
+    from Config import Mario
+    config = Mario
 elif args.icarus:
-    from Utility.Icarus.Fitness import build_slow_fitness_function
-    from Utility.Icarus.IO import get_levels
+    from Config import Icarus
+    config = Icarus
 
-    n = 2
-    gram = NGram(n)
-    levels = get_levels()
-    for level in levels:
-        gram.add_sequence(level)
-
-    lvl = list(reversed(lvl))
-    f = build_slow_fitness_function(gram)
-
-print(f(lvl))
+print(columns_into_grid_string(lvl))
+print(f'bad n-grams: {config.gram.count_bad_n_grams(lvl)}')
+print(f'% playable:  {config.get_percent_playable(lvl)}')

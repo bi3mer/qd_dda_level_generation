@@ -4,8 +4,7 @@ from random import random, choice, randint
 from itertools import repeat
 
 ##################################### BFS #####################################
-def generate_link_dfs(grammar, start, end, additional_columns):
-    # print(f'\n\nstart: {grammar.sequence_is_possible(start + end)}\n\n')
+def generate_link_dfs(grammar, start, end, additional_columns, agent=None):
     if additional_columns == 0 and grammar.sequence_is_possible(start + end):
         return []
 
@@ -38,7 +37,7 @@ def generate_link_dfs(grammar, start, end, additional_columns):
     return None
 
 ##################################### BFS #####################################
-def generate_link_bfs(grammar, start, end, additional_columns):
+def generate_link_bfs(grammar, start, end, additional_columns, agent=None):
     '''
     Based off of: https://www.redblobgames.com/pathfinding/a-star/introduction.html
     '''
@@ -73,7 +72,22 @@ def generate_link_bfs(grammar, start, end, additional_columns):
                     if new_node[0] == end_prior and path_length >= grammar.n:
                         end_node = new_node
                         came_from[end_node] = node
-                        break
+                        if agent != None:
+                            path = []
+
+                            while end_node != start_node:
+                                path.insert(0, end_node[0][-1])
+                                end_node = came_from[end_node]
+
+                            playability = agent(start + start_link + path[:-(grammar.n - 1)] + end)
+                            print(playability)
+                            if playability == 1.0:
+                                break
+                            else:
+                                end_node = None
+                                came_from[end_node] = None
+                        else:
+                            break
                     else:
                         came_from[new_node] = node
                         queue.append(new_node)

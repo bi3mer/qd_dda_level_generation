@@ -81,4 +81,3 @@ def repair_level(level):
     new_level, modifications_made = repair(columns_into_rows(level), False, True, False, False)
     return rows_into_columns(new_level.split('\n')), modifications_made
 
-fitness = get_percent_playable

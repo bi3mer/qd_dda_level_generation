@@ -8,7 +8,8 @@ from statistics import stdev
 from random import seed, choices
 from os.path import join
 from os import listdir
-from json import dump
+from json import dump, load
+from sys import exit
 
 class RandomWalkthrough:
     def __init__(self, config, rng_seed):
@@ -32,14 +33,13 @@ class RandomWalkthrough:
             if algorithm == generate_link_mcts:
                 link = algorithm(self.config.gram, level, segments[i], self.config.feature_descriptors, bc_mean)
             else:
-                link = algorithm(self.config.gram, level, segments[i], 0)
+                link = algorithm(self.config.gram, level, segments[i], 0, agent=None)
             
             if link == None:
                 print(level)
                 print(segments[i])
                 print(bc_mean)
-                # import sys
-                # sys.exit(-1)
+                exit(-1)
 
             if len(link) == 0:
                 bc.append([0 for _ in repeat(None, len(segments) - 1)])
@@ -54,13 +54,20 @@ class RandomWalkthrough:
 
     def run(self, levels_to_generate, num_segments):
         print('getting segments')
-        levels = []
         level_dir = join(self.config.data_dir, 'levels')
-        for level_file_name in listdir(level_dir):
-            f = open(join(level_dir, level_file_name))
-            levels.append(rows_into_columns(f.readlines()))
-            assert self.config.gram.sequence_is_possible(levels[-1])
-            f.close()
+        levels = []
+        
+        f = open(join(self.config.data_dir, 'generate_corpus_info.json'))
+        level_info = load(f)
+        f.close()
+
+        for level_name in level_info['fitness']:
+            if level_info['fitness'][level_name] == 0.0:
+                f = open(join(level_dir, level_name))
+                levels.append(rows_into_columns(f.readlines()))
+                f.close()
+
+                assert self.config.gram.sequence_is_possible(levels[-1])
 
         print('Generating random level combinations')
         stats = {

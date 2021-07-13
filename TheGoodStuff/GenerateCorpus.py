@@ -57,7 +57,7 @@ class GenerateCorpus():
         print('Validating levels...')
         valid_levels = 0
         invalid_levels =  0
-        fitnesses = []
+        fitnesses = {}
         bins = gram_search.bins
         f = open(f'{self.config.data_file}_generate_corpus_data.csv', 'w')
         csv_writer = writer(f)
@@ -69,7 +69,6 @@ class GenerateCorpus():
                 fitness = entry[0]
                 level = entry[1]
 
-                fitnesses.append(fitness)
                 if fitness == 0.0:
                     valid_levels += 1
                 else:
@@ -77,26 +76,29 @@ class GenerateCorpus():
                 
                 csv_writer.writerow(list(key) + [index, fitness])
 
-                level_file = open(join(level_dir, f'{key[1]}_{key[0]}_{index}.txt'), 'w')
+                file_name = f'{key[1]}_{key[0]}_{index}.txt'
+                level_file = open(join(level_dir, file_name), 'w')
                 level_file.write(columns_into_grid_string(level))
                 level_file.close()
+
+                fitnesses[file_name] = fitness
 
             update_progress(progress / len(keys)) 
 
         f.close()
+
         results = {
             'valid_levels': valid_levels,
             'invalid_levels': invalid_levels,
             'total_levels': valid_levels + invalid_levels,
             'fitness': fitnesses,
-            'mean_fitness': sum(fitnesses) / len(fitnesses)
         }
 
         update_progress(1)
 
         #######################################################################
         print('Storing results and Generating MAP-Elites graph...')
-        f = open(join(self.config.data_dir, 'generate_corpus_info.txt'), 'w')
+        f = open(join(self.config.data_dir, 'generate_corpus_info.json'), 'w')
         f.write(json.dumps(results, indent=2))
         f.close()
         

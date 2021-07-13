@@ -36,7 +36,7 @@ unigram_keys.difference_update(pruned) # remove any n-gram dead ends from unigra
 resolution = 40
 elites_per_bin = 4
 
-# fitness = lambda level: get_fitness(level, get_percent_playable(level))
+fitness = lambda level: get_fitness(level, get_percent_playable(level))
 minimize_performance = False
 uses_separate_simulation = False
 is_vertical = True
@@ -69,5 +69,3 @@ def get_percent_playable(level, agent=None):
 def get_fitness(level, percent_playable, agent=None):
     bad_n_grams = gram.count_bad_n_grams(level)
     return bad_n_grams + 1 - percent_playable
-
-fitness = get_percent_playable

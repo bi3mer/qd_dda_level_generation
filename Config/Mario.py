@@ -18,8 +18,8 @@ flawed_agents = [
 # start_population_size = 500
 # iterations = 20_000
 
-start_population_size = 250
-iterations = 1_000
+start_population_size = 500
+iterations = 50_000
 
 feature_names = ['linearity', 'leniency']
 feature_descriptors = [percent_linearity, percent_leniency]
@@ -44,7 +44,6 @@ pruned = gram.fully_connect() # remove dead ends from grammar
 unigram_keys.difference_update(pruned) # remove any n-gram dead ends from unigram
 
 # fitness = summerville_fitness(gram)
-fitness = percent_playable
 minimize_performance = False
 
 start_strand_size = 25
@@ -74,6 +73,9 @@ def get_percent_playable(level, agent=None):
 def get_fitness(level, percent_playable, agent=None):
     bad_n_grams = gram.count_bad_n_grams(level)
     return bad_n_grams + 1 - percent_playable
+
+fitness = lambda lvl: get_fitness(lvl, get_percent_playable(lvl))
+
 
 # FOr now, let's not bother with Infinite Mario Bros.
 # Necessary to evaluate with Robin Baumgarten agent
