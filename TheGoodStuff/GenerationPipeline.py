@@ -1,6 +1,6 @@
 from Utility.Log import Log
 from Utility.GridTools import columns_into_grid_string
-from Utility.LinkerGeneration import generate_link_bfs, generate_link_mcts
+from Utility.LinkerGeneration import generate_link_bfs
 from Optimization import MapElites
 from Utility.Math import *
 from Utility import *
