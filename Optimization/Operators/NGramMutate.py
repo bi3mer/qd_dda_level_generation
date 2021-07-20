@@ -25,7 +25,7 @@ class NGramMutate:
             
             link = generate_link_bfs(self.gram, start, end, 1)
             path = start + link + end
-
+            
             assert self.gram.sequence_is_possible(path)
 
             return path[:self.max_length]

@@ -15,12 +15,11 @@ from itertools import repeat
 #   pick new segments. Report on how many times a link failed to find a level.
 # - Seth makes overleaf
 # - write the paper
-def generate_link_bfs(grammar, start, end, additional_columns, agent=None, max_length=30):
+def generate_link_bfs(grammar, start, end, additional_columns, agent=None, max_length=40):
     '''
     Based off of: https://www.redblobgames.com/pathfinding/a-star/introduction.html
     '''
-    print('WARNING :: I do not handle two priors being exactly the same yet.')
-    print('TODO :: Rename generate_link_bfs to generate_link')
+    # print('TODO :: Rename generate_link_bfs to generate_link')
     assert grammar.sequence_is_possible(start)
     assert grammar.sequence_is_possible(end)
 
@@ -46,22 +45,19 @@ def generate_link_bfs(grammar, start, end, additional_columns, agent=None, max_l
 
     start_node = (tuple(min_path[-(grammar.n - 1):]), 0)
     end_prior = tuple(end[:grammar.n - 1])
-    iterations = 500
     queue.append(start_node)
     path = None
 
     # loop through queue until a path is found
     while queue:
         node = queue.popleft()
-        if node[1] + 1 > 30:
-                continue
+        if node[1] + 1 > max_length:
+            continue
             
         current_prior = node[0]
         output = grammar.get_unweighted_output_list(current_prior)
         if output == None:
             continue
-        # print(len(queue), len(current_path), len(output))
-        # print(current_path, prior, output)
 
         for new_column in output:
             # build the new prior with the slice found by removing the first 
@@ -89,28 +85,14 @@ def generate_link_bfs(grammar, start, end, additional_columns, agent=None, max_l
             # only use the path if we have constructed a path that is larger 
             # than n.
             if len(path) >= grammar.n:
-                # TODO: this link creation is wrong right now but not the bigger issue for right now :/
-                # link = start_link + new_path[:-(grammar.n - 1)]
-                link =  path[:-(grammar.n - 1)]
+                link = start_link + path[:-(grammar.n - 1)]
+
                 if agent != None:
                     playability = agent(start + link + end)
                     if playability == 1.0:
                         return link
-                    else:
-                        iterations -=1
-
-                        if iterations <= 0:
-                            print()
-                            print(columns_into_grid_string(start))
-                            print()
-                            print(columns_into_grid_string(end))
-                            print()
-                            print('here!!!!!!!!')
-                            import sys
-                            sys.exit(-1)
                 else:
                     return link
             
     # No link found
-    print('ERROR :: no link found!')
     return None
