@@ -1,39 +1,64 @@
-from Utility.GridTools import columns_into_grid_string
 from collections import deque
-from math import sqrt, log, exp
-from random import random, choice, randint
-from itertools import repeat
+from math import sqrt
 
-
-##################################### BFS #####################################
 # - exhaustive search, use a flag and life is good
 # - if path has better characteristics, run agent else continue
 # - change to stamina branch of DG, how many iterations to run for DG. Add third dimension if possible.
 # - what % of the links asked to make work versus do not
 # - % that the segments could be completed
-# - what happens if a walkthrough fails? PIck x segments, if linking fails then
+# - what happens if a walkthrough fails? Pick x segments, if linking fails then
 #   pick new segments. Report on how many times a link failed to find a level.
 # - Seth makes overleaf
 # - write the paper
-def generate_link_bfs(grammar, start, end, additional_columns, agent=None, max_length=40):
+def generate_link(grammar, start, end, additional_columns, agent=None, feature_descriptors=None, max_length=40):
     '''
+    Build a link between two connecting segments. If an agent and feature descriptors
+    are provided then this will exhaustively search all possible links and use the
+    one with the lowest rmse between the feature values found and the targets based
+    on the start and end level segments provided in the arguments.
+
     Based off of: https://www.redblobgames.com/pathfinding/a-star/introduction.html
+
+    :param NGram grammar: grammar learned from training levels.
+    :param [str] start: start level segment that link begins from.
+    :param [str] end: end level segment that link connects to.
+    :param int additional_columns: number of extra columns to be generated.
+    :param function agent: calculates value [0,1] for percent that an agent 
+    can complete a given level.
+    :param [function] feature_descriptors: list of functions that evaluate a 
+    level segment based on some behavioral characteristic.
+    :param int max_length: maximum length of a link between start and end.
+    :return: the connecting link or None if no valid link found.
+    :rtype: [str]
     '''
-    # print('TODO :: Rename generate_link_bfs to generate_link')
     assert grammar.sequence_is_possible(start)
     assert grammar.sequence_is_possible(end)
-
-    # print()
-    # print(start)
-    # print(end)
-    # print()
 
     if agent != None:
         assert agent(start) == 1.0
         assert agent(end) == 1.0
+    
+    if feature_descriptors != None:
+        assert type(feature_descriptors) == list
+        assert len(feature_descriptors) > 0
 
+    # if no extra columns have to be generated and the combination of start and
+    # end is already valid, then return. However, if an agent is given, validate
+    # that the agent can play through the combination before returning.
     if additional_columns == 0 and grammar.sequence_is_possible(start + end):
-        return []
+        if agent == None:
+            return []
+        elif agent(start + end) == 1.0:
+            return []
+
+    # if we have been given an agent and feature descriptors than calculate
+    # the average behavioral charecteristics of the two level segments to
+    # find a target
+    exhaustive_search = agent != None and feature_descriptors != None
+    if exhaustive_search:
+        target_bc = [(bc(start) + bc(end))/2 for bc in feature_descriptors]
+        best_rmse = 1000
+        best_link = None
 
     # generate path of minimum length with an n-gram
     start_link = grammar.generate(tuple(start), additional_columns)
@@ -87,12 +112,18 @@ def generate_link_bfs(grammar, start, end, additional_columns, agent=None, max_l
             if len(path) >= grammar.n:
                 link = start_link + path[:-(grammar.n - 1)]
 
-                if agent != None:
-                    playability = agent(start + link + end)
-                    if playability == 1.0:
-                        return link
+                if exhaustive_search:
+                    rmse = sqrt(sum([(t - bc(link))**2 for t , bc in zip(target_bc, feature_descriptors)])/2.0)
+                    if rmse < best_rmse:
+                        playability = agent(start + link + end)
+                        if playability == 1.0:
+                            best_link = link
+                            best_rmse = rmse
                 else:
                     return link
             
+    if exhaustive_search:
+        return best_link
+
     # No link found
     return None

@@ -1,4 +1,4 @@
-from Utility.LinkerGeneration import generate_link_bfs
+from Utility.LinkerGeneration import generate_link
 from random import randrange
 
 class NGramCrossover:
@@ -22,7 +22,7 @@ class NGramCrossover:
         # two random but valid priors.
         start = parent_1[:cross_over_point]
         end = parent_2[cross_over_point:]
-        p_1 = start + generate_link_bfs(self.gram, start, end, 0) + end
+        p_1 = start + generate_link(self.gram, start, end, 0) + end
         assert self.gram.sequence_is_possible(p_1)
 
         # build second level
@@ -30,7 +30,7 @@ class NGramCrossover:
         end = parent_1[cross_over_point:]
         assert self.gram.sequence_is_possible(start)
         assert self.gram.sequence_is_possible(end)
-        p_2 = start + generate_link_bfs(self.gram, start, end, 0) + end
+        p_2 = start + generate_link(self.gram, start, end, 0) + end
         assert self.gram.sequence_is_possible(p_2)
 
         # return truncated results

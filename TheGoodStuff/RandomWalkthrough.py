@@ -30,10 +30,14 @@ class RandomWalkthrough:
             bc_0 = [alg(segments[i - 1]) for alg in self.config.feature_descriptors]
             bc_1 = [alg(segments[i]) for alg in self.config.feature_descriptors]
             bc_mean = [(bc_0[j] + bc_1[j])/2 for j in range(len(bc_0))]
-            # if algorithm == NOne:
-                # link = algorithm(self.config.gram, level, segments[i], self.config.feature_descriptors, bc_mean)
-            # else:
-            link = algorithm(self.config.gram, level, segments[i], 0, agent=self.config.get_percent_playable)
+
+            link = algorithm(
+                self.config.gram, 
+                level, 
+                segments[i], 
+                0, 
+                agent=self.config.get_percent_playable, 
+                feature_descriptors=self.config.feature_descriptors)
             
             if link == None:
                 print(level)
@@ -48,7 +52,6 @@ class RandomWalkthrough:
                 bc.append([abs(bc_link[j] - bc_mean[j]) for j in range(len(bc_mean))])
 
             links.append(link)
-
             
             level.extend(link)
             assert self.config.gram.count_bad_n_grams(level) == 0
@@ -100,7 +103,7 @@ class RandomWalkthrough:
 
         link_generator = {
             'no_link': lambda segments: self.__combine(segments, None),
-            'bfs': lambda segments: self.__combine(segments, generate_link_bfs),
+            'bfs': lambda segments: self.__combine(segments, generate_link),
             # 'dfs': lambda segments: self.__combine(segments, generate_link_dfs),
             # 'mcts': lambda segments: self.__combine(segments, generate_link_mcts),
         }
@@ -118,7 +121,6 @@ class RandomWalkthrough:
                 stats[key]['links'].append(links)
                 stats[key]['behavioral_characteristics'].append(bc)
                 stats[key]['completability'].append(self.config.get_percent_playable(level))
-                print(columns_into_grid_string(level))
 
             update_progress(i / levels_to_generate)
         update_progress(1)
