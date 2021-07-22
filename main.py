@@ -70,8 +70,6 @@ else:
     parser.print_help(sys.stderr)
     sys.exit(-1)
 
-# pipeline = GenerationPipeline(config, args.only_map_elites)
-# pipeline.run(args.seed)
-
-# p = GenerationPipeline(Mario, False)
-# p.run()
+# Helpful sound for local development. Only works on mac.
+import os
+os.system('say "Done!"')

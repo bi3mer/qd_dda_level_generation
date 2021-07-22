@@ -1,5 +1,5 @@
 from Utility import rows_into_columns, update_progress
-from Utility.Math import median, mean
+from Utility.Math import median, mean, rmse
 from Utility.LinkerGeneration import *
 
 from itertools import chain, repeat
@@ -16,21 +16,23 @@ class RandomWalkthrough:
         if rng_seed != None:
             seed(rng_seed)
 
-
     def __combine(self, segments, algorithm):
-        if algorithm == None:
-            links = [[] for _ in repeat(None, len(segments))]
-            bc = [[0 for __ in repeat(None, len(self.config.feature_names))] for _ in repeat(None, len(segments))]
-            return list(chain(*segments)), links, bc
-
         level = segments[0]
         links = []
-        bc = []
+        bc_target = {}
+        bc_link = {}
+        for alg in self.config.feature_names:
+            bc_target[alg] = []
+            bc_link[alg] = []
+
         for i in range(1, len(segments)):
+            # calculate target behavioral characteristic values
             bc_0 = [alg(segments[i - 1]) for alg in self.config.feature_descriptors]
             bc_1 = [alg(segments[i]) for alg in self.config.feature_descriptors]
-            bc_mean = [(bc_0[j] + bc_1[j])/2 for j in range(len(bc_0))]
+            for index, alg in enumerate(self.config.feature_names):
+                bc_target[alg].append((bc_0[index] + bc_1[index]) / 2.0)
 
+            # build link 
             link = algorithm(
                 self.config.gram, 
                 level, 
@@ -38,18 +40,21 @@ class RandomWalkthrough:
                 0, 
                 agent=self.config.get_percent_playable, 
                 feature_descriptors=self.config.feature_descriptors)
-            
+
+            # if the link cannot be formed then return early where True represents
+            # that a link could not be built. 
             if link == None:
-                print(level)
-                print(segments[i])
-                print(bc_mean)
-                exit(-1)
+                return None, None, None, True
 
             if len(link) == 0:
-                bc.append([0 for _ in repeat(None, len(segments) - 1)])
+                # if the length of the link is 0, then there is no error in the target
+                # BC and the found BC
+                for alg in self.config.feature_names:
+                    bc_link[alg].append(bc_target[alg][-1])
             else:
-                bc_link = [alg(link) for alg in self.config.feature_descriptors]
-                bc.append([abs(bc_link[j] - bc_mean[j]) for j in range(len(bc_mean))])
+                # otherwise, calculate BC for the link
+                for bc, alg in zip(self.config.feature_descriptors, self.config.feature_names):
+                    bc_link[alg].append(bc(link))
 
             links.append(link)
             
@@ -58,7 +63,20 @@ class RandomWalkthrough:
             level.extend(segments[i])
             assert self.config.gram.count_bad_n_grams(level) == 0
 
-        return level, links, bc
+        bc = [rmse(bc_target[alg], bc_link[alg]) for alg in self.config.feature_names]
+
+        return level, links, bc, False
+
+    def build_row(self, name, scores):
+        return [
+            name,
+            round(min(scores), 3),
+            round(mean(scores), 3),
+            round(median(scores), 3),
+            round(max(scores), 3),
+            round(max(scores), 3),
+            round(stdev(scores), 3)
+        ]
 
     def run(self, levels_to_generate, num_segments):
         print('getting segments')
@@ -78,50 +96,62 @@ class RandomWalkthrough:
                 assert self.config.gram.sequence_is_possible(levels[-1])
 
         print('Generating random level combinations')
+        NO_LINK = 'no_link'
+        BFS = 'bfs'
+        L = 'links'
+        BC = 'behavioral_characteristics'
+        C  = 'completability'
+        CS = 'connection_success'
+        CE = 'connection_error'
+
         stats = {
             'no_link': {
                 'links': [],
                 'behavioral_characteristics': [],
-                'completability': []
+                'completability': [],
+                'connection_success': 0,
+                'connection_error': 0
             },
             'bfs': {
                 'links': [],
                 'behavioral_characteristics': [],
-                'completability': []
+                'completability': [],
+                'connection_success': 0,
+                'connection_error': 0
             },
-            # 'dfs': {
-            #     'links': [],
-            #     'behavioral_characteristics': [],
-            #     'completability': []
-            # },
-            # 'mcts': {
-            #     'links': [],
-            #     'behavioral_characteristics': [],
-            #     'completability': []
-            # },
-        }
-
-        link_generator = {
-            'no_link': lambda segments: self.__combine(segments, None),
-            'bfs': lambda segments: self.__combine(segments, generate_link),
-            # 'dfs': lambda segments: self.__combine(segments, generate_link_dfs),
-            # 'mcts': lambda segments: self.__combine(segments, generate_link_mcts),
         }
 
         update_progress(0)
-        for i in range(levels_to_generate):
+        i = 0
+        no_link_can_be_beaten = []
+        all_can_be_beaten = []
+        while i < levels_to_generate:
             segments = choices(levels, k=num_segments)
             for s in segments:
                 assert self.config.gram.sequence_is_possible(s)
                 assert self.config.get_percent_playable(s) == 1.0
 
-            for key in link_generator:
-                level, links, bc = link_generator[key](segments)
+            level, links, bc,  error = self.__combine(segments, generate_link)
+            if error:
+                stats[BFS][CE] += 1
+                continue
+            
+            stats[BFS][CS] += 1
+            stats[BFS][L].append(links)
+            stats[BFS][BC].append(bc)
+            stats[BFS][C].append(self.config.get_percent_playable(level))
+            all_can_be_beaten.append(stats[BFS][C][-1] == 1.0)
 
-                stats[key]['links'].append(links)
-                stats[key]['behavioral_characteristics'].append(bc)
-                stats[key]['completability'].append(self.config.get_percent_playable(level))
+            empty_links = [[] for _ in repeat(None, len(segments))]
+            empty_bc = [[0 for __ in repeat(None, len(self.config.feature_names))] for _ in repeat(None, len(segments))]
+            empty_level = list(chain(*segments))
+            stats[NO_LINK][CS] += 1
+            stats[NO_LINK][L].append(empty_links)
+            stats[NO_LINK][BC].append(empty_bc)
+            stats[NO_LINK][C].append(self.config.get_percent_playable(empty_level))
+            no_link_can_be_beaten.append(stats[NO_LINK][C][-1] == 1.0)
 
+            i += 1
             update_progress(i / levels_to_generate)
         update_progress(1)
 
@@ -131,34 +161,11 @@ class RandomWalkthrough:
         dump(stats, f, indent=2)
         f.close()
 
-        print('Link Lengths')
-        keys = list(link_generator.keys())
-        headers = ['', 'min', 'mean', 'median', 'max', 'std']
-        playability_table = []
-        for k in keys:
-            row = [k]
-            scores = []
-            for links in stats[k]['links']:
-                for l in links:
-                    scores.append(len(l))
-
-            row.append(round(min(scores), 3))
-            row.append(round(mean(scores), 3))
-            row.append(round(median(scores), 3))
-            row.append(round(max(scores), 3))
-            row.append(round(stdev(scores), 3))
-            playability_table.append(row)
-                
-        format_row = "{:>8}" * (len(headers))
-        print(format_row.format(*headers))
-        for _, row in zip(headers, playability_table):
-            print(format_row.format(*row))
-
         print()
         print('Completability')
         headers = ['', 'min', 'mean', 'median', 'max', 'std']
         playability_table = []
-        for k in keys:
+        for k in [NO_LINK, BFS]:
             row = [k]
             scores = []
             for s in stats[k]['completability']:
@@ -177,47 +184,34 @@ class RandomWalkthrough:
             print(format_row.format(*row))
 
         print()
-        print(self.config.feature_names[0])
         headers = ['', 'min', 'mean', 'median', 'max', 'std']
-        playability_table = []
-        for k in keys:
-            row = [k]
-            scores = []
-            for bc_scores in stats[k]['behavioral_characteristics']:
-                for link_score in bc_scores:
-                    scores.append(link_score[0])
+        table = []
+        scores = []
 
-            row.append(round(min(scores), 3))
-            row.append(round(mean(scores), 3))
-            row.append(round(median(scores), 3))
-            row.append(round(max(scores), 3))
-            row.append(round(stdev(scores), 3))
-            playability_table.append(row)
-                
-        format_row = "{:>8}" * (len(headers))
+        # link lengths
+        for links in stats[BFS][L]:
+            for l in links:
+                scores.append(len(l))
+        table.append(self.build_row('link size', scores))
+
+        # behavioral characteristics
+        for index, bc_name in enumerate(self.config.feature_names):
+            scores = []
+            for bc_scores in stats[k][BC]:
+                scores.append(bc_scores[index])
+            table.append(self.build_row(bc_name, scores))
+
+
+        print('Stats')
+        format_row = "{:>9}" * (len(headers))
         print(format_row.format(*headers))
-        for _, row in zip(headers, playability_table):
+        for _, row in zip(headers, table):
             print(format_row.format(*row))
 
         print()
-        print(self.config.feature_names[1])
-        headers = ['', 'min', 'mean', 'median', 'max', 'std']
-        playability_table = []
-        for k in keys:
-            row = [k]
-            scores = []
-            for bc_scores in stats[k]['behavioral_characteristics']:
-                for link_score in bc_scores:
-                    scores.append(link_score[1])
+        print('Connections')
+        print(f'Successful: {stats[BFS][CS]}')
+        print(f'Error:      {stats[BFS][CE]}')
 
-            row.append(round(min(scores), 3))
-            row.append(round(mean(scores), 3))
-            row.append(round(median(scores), 3))
-            row.append(round(max(scores), 3))
-            row.append(round(stdev(scores), 3))
-            playability_table.append(row)
-                
-        format_row = "{:>8}" * (len(headers))
-        print(format_row.format(*headers))
-        for _, row in zip(headers, playability_table):
-            print(format_row.format(*row))
+        print(f'No Link an be beaten: {sum(no_link_can_be_beaten)} / {levels_to_generate}')
+        print(f'Link an be beaten:    {sum(all_can_be_beaten)} / {levels_to_generate}')

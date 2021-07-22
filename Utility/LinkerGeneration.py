@@ -1,5 +1,6 @@
 from collections import deque
 from math import sqrt
+from Utility.Math import rmse
 
 # - exhaustive search, use a flag and life is good
 # - if path has better characteristics, run agent else continue
@@ -113,12 +114,12 @@ def generate_link(grammar, start, end, additional_columns, agent=None, feature_d
                 link = start_link + path[:-(grammar.n - 1)]
 
                 if exhaustive_search:
-                    rmse = sqrt(sum([(t - bc(link))**2 for t , bc in zip(target_bc, feature_descriptors)])/2.0)
-                    if rmse < best_rmse:
+                    _rmse = rmse(target_bc, [bc(link) for bc in feature_descriptors])
+                    if _rmse < best_rmse:
                         playability = agent(start + link + end)
                         if playability == 1.0:
                             best_link = link
-                            best_rmse = rmse
+                            best_rmse = _rmse
                 else:
                     return link
             

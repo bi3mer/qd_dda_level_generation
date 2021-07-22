@@ -1,3 +1,5 @@
+from math import sqrt
+
 def median(number_list):
     # https://www.geeksforgeeks.org/finding-mean-median-mode-in-python-without-libraries/
     number_list.sort()
@@ -12,6 +14,10 @@ def median(number_list):
 
 def mean(number_list):
     return sum(number_list) / len(number_list)
+
+def rmse(target, pred):
+    assert len(target) == len(pred)
+    return sqrt(sum([(t - p)**2 for t , p in zip(target, pred)])/len(target))
 
 def get_slope_and_intercept(x, y):
     sum_x = 0

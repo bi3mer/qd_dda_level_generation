@@ -14,7 +14,7 @@ data_dir = f'IcarusData'
 
 flawed_agents = []
 start_population_size = 500
-iterations = 1000
+iterations = 50_000
 
 # start_population_size = 500
 # iterations = 120_000
@@ -39,7 +39,7 @@ resolution = 40
 elites_per_bin = 4
 
 fitness = lambda level: get_fitness(level, get_percent_playable(level))
-minimize_performance = False
+minimize_performance = True
 uses_separate_simulation = False
 is_vertical = True
 

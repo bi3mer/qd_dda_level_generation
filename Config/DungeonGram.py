@@ -30,7 +30,7 @@ feature_dimensions = [[0, 1.0], [0, 0.5]]
 resolution = 20
 elites_per_bin = 4
 fitness = lambda lvl: get_fitness(lvl, get_percent_playable(lvl))
-minimize_performance = False
+minimize_performance = True
 
 uses_separate_simulation = False
 is_vertical = False
