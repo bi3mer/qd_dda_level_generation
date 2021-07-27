@@ -1,5 +1,4 @@
 from collections import deque
-from math import sqrt
 from Utility.Math import rmse
 
 # - exhaustive search, use a flag and life is good
@@ -127,4 +126,56 @@ def generate_link(grammar, start, end, additional_columns, agent=None, feature_d
         return best_link
 
     # No link found
+    return None
+
+def exhaustive_link(grammar, start, end, agent, feature_descriptors, stop_at_first, max_length=8):
+    assert grammar.sequence_is_possible(start)
+    assert grammar.sequence_is_possible(end)
+
+    end_prior = tuple(end[:grammar.n - 1])
+    queue = deque()
+    queue.append(start[-(grammar.n - 1):])
+
+    if not stop_at_first:
+        target_bc = [(bc(start) + bc(end))/2 for bc in feature_descriptors]
+        best_rmse = 100000
+        best_link = None
+    
+    prior_size = (grammar.n-1)*2
+    while queue:
+        current_path = queue.popleft()
+
+        # if not stop_at_first:
+        #     print(len(queue))
+
+        new_path_length = len(current_path) + 1
+        if new_path_length > max_length + prior_size:
+            continue
+
+        current_prior = tuple(current_path[-(grammar.n - 1):])
+        output = grammar.get_unweighted_output_list(current_prior)
+        if output == None:
+            continue
+
+        for new_column in output:
+            new_prior = tuple(current_prior[1:]) + (new_column,)
+            new_path = current_path + [new_column]
+
+            if new_prior == end_prior and new_path_length > prior_size:
+                link = new_path[grammar.n - 1:-(grammar.n - 1)]
+                if stop_at_first:
+                    if agent(start + link + end) == 1.0:
+                        return link
+                else:
+                    _rmse = rmse(target_bc, [bc(link) for bc in feature_descriptors])
+                    if _rmse < best_rmse:
+                        if agent(start + link + end) == 1.0:
+                            best_link = link
+                            best_rmse = _rmse
+
+            queue.append(new_path)
+
+    if not stop_at_first:
+        return best_link
+
     return None

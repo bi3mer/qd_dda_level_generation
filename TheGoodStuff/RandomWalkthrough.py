@@ -1,4 +1,4 @@
-from Utility import rows_into_columns, update_progress
+from Utility import rows_into_columns, Bar, update_progress
 from Utility.Math import median, mean, rmse
 from Utility.LinkerGeneration import *
 
@@ -7,7 +7,6 @@ from statistics import stdev
 from random import seed, choices
 from os.path import join
 from json import dump, load
-from sys import exit
 
 class RandomWalkthrough:
     def __init__(self, config, rng_seed):
@@ -16,8 +15,8 @@ class RandomWalkthrough:
         if rng_seed != None:
             seed(rng_seed)
 
-    def __combine(self, segments, algorithm):
-        level = segments[0]
+    def __combine(self, segments, algorithm, stop_at_first):
+        level = segments[0].copy()
         links = []
         bc_target = {}
         bc_link = {}
@@ -37,9 +36,9 @@ class RandomWalkthrough:
                 self.config.gram, 
                 level, 
                 segments[i], 
-                0, 
-                agent=self.config.get_percent_playable, 
-                feature_descriptors=self.config.feature_descriptors)
+                self.config.get_percent_playable, 
+                self.config.feature_descriptors,
+                stop_at_first)
 
             # if the link cannot be formed then return early where True represents
             # that a link could not be built. 
@@ -60,11 +59,10 @@ class RandomWalkthrough:
             
             level.extend(link)
             assert self.config.gram.count_bad_n_grams(level) == 0
-            level.extend(segments[i])
+            level.extend(segments[i].copy())
             assert self.config.gram.count_bad_n_grams(level) == 0
 
         bc = [rmse(bc_target[alg], bc_link[alg]) for alg in self.config.feature_names]
-
         return level, links, bc, False
 
     def build_row(self, name, scores):
@@ -78,7 +76,7 @@ class RandomWalkthrough:
             round(stdev(scores), 3)
         ]
 
-    def run(self, levels_to_generate, num_segments):
+    def run(self, runs):
         print('getting segments')
         level_dir = join(self.config.data_dir, 'levels')
         levels = []
@@ -97,63 +95,75 @@ class RandomWalkthrough:
 
         print('Generating random level combinations')
         NO_LINK = 'no_link'
-        BFS = 'bfs'
+        FIRST = 'first'
+        BEST = 'best'
         L = 'links'
         BC = 'behavioral_characteristics'
         C  = 'completability'
         CS = 'connection_success'
         CE = 'connection_error'
+        S = 'segments'
+        R = 'runs'
 
-        stats = {
-            'no_link': {
-                'links': [],
-                'behavioral_characteristics': [],
-                'completability': [],
-                'connection_success': 0,
-                'connection_error': 0
-            },
-            'bfs': {
-                'links': [],
-                'behavioral_characteristics': [],
-                'completability': [],
-                'connection_success': 0,
-                'connection_error': 0
-            },
-        }
+        stats = {}
+        stats['target_size'] = runs
+        
+        print('WARNING :: stats should have one for each k value!!!!!!!!!!!')
+        k_values = [2,3,4]
 
-        update_progress(0)
-        i = 0
-        no_link_can_be_beaten = []
-        all_can_be_beaten = []
-        while i < levels_to_generate:
-            segments = choices(levels, k=num_segments)
-            for s in segments:
-                assert self.config.gram.sequence_is_possible(s)
-                assert self.config.get_percent_playable(s) == 1.0
-
-            level, links, bc,  error = self.__combine(segments, generate_link)
-            if error:
-                stats[BFS][CE] += 1
-                continue
+        for k in k_values:
+            print(f'K = {k}')
+            progress_bar = Bar(runs * k * 3)
             
-            stats[BFS][CS] += 1
-            stats[BFS][L].append(links)
-            stats[BFS][BC].append(bc)
-            stats[BFS][C].append(self.config.get_percent_playable(level))
-            all_can_be_beaten.append(stats[BFS][C][-1] == 1.0)
+            stats[k] = {}
+            stats[k][R] = []
+            stats[k][BEST] = []
+            stats[k][FIRST] = []
+            stats[k][NO_LINK] = []
 
-            empty_links = [[] for _ in repeat(None, len(segments))]
-            empty_bc = [[0 for __ in repeat(None, len(self.config.feature_names))] for _ in repeat(None, len(segments))]
-            empty_level = list(chain(*segments))
-            stats[NO_LINK][CS] += 1
-            stats[NO_LINK][L].append(empty_links)
-            stats[NO_LINK][BC].append(empty_bc)
-            stats[NO_LINK][C].append(self.config.get_percent_playable(empty_level))
-            no_link_can_be_beaten.append(stats[NO_LINK][C][-1] == 1.0)
+            for _ in range(runs):
+                segments = choices(levels, k=k)
+                for s in segments:
+                    assert self.config.gram.sequence_is_possible(s)
+                    assert self.config.get_percent_playable(s) == 1.0
 
-            i += 1
-            update_progress(i / levels_to_generate)
-        update_progress(1)
+                data = {}
+                data[S] = segments
+
+                progress_bar.update(message=f'F')
+                level, links, bc, error = self.__combine(segments, exhaustive_link, True)
+                if error:
+                    progress_bar.update()
+                    progress_bar.update()
+                    continue
+                
+                data[FIRST] = {}
+                data[FIRST][L] = links
+                data[FIRST][BC] = bc
+                data[FIRST][C] = self.config.get_percent_playable(level)
+                stats[k][FIRST].append(data[FIRST][C] == 1.0)
+
+                progress_bar.update(message=f'A')
+                level, links, bc,  error = self.__combine(segments, exhaustive_link, False)
+
+                data[BEST] = {}
+                data[BEST][L] = links
+                data[BEST][BC] = bc
+                data[BEST][C] = self.config.get_percent_playable(level)
+                stats[k][BEST].append(data[BEST][C] == 1.0)
+
+                progress_bar.update(message=f'N')
+                links = [[] for _ in repeat(None, len(segments))]
+                bc = [[0 for __ in repeat(None, len(self.config.feature_names))] for _ in repeat(None, len(segments))]
+                level = list(chain(*segments))
+                data[NO_LINK] = {}
+                data[NO_LINK][L] = links
+                data[NO_LINK][BC] = bc
+                data[NO_LINK][C] = self.config.get_percent_playable(level)
+                stats[k][NO_LINK].append(data[NO_LINK][C] == 1.0)
+
+                stats[k][R].append(data)
+            progress_bar.done()
 
 
         print('Storing data...')
@@ -161,57 +171,59 @@ class RandomWalkthrough:
         dump(stats, f, indent=2)
         f.close()
 
-        print()
-        print('Completability')
-        headers = ['', 'min', 'mean', 'median', 'max', 'std']
-        playability_table = []
-        for k in [NO_LINK, BFS]:
-            row = [k]
-            scores = []
-            for s in stats[k]['completability']:
-                scores.append(s)
+        
 
-            row.append(round(min(scores), 3))
-            row.append(round(mean(scores), 3))
-            row.append(round(median(scores), 3))
-            row.append(round(max(scores), 3))
-            row.append(round(stdev(scores), 3))
-            playability_table.append(row)
+        # print()
+        # print('Completability')
+        # headers = ['', 'min', 'mean', 'median', 'max', 'std']
+        # playability_table = []
+        # for k in [NO_LINK, FIRST, BEST]:
+        #     row = [k]
+        #     scores = []
+        #     for s in stats[k]['completability']:
+        #         scores.append(s)
+
+        #     row.append(round(min(scores), 3))
+        #     row.append(round(mean(scores), 3))
+        #     row.append(round(median(scores), 3))
+        #     row.append(round(max(scores), 3))
+        #     row.append(round(stdev(scores), 3))
+        #     playability_table.append(row)
                 
-        format_row = "{:>8}" * (len(headers))
-        print(format_row.format(*headers))
-        for _, row in zip(headers, playability_table):
-            print(format_row.format(*row))
+        # format_row = "{:>8}" * (len(headers))
+        # print(format_row.format(*headers))
+        # for _, row in zip(headers, playability_table):
+        #     print(format_row.format(*row))
 
-        print()
-        headers = ['', 'min', 'mean', 'median', 'max', 'std']
-        table = []
-        scores = []
+        # print()
+        # headers = ['', 'min', 'mean', 'median', 'max', 'std']
+        # table = []
+        # scores = []
 
-        # link lengths
-        for links in stats[BFS][L]:
-            for l in links:
-                scores.append(len(l))
-        table.append(self.build_row('link size', scores))
+        # # link lengths
+        # for links in stats[BEST][L]:
+        #     for l in links:
+        #         scores.append(len(l))
+        # table.append(self.build_row('link size', scores))
 
-        # behavioral characteristics
-        for index, bc_name in enumerate(self.config.feature_names):
-            scores = []
-            for bc_scores in stats[k][BC]:
-                scores.append(bc_scores[index])
-            table.append(self.build_row(bc_name, scores))
+        # # behavioral characteristics
+        # for index, bc_name in enumerate(self.config.feature_names):
+        #     scores = []
+        #     for bc_scores in stats[k][BC]:
+        #         scores.append(bc_scores[index])
+        #     table.append(self.build_row(bc_name, scores))
 
 
-        print('Stats')
-        format_row = "{:>9}" * (len(headers))
-        print(format_row.format(*headers))
-        for _, row in zip(headers, table):
-            print(format_row.format(*row))
+        # print('Stats')
+        # format_row = "{:>9}" * (len(headers))
+        # print(format_row.format(*headers))
+        # for _, row in zip(headers, table):
+        #     print(format_row.format(*row))
 
-        print()
-        print('Connections')
-        print(f'Successful: {stats[BFS][CS]}')
-        print(f'Error:      {stats[BFS][CE]}')
+        # print()
+        # print('Connections')
+        # print(f'Successful: {stats[BEST][CS]}')
+        # print(f'Error:      {stats[BEST][CE]}')
 
-        print(f'No Link an be beaten: {sum(no_link_can_be_beaten)} / {levels_to_generate}')
-        print(f'Link an be beaten:    {sum(all_can_be_beaten)} / {levels_to_generate}')
+        # print(f'No Link an be beaten: {sum(no_link_can_be_beaten)} / {levels_to_generate}')
+        # print(f'Link an be beaten:    {sum(all_can_be_beaten)} / {levels_to_generate}')

@@ -1,5 +1,5 @@
 from .LinkerGeneration import *
-from .ProgressBar import update_progress
+from .ProgressBar import update_progress, Bar
 from .GridTools import *
 from . import Mario
 from .IO import *
