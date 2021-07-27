@@ -33,45 +33,45 @@ type_group.add_argument('--generate-gram-level', action='store_true', help='Gene
 # rw = RandomWalkthrough(Mario, 0)
 # rw.run(10, 3)
 
-# args = parser.parse_args()
+args = parser.parse_args()
 
-# if args.dungeongram:
-#     config = DungeonGram
-# elif args.mario:
-#     config = Mario
-# elif args.icarus:
-#     config = Icarus
+if args.dungeongram:
+    config = DungeonGram
+elif args.mario:
+    config = Mario
+elif args.icarus:
+    config = Icarus
 
-# if args.generate_corpus:
-#     gc = GenerateCorpus(config)
-#     gc.run(args.seed)
-# # elif args.generate_graph_test:
-# #    ggt = GenerateLevelGraphTest(config, args.seed)
-# #    ggt.run()
-# # elif args.generate_graph or args.generate_links:
-# #     raise NotImplementedError('generate graph not implemented yet. Work has not shown which linking method is best')
-# elif args.walkthrough:
-#     raise NotImplementedError('walkthrough not implemented yet.')
-# elif args.random_walkthrough:
-#     rw = RandomWalkthrough(config, args.seed)
-#     rw.run(args.runs, args.segments)
-# elif args.run_flawed_agents:
-#     raise NotImplementedError('run flawed agents not implemented yet.')
-# elif args.average_generated:
-#     ag = AverageGenerated(config, args.seed)
-#     ag.run(args.runs)
-# elif args.generate_ga_level:
-#     ggal = GenerateGALevels(config, args.seed)
-#     ggal.run(args.runs)
-# elif args.generate_gram_level:
-#     gnl = GenerateNGramLevels(config, args.seed)
-#     gnl.run(args.runs)
-# else:
-#     parser.print_help(sys.stderr)
-#     sys.exit(-1)
+if args.generate_corpus:
+    gc = GenerateCorpus(config)
+    gc.run(args.seed)
+# elif args.generate_graph_test:
+#    ggt = GenerateLevelGraphTest(config, args.seed)
+#    ggt.run()
+# elif args.generate_graph or args.generate_links:
+#     raise NotImplementedError('generate graph not implemented yet. Work has not shown which linking method is best')
+elif args.walkthrough:
+    raise NotImplementedError('walkthrough not implemented yet.')
+elif args.random_walkthrough:
+    rw = RandomWalkthrough(config, args.seed)
+    rw.run(args.runs, args.segments)
+elif args.run_flawed_agents:
+    raise NotImplementedError('run flawed agents not implemented yet.')
+elif args.average_generated:
+    ag = AverageGenerated(config, args.seed)
+    ag.run(args.runs)
+elif args.generate_ga_level:
+    ggal = GenerateGALevels(config, args.seed)
+    ggal.run(args.runs)
+elif args.generate_gram_level:
+    gnl = GenerateNGramLevels(config, args.seed)
+    gnl.run(args.runs)
+else:
+    parser.print_help(sys.stderr)
+    sys.exit(-1)
 
-rw = RandomWalkthrough(Mario, 0)
-rw.run(10)
+# rw = RandomWalkthrough(Mario, 0)
+# rw.run(10)
 
 # Helpful sound for local development. Only works on mac.
 import os
