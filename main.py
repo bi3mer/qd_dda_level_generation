@@ -30,9 +30,6 @@ type_group.add_argument('--generate-gram-level', action='store_true', help='Gene
 # parser.add_argument('--run-flawed-agents', action='store_true', help='Assumes pipeline already run. Will run flawed agents on the grid.')
 
 
-# rw = RandomWalkthrough(Mario, 0)
-# rw.run(10, 3)
-
 args = parser.parse_args()
 
 if args.dungeongram:
@@ -71,7 +68,7 @@ else:
     sys.exit(-1)
 
 # rw = RandomWalkthrough(Mario, 0)
-# rw.run(10)
+# rw.run(1000)
 
 # Helpful sound for local development. Only works on mac.
 import os

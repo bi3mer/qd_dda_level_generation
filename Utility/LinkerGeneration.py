@@ -132,6 +132,9 @@ def exhaustive_link(grammar, start, end, agent, feature_descriptors, stop_at_fir
     assert grammar.sequence_is_possible(start)
     assert grammar.sequence_is_possible(end)
 
+    if grammar.sequence_is_possible(start + end) and agent(start + end) == 1.0:
+        return []
+
     end_prior = tuple(end[:grammar.n - 1])
     queue = deque()
     queue.append(start[-(grammar.n - 1):])
@@ -144,9 +147,6 @@ def exhaustive_link(grammar, start, end, agent, feature_descriptors, stop_at_fir
     prior_size = (grammar.n-1)*2
     while queue:
         current_path = queue.popleft()
-
-        # if not stop_at_first:
-        #     print(len(queue))
 
         new_path_length = len(current_path) + 1
         if new_path_length > max_length + prior_size:

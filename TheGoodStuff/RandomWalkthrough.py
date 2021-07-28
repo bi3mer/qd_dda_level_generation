@@ -1,3 +1,4 @@
+from Utility.GridTools import columns_into_grid_string
 from Utility import rows_into_columns, Bar, update_progress
 from Utility.Math import median, mean, rmse
 from Utility.LinkerGeneration import *
@@ -34,7 +35,7 @@ class RandomWalkthrough:
             # build link 
             link = algorithm(
                 self.config.gram, 
-                level, 
+                segments[i-1], 
                 segments[i], 
                 self.config.get_percent_playable, 
                 self.config.feature_descriptors,
@@ -108,7 +109,6 @@ class RandomWalkthrough:
         stats = {}
         stats['target_size'] = runs
         
-        print('WARNING :: stats should have one for each k value!!!!!!!!!!!')
         k_values = [2,3,4]
 
         for k in k_values:
@@ -127,9 +127,6 @@ class RandomWalkthrough:
                     assert self.config.gram.sequence_is_possible(s)
                     assert self.config.get_percent_playable(s) == 1.0
 
-                data = {}
-                data[S] = segments
-
                 progress_bar.update(message=f'F')
                 level, links, bc, error = self.__combine(segments, exhaustive_link, True)
                 if error:
@@ -137,6 +134,8 @@ class RandomWalkthrough:
                     progress_bar.update()
                     continue
                 
+                data = {}
+                data[S] = segments
                 data[FIRST] = {}
                 data[FIRST][L] = links
                 data[FIRST][BC] = bc
@@ -170,60 +169,3 @@ class RandomWalkthrough:
         f = open(join(self.config.data_dir, 'random_walkthrough_results.json'), 'w')
         dump(stats, f, indent=2)
         f.close()
-
-        
-
-        # print()
-        # print('Completability')
-        # headers = ['', 'min', 'mean', 'median', 'max', 'std']
-        # playability_table = []
-        # for k in [NO_LINK, FIRST, BEST]:
-        #     row = [k]
-        #     scores = []
-        #     for s in stats[k]['completability']:
-        #         scores.append(s)
-
-        #     row.append(round(min(scores), 3))
-        #     row.append(round(mean(scores), 3))
-        #     row.append(round(median(scores), 3))
-        #     row.append(round(max(scores), 3))
-        #     row.append(round(stdev(scores), 3))
-        #     playability_table.append(row)
-                
-        # format_row = "{:>8}" * (len(headers))
-        # print(format_row.format(*headers))
-        # for _, row in zip(headers, playability_table):
-        #     print(format_row.format(*row))
-
-        # print()
-        # headers = ['', 'min', 'mean', 'median', 'max', 'std']
-        # table = []
-        # scores = []
-
-        # # link lengths
-        # for links in stats[BEST][L]:
-        #     for l in links:
-        #         scores.append(len(l))
-        # table.append(self.build_row('link size', scores))
-
-        # # behavioral characteristics
-        # for index, bc_name in enumerate(self.config.feature_names):
-        #     scores = []
-        #     for bc_scores in stats[k][BC]:
-        #         scores.append(bc_scores[index])
-        #     table.append(self.build_row(bc_name, scores))
-
-
-        # print('Stats')
-        # format_row = "{:>9}" * (len(headers))
-        # print(format_row.format(*headers))
-        # for _, row in zip(headers, table):
-        #     print(format_row.format(*row))
-
-        # print()
-        # print('Connections')
-        # print(f'Successful: {stats[BEST][CS]}')
-        # print(f'Error:      {stats[BEST][CE]}')
-
-        # print(f'No Link an be beaten: {sum(no_link_can_be_beaten)} / {levels_to_generate}')
-        # print(f'Link an be beaten:    {sum(all_can_be_beaten)} / {levels_to_generate}')

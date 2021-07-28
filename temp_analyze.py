@@ -106,6 +106,25 @@ for k in stats:
         print()
         print()
 
+
+     # Link Lengths
+    first_len = []
+    best_len = []
+
+    for r in stats[k][R]:
+        first_len.extend([len(l) for l in r[FIRST][L]])
+        best_len.extend([len(l) for l in r[BEST][L]])
+
+    print()
+    print('link Length')
+    table = []
+    table.append(build_row(FIRST, first_len))
+    table.append(build_row(BEST, best_len))
+
+    print(format_row.format(*headers))
+    for _, row in zip(headers, table):
+        print(format_row.format(*row))
+
     print()
     print('====================================================')
     print()
