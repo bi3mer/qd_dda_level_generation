@@ -5,7 +5,6 @@ from os.path import join
 from Utility.Math import median, mean, rmse
 from statistics import stdev
 
-
 def build_row(name, scores):
     return [
         name,
@@ -42,15 +41,15 @@ for k in stats:
     print(f'K={k}')
     print()
     print('100% beatable levels / runs')
-    print(f'{BEST}: {sum(stats[k][BEST])} / {runs}')
-    print(f'{FIRST}: {sum(stats[k][FIRST])} / {runs}')
     print(f'{NO_LINK}: {sum(stats[k][NO_LINK])} / {runs}')
+    print(f'{FIRST}: {sum(stats[k][FIRST])} / {runs}')
+    print(f'{BEST}: {sum(stats[k][BEST])} / {runs}')
 
     print()
     print('100% beatable levels / levels with links')
-    print(f'{BEST}: {sum(stats[k][BEST])} / {len(stats[k][R])}')
-    print(f'{FIRST}: {sum(stats[k][FIRST])} / {len(stats[k][R])}')
-    print(f'{NO_LINK}: {sum(stats[k][NO_LINK])} / {len(stats[k][R])}')
+    print(f'{NO_LINK}: {sum(stats[k][NO_LINK])} / {runs}')
+    print(f'{FIRST}: {sum(stats[k][FIRST])} / {sum([FIRST in r for r in stats[k][R]])}')
+    print(f'{BEST}: {sum(stats[k][BEST])} / {sum([BEST in r for r in stats[k][R]])}')
 
     # completability
     print()

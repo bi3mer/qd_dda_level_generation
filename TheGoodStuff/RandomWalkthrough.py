@@ -12,7 +12,7 @@ from json import dump, load
 class RandomWalkthrough:
     def __init__(self, config, rng_seed):
         self.config = config
-
+        
         if rng_seed != None:
             seed(rng_seed)
 
@@ -94,6 +94,7 @@ class RandomWalkthrough:
 
                 assert self.config.gram.sequence_is_possible(levels[-1])
 
+
         print('Generating random level combinations')
         NO_LINK = 'no_link'
         FIRST = 'first'
@@ -127,14 +128,23 @@ class RandomWalkthrough:
                     assert self.config.gram.sequence_is_possible(s)
                     assert self.config.get_percent_playable(s) == 1.0
 
+                data = {}
+                progress_bar.update(message=f'N')
+                links = [[] for _ in repeat(None, len(segments))]
+                bc = [[0 for __ in repeat(None, len(self.config.feature_names))] for _ in repeat(None, len(segments))]
+                level = list(chain(*segments))
+                data[NO_LINK] = {}
+                data[NO_LINK][L] = links
+                data[NO_LINK][BC] = bc
+                data[NO_LINK][C] = self.config.get_percent_playable(level)
+                stats[k][NO_LINK].append(data[NO_LINK][C] == 1.0)
+
                 progress_bar.update(message=f'F')
                 level, links, bc, error = self.__combine(segments, exhaustive_link, True)
                 if error:
                     progress_bar.update()
-                    progress_bar.update()
                     continue
                 
-                data = {}
                 data[S] = segments
                 data[FIRST] = {}
                 data[FIRST][L] = links
@@ -151,15 +161,6 @@ class RandomWalkthrough:
                 data[BEST][C] = self.config.get_percent_playable(level)
                 stats[k][BEST].append(data[BEST][C] == 1.0)
 
-                progress_bar.update(message=f'N')
-                links = [[] for _ in repeat(None, len(segments))]
-                bc = [[0 for __ in repeat(None, len(self.config.feature_names))] for _ in repeat(None, len(segments))]
-                level = list(chain(*segments))
-                data[NO_LINK] = {}
-                data[NO_LINK][L] = links
-                data[NO_LINK][BC] = bc
-                data[NO_LINK][C] = self.config.get_percent_playable(level)
-                stats[k][NO_LINK].append(data[NO_LINK][C] == 1.0)
 
                 stats[k][R].append(data)
             progress_bar.done()
