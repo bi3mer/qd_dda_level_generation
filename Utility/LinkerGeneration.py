@@ -128,7 +128,7 @@ def generate_link(grammar, start, end, additional_columns, agent=None, feature_d
     # No link found
     return None
 
-def exhaustive_link(grammar, start, end, agent, feature_descriptors, stop_at_first, max_length=8):
+def exhaustive_link(grammar, start, end, agent, feature_descriptors, stop_at_first, max_length=6):
     assert grammar.sequence_is_possible(start)
     assert grammar.sequence_is_possible(end)
 

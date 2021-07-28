@@ -54,7 +54,7 @@ elif args.walkthrough:
     raise NotImplementedError('walkthrough not implemented yet.')
 elif args.random_walkthrough:
     rw = RandomWalkthrough(config, args.seed)
-    rw.run(args.runs, args.segments)
+    rw.run(args.runs)
 elif args.run_flawed_agents:
     raise NotImplementedError('run flawed agents not implemented yet.')
 elif args.average_generated:
