@@ -143,24 +143,22 @@ class RandomWalkthrough:
                 level, links, bc, error = self.__combine(segments, exhaustive_link, True)
                 if error:
                     progress_bar.update()
-                    continue
-                
-                data[S] = segments
-                data[FIRST] = {}
-                data[FIRST][L] = links
-                data[FIRST][BC] = bc
-                data[FIRST][C] = self.config.get_percent_playable(level)
-                stats[k][FIRST].append(data[FIRST][C] == 1.0)
+                else:                
+                    data[S] = segments
+                    data[FIRST] = {}
+                    data[FIRST][L] = links
+                    data[FIRST][BC] = bc
+                    data[FIRST][C] = self.config.get_percent_playable(level)
+                    stats[k][FIRST].append(data[FIRST][C] == 1.0)
 
-                progress_bar.update(message=f'A')
-                level, links, bc,  error = self.__combine(segments, exhaustive_link, False)
+                    progress_bar.update(message=f'A')
+                    level, links, bc,  error = self.__combine(segments, exhaustive_link, False)
 
-                data[BEST] = {}
-                data[BEST][L] = links
-                data[BEST][BC] = bc
-                data[BEST][C] = self.config.get_percent_playable(level)
-                stats[k][BEST].append(data[BEST][C] == 1.0)
-
+                    data[BEST] = {}
+                    data[BEST][L] = links
+                    data[BEST][BC] = bc
+                    data[BEST][C] = self.config.get_percent_playable(level)
+                    stats[k][BEST].append(data[BEST][C] == 1.0)
 
                 stats[k][R].append(data)
             progress_bar.done()

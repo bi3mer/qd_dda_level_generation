@@ -1,5 +1,5 @@
 from json import load
-from Config import Icarus as config
+from Config import Mario as config
 from os.path import join
 
 from Utility.Math import median, mean, rmse
@@ -61,8 +61,9 @@ for k in stats:
     no_link = []
     for r in stats[k][R]:
         no_link.append(r[NO_LINK][C])
-        first.append(r[FIRST][C])
-        best.append(r[BEST][C])
+        if FIRST in r:
+            first.append(r[FIRST][C])
+            best.append(r[BEST][C])
 
     table = [
         build_row(NO_LINK, no_link),
@@ -87,8 +88,9 @@ for k in stats:
 
     for r in stats[k][R]:
         for i in range(len(config.feature_names)):
-            first_bc[config.feature_names[i]].append(r[FIRST][BC][i])
-            best_bc[config.feature_names[i]].append(r[BEST][BC][i])
+            if FIRST in r:
+                first_bc[config.feature_names[i]].append(r[FIRST][BC][i])
+                best_bc[config.feature_names[i]].append(r[BEST][BC][i])
 
     print()
     scores = []
@@ -111,8 +113,9 @@ for k in stats:
     best_len = []
 
     for r in stats[k][R]:
-        first_len.extend([len(l) for l in r[FIRST][L]])
-        best_len.extend([len(l) for l in r[BEST][L]])
+        if FIRST in r:
+            first_len.extend([len(l) for l in r[FIRST][L]])
+            best_len.extend([len(l) for l in r[BEST][L]])
 
     print()
     print('link Length')
