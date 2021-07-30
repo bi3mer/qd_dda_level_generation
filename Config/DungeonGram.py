@@ -9,6 +9,7 @@ from dungeongrams import *
 
 from os.path import join
 
+name = 'DungeonGrams'
 data_dir = f'DungeonData'
 
 flawed_agents = [

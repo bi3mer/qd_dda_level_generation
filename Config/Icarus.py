@@ -9,6 +9,7 @@ from dungeongrams import *
 
 from os.path import join
 
+name = 'Icarus'
 
 data_dir = f'IcarusData'
 

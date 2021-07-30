@@ -6,6 +6,8 @@ from Utility.NGram import NGram
 
 from os.path import join
 
+name = 'Mario'
+
 data_dir = f'MarioData'
 
 flawed_agents = [

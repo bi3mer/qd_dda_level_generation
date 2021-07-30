@@ -133,3 +133,5 @@ MarioData*
 DungeonData*
 IcarusData*
 .vscode/
+
+*.pdf

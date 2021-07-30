@@ -1,3 +1,5 @@
+from os import confstr
+from typing import Sequence
 from Utility.GridTools import columns_into_grid_string
 from Utility import rows_into_columns, Bar, update_progress
 from Utility.Math import median, mean, rmse
@@ -106,6 +108,7 @@ class RandomWalkthrough:
         CE = 'connection_error'
         S = 'segments'
         R = 'runs'
+        G = 'is_generable'
 
         stats = {}
         stats['target_size'] = runs
@@ -133,11 +136,15 @@ class RandomWalkthrough:
                 links = [[] for _ in repeat(None, len(segments))]
                 bc = [[0 for __ in repeat(None, len(self.config.feature_names))] for _ in repeat(None, len(segments))]
                 level = list(chain(*segments))
-                data[NO_LINK] = {}
-                data[NO_LINK][L] = links
-                data[NO_LINK][BC] = bc
-                data[NO_LINK][C] = self.config.get_percent_playable(level)
-                stats[k][NO_LINK].append(data[NO_LINK][C] == 1.0)
+                no_link_percent_complete = self.config.get_percent_playable(level)
+
+                if no_link_percent_complete == 1.0:
+                    data[NO_LINK] = {}
+                    data[NO_LINK][L] = links
+                    data[NO_LINK][BC] = bc
+                    data[NO_LINK][C] = no_link_percent_complete
+                    data[NO_LINK][G] = self.config.gram.sequence_is_possible(level)
+                    stats[k][NO_LINK].append(data[NO_LINK][C] == 1.0)
 
                 progress_bar.update(message=f'F')
                 level, links, bc, error = self.__combine(segments, exhaustive_link, True)
@@ -149,6 +156,7 @@ class RandomWalkthrough:
                     data[FIRST][L] = links
                     data[FIRST][BC] = bc
                     data[FIRST][C] = self.config.get_percent_playable(level)
+                    data[FIRST][G] = self.config.gram.sequence_is_possible(level)
                     stats[k][FIRST].append(data[FIRST][C] == 1.0)
 
                     progress_bar.update(message=f'A')
@@ -158,6 +166,7 @@ class RandomWalkthrough:
                     data[BEST][L] = links
                     data[BEST][BC] = bc
                     data[BEST][C] = self.config.get_percent_playable(level)
+                    data[BEST][G]= self.config.gram.sequence_is_possible(level)
                     stats[k][BEST].append(data[BEST][C] == 1.0)
 
                 stats[k][R].append(data)
