@@ -190,15 +190,17 @@ def plot_link_lengths(stuff):
     plt.savefig(join('link_link_lengths.pdf'))
     plt.close(fig)
 
-def plot_bc(config, bc):
+def plot_bc(configs, bcs):
     fig, ax = plt.subplots()
     ax.boxplot(
-        [bc[f_name][alg] for f_name in bc for alg in [FIRST, BEST]],
-        labels=[f'{f_name}\n{alg}' for f_name in bc for alg in [FIRST, BEST]],
-        vert=False)
-    ax.set_title(f'{config.name} Behavioral Characteristic RMSE')
-    ax.set_xlabel('RMSE')
-    plt.savefig(join(config.data_dir, 'link_bc.pdf'))
+        [bc[f_name][alg] for bc in bcs for f_name in bc for alg in [FIRST, BEST] ],
+        labels=[f'{f_name}\n{alg}' for bc in bcs for f_name in bc for alg in [FIRST, BEST] ],
+        vert=True)
+
+    fig.set_size_inches(18.5, 10.5)
+    ax.set_title(f'Behavioral Characteristic RMSE')
+    ax.set_ylabel('RMSE')
+    plt.savefig('link_bc.pdf')
     plt.close(fig)
 
 m_first_len, m_best_len, m_bc = get_and_print_stats(Mario)
@@ -211,7 +213,5 @@ plot_link_lengths([
     (DungeonGram, d_first_len, d_best_len,),
 ])
 
-plot_bc(Mario, m_bc)
-plot_bc(Icarus, m_bc)
-plot_bc(DungeonGram, m_bc)
+plot_bc([Mario, Icarus, DungeonGram,], [m_bc, i_bc, d_bc])
 
