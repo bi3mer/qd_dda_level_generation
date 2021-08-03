@@ -192,9 +192,9 @@ def plot_link_lengths(stuff):
 
 def plot_bc(configs, bcs):
     fig, ax = plt.subplots()
-    ax.boxplot(
+    ax.violinplot(
         [bc[f_name][alg] for bc in bcs for f_name in bc for alg in [FIRST, BEST] ],
-        labels=[f'{con.name}\n{f_name}\n{alg}' for con, bc in zip(configs, bcs) for f_name in bc for alg in [FIRST, BEST] ],
+        # labels=[f'{con.name}\n{f_name}\n{alg}' for con, bc in zip(configs, bcs) for f_name in bc for alg in [FIRST, BEST] ],
         vert=True)
 
     fig.set_size_inches(18.5, 10.5)
