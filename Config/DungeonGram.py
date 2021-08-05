@@ -95,9 +95,9 @@ def filter_link_food(start, link, end):
     return True in [dungeongrams.CHAR_FOOD in l for l in link]
 
 link_algorithms = {
-    'preferred': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, False),
-    'shortest': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, True),
     'null': lambda start, end: [] if get_percent_playable(start + end) == 1.0 else None,
+    'shortest': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, True),
+    'preferred': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, False),
     'preferred+f': lambda start, end: exhaustive_link(gram, start, end, [
         filter_percent_playable,
         filter_link_food

@@ -131,10 +131,11 @@ def get_and_print_stats(config):
 
         # link lengths
         for r in stats[k][R]:
-            if alg_name == 'null':
-                continue
-            if alg_name in r:
-                link_lengths[alg_name].extend([len(l) for l in r[alg_name][L]])
+            for alg_name in config.link_algorithms:
+                    if alg_name == 'null':
+                        continue
+                    if alg_name in r:
+                        link_lengths[alg_name].extend([len(l) for l in r[alg_name][L]])
 
     
         print('===============================================================')
@@ -146,50 +147,64 @@ def get_and_print_stats(config):
 
     return link_lengths, bc
 
+def plot_link_lengths(configs, lengths):
+    colors = {
+        'preferred': '#38ba11',
+        'shortest': '#9311ba',
+        'preferred+f': '#ba5211'
+    }
 
-def link_lengths(config, first_len, best_len, bc):
-    # for index, bc_name in enumerate(config.feature_names):
-    #     table = []
-    #     print(bc_name)
-    #     table.append(build_row(FIRST, bc[bc_name][FIRST]))
-    #     table.append(build_row(BEST, bc[bc_name][BEST]))
+    data_color = []
+    data = []
+    pos = []
+    
+    fig, ax = plt.subplots()
+    position = 1
+    for game, game_lengths in zip(configs, lengths):
+        start = position
+        for alg_name in game_lengths:
+            if alg_name == 'null':
+                continue
+            
+            data_color.append(colors[alg_name])
+            data.append(game_lengths[alg_name])
+            pos.append(position)
+            position += 1
 
-    #     print(format_row.format(*headers))
-    #     for _, row in zip(headers, table):
-    #         print(format_row.format(*row))
-    #     print()
-    #     print()
+        mid = (start + position - 1) / 2
+        ax.text(mid,-0.6, game.name, size=14, ha='center')
+        position += 1
 
-    # print()
-    # print('link Length')
-    # table = []
-    # table.append(build_row(FIRST, first_len))
-    # table.append(build_row(BEST, best_len))
+    parts = ax.violinplot(data, pos, vert=True, showmedians=True)
+    for dc, b in zip(data_color, parts['bodies']):
+        b.set_facecolor(dc)
 
-    # print(format_row.format(*headers))
-    # for _, row in zip(headers, table):
-    #     print(format_row.format(*row))
-    print('WARNING :: link lengths not updated')
+    plt.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom=False,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=False) # labels along the bottom edge are off
 
+    # # build legend for plot by creating invisible objects
+    color_names = colors.keys()
+    legend = ax.legend(
+        [mpatches.Patch(color=colors[name]) for name in color_names], 
+        color_names,
+        bbox_to_anchor=(1.05, 1), 
+        loc='upper left',
+        prop={'size': 12})
+    
+    ax.set_title(f'Link Lengths')
+    fig.set_size_inches(9, 6)
+    plt.savefig(
+        join('link_lengths.pdf'), 
+        bbox_extra_artists=(legend,),
+        bbox_inches='tight',
+        pad_inches=0.3)
+    # plt.show()
+    plt.close(fig)
 
-def plot_link_lengths(stuff):
-    # feeling laxy, stuff is an array of tuples with (config, first_len, best_len).
-    # fig, ax = plt.subplots()
-    # ax.boxplot(
-    #     list(chain(*[(s[1], s[2]) for s in stuff])), 
-    #     labels=list(chain(*[(f'{s[0].name}\n{FIRST}', f'{s[0].name}\n{BEST}') for s in stuff])), 
-    #     vert=False)
-
-    # ax.yaxis.set_tick_params(labelsize='xx-small')
-    # ax.set_title(f'Link Lengths')
-    # ax.set_xlabel('Link Length')
-    # plt.savefig(join('link_link_lengths.pdf'))
-    # plt.close(fig)
-    print('WARNING :: link lengths not updated')
-
-# labels
-# legend
-# labels=[f'{con.name}\n{f_name}\n{alg}' for con, bc in zip(configs, bcs) for f_name in bc for alg in [FIRST, BEST] ],
 def plot_bc(configs, bcs):
     fig, ax = plt.subplots()
 
@@ -224,7 +239,7 @@ def plot_bc(configs, bcs):
             xtick_positions.append((xtick_start + position - 1)/2)
 
         mid = (start + position - 1) / 2
-        ax.text(mid,-0.06, game.name, size=12, ha='center')
+        ax.text(mid,-0.1, game.name, size=12, ha='center')
         
         position += 1
 
@@ -248,18 +263,17 @@ def plot_bc(configs, bcs):
     ax.set_title(f'Behavioral Characteristic RMSE')
     ax.set_ylabel('RMSE')
     # plt.show()
-    plt.savefig('link_bc.pdf')
+    plt.savefig('link_bc.pdf', bbox_inches='tight',
+        pad_inches=0.3)
     plt.close(fig)
 
 m_len, m_bc = get_and_print_stats(Mario)
 i_len, i_bc = get_and_print_stats(Icarus)
 d_len, d_bc = get_and_print_stats(DungeonGram)
 
-plot_link_lengths([
-    (Mario, m_len),
-    (Icarus, i_len,),
-    (DungeonGram, d_len,),
-])
+plot_link_lengths(
+    [Mario, Icarus, DungeonGram],
+    [m_len, i_len, d_len])
 
 plot_bc([Mario, Icarus, DungeonGram,], [m_bc, i_bc, d_bc])
 

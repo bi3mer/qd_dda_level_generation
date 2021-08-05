@@ -81,9 +81,9 @@ def filter_percent_playable(start, link, end):
     return get_percent_playable(start + link + end) == 1.0
 
 link_algorithms = {
-    'preferred': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, False),
-    'shortest': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, True),
     'null': lambda start, end: [] if get_percent_playable(start + end) == 1.0 else None,
+    'shortest': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, True),
+    'preferred': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, False),
 }
 
 # FOr now, let's not bother with Infinite Mario Bros.

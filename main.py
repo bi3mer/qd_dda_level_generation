@@ -1,8 +1,11 @@
 from TheGoodStuff import *
 from Config import Mario, Icarus, DungeonGram
 
+from time import time
 import argparse
 import sys
+
+start = time()
 
 parser = argparse.ArgumentParser(description='Level Generation Pipeline.')
 parser.add_argument('--seed', type=int, default=0, help='Set seed for generation')
@@ -73,3 +76,9 @@ else:
 # Helpful sound for local development. Only works on mac.
 import os
 os.popen('say "Done!"')
+
+end = time()
+
+hours, rem = divmod(end-start, 3600)
+minutes, seconds = divmod(rem, 60)
+print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))

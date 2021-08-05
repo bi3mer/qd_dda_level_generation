@@ -110,6 +110,10 @@ class RandomWalkthrough:
         stats['target_size'] = runs
         
         k_values = [2,3,4]
+        
+        cache = {}
+        for alg_name in self.config.link_algorithms:
+            cache[alg_name] = {}
 
         for k in k_values:
             print(f'K = {k}')
@@ -151,7 +155,13 @@ class RandomWalkthrough:
                     level = segments[0].copy()
                     full_level_found = True
                     for i in range(1, k):
-                        link = self.config.link_algorithms[alg_name](segments[i-1], segments[i])
+                        hash_str = str(segments[i-1]) + ',' + str(segments[i])
+                        if hash_str in cache[alg_name]:
+                            link = cache[alg_name][hash_str]
+                        else:
+                            link = self.config.link_algorithms[alg_name](segments[i-1], segments[i])
+                            cache[alg_name][hash_str] = link
+
                         if link == None:
                             full_level_found = False
                             break
