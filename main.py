@@ -67,9 +67,9 @@ else:
     parser.print_help(sys.stderr)
     sys.exit(-1)
 
-# rw = RandomWalkthrough(Mario, 0)
-# rw.run(1000)
+# import cProfile
+# cProfile.run('RandomWalkthrough(DungeonGram, 0).run(3)')
 
 # Helpful sound for local development. Only works on mac.
 import os
-os.system('say "Done!"')
+os.popen('say "Done!"')

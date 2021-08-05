@@ -3,6 +3,7 @@ from Utility.Mario.IO import get_levels
 from Utility.Mario.Behavior import *
 from Utility.Mario.Fitness import *
 from Utility.NGram import NGram
+from Utility.LinkerGeneration import *
 
 from os.path import join
 
@@ -75,6 +76,15 @@ def get_fitness(level, percent_playable, agent=None):
 
 fitness = lambda lvl: get_fitness(lvl, get_percent_playable(lvl))
 
+# Linking Generated Level Segments using N-Grams
+def filter_percent_playable(start, link, end):
+    return get_percent_playable(start + link + end) == 1.0
+
+link_algorithms = {
+    'preferred': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, False),
+    'shortest': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, True),
+    'null': lambda start, end: [] if get_percent_playable(start + end) == 1.0 else None,
+}
 
 # FOr now, let's not bother with Infinite Mario Bros.
 # Necessary to evaluate with Robin Baumgarten agent

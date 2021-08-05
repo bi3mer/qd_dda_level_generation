@@ -5,6 +5,8 @@ from Utility.DungeonGram.Behavior import *
 from Utility.DungeonGram.Fitness import *
 from Utility.NGram import NGram
 from Utility.GridTools import columns_into_rows, rows_into_columns
+from Utility.LinkerGeneration import *
+
 from dungeongrams import *
 
 from os.path import join
@@ -82,3 +84,22 @@ def repair_level(level):
     new_level, modifications_made = repair(columns_into_rows(level), False, True, False, False)
     return rows_into_columns(new_level.split('\n')), modifications_made
 
+
+    
+
+# Linking Generated Level Segments using N-Grams
+def filter_percent_playable(start, link, end):
+    return get_percent_playable(start + link + end) == 1.0
+
+def filter_link_food(start, link, end):
+    return True in [dungeongrams.CHAR_FOOD in l for l in link]
+
+link_algorithms = {
+    'preferred': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, False),
+    'shortest': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, True),
+    'null': lambda start, end: [] if get_percent_playable(start + end) == 1.0 else None,
+    'preferred+f': lambda start, end: exhaustive_link(gram, start, end, [
+        filter_percent_playable,
+        filter_link_food
+    ], feature_descriptors, False),
+}

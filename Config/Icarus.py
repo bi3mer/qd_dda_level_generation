@@ -4,7 +4,7 @@ from Utility.Icarus.IO import get_levels
 from Utility.Icarus.Behavior import *
 from Utility.Icarus.Fitness import *
 from Utility.NGram import NGram
-from Utility.GridTools import columns_into_rows
+from Utility.LinkerGeneration import *
 from dungeongrams import *
 
 from os.path import join
@@ -70,3 +70,13 @@ def get_percent_playable(level, agent=None):
 def get_fitness(level, percent_playable, agent=None):
     bad_n_grams = gram.count_bad_n_grams(level)
     return bad_n_grams + 1 - percent_playable
+
+# Linking Generated Level Segments using N-Grams
+def filter_percent_playable(start, link, end):
+    return get_percent_playable(start + link + end) == 1.0
+
+link_algorithms = {
+    'preferred': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, False),
+    'shortest': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, True),
+    'null': lambda start, end: [] if get_percent_playable(start + end) == 1.0 else None,
+}

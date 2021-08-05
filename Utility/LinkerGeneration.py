@@ -128,11 +128,11 @@ def generate_link(grammar, start, end, additional_columns, agent=None, feature_d
     # No link found
     return None
 
-def exhaustive_link(grammar, start, end, agent, feature_descriptors, stop_at_first, max_length=6):
+def exhaustive_link(grammar, start, end, filters, metrics, stop_at_first, max_length=6):
     assert grammar.sequence_is_possible(start)
     assert grammar.sequence_is_possible(end)
 
-    if grammar.sequence_is_possible(start + end) and agent(start + end) == 1.0:
+    if grammar.sequence_is_possible(start + end) and all([f(start, [], end) for f in filters]):
         return []
 
     end_prior = tuple(end[:grammar.n - 1])
@@ -140,7 +140,7 @@ def exhaustive_link(grammar, start, end, agent, feature_descriptors, stop_at_fir
     queue.append(start[-(grammar.n - 1):])
 
     if not stop_at_first:
-        target_bc = [(bc(start) + bc(end))/2 for bc in feature_descriptors]
+        target_bc = [(bc(start) + bc(end))/2 for bc in metrics]
         best_rmse = 100000
         best_link = None
     
@@ -164,12 +164,12 @@ def exhaustive_link(grammar, start, end, agent, feature_descriptors, stop_at_fir
             if new_prior == end_prior and new_path_length > prior_size:
                 link = new_path[grammar.n - 1:-(grammar.n - 1)]
                 if stop_at_first:
-                    if agent(start + link + end) == 1.0:
+                    if all([f(start, link, end) for f in filters]):
                         return link
                 else:
-                    _rmse = rmse(target_bc, [bc(link) for bc in feature_descriptors])
+                    _rmse = rmse(target_bc, [bc(link) for bc in metrics])
                     if _rmse < best_rmse:
-                        if agent(start + link + end) == 1.0:
+                        if all([f(start, link, end) for f in filters]):
                             best_link = link
                             best_rmse = _rmse
 

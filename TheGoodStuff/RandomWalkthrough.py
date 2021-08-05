@@ -3,7 +3,6 @@ from typing import Sequence
 from Utility.GridTools import columns_into_grid_string
 from Utility import rows_into_columns, Bar, update_progress
 from Utility.Math import median, mean, rmse
-from Utility.LinkerGeneration import *
 
 from itertools import chain, repeat
 from statistics import stdev
@@ -98,9 +97,6 @@ class RandomWalkthrough:
 
 
         print('Generating random level combinations')
-        NO_LINK = 'no_link'
-        FIRST = 'first'
-        BEST = 'best'
         L = 'links'
         BC = 'behavioral_characteristics'
         C  = 'completability'
@@ -117,13 +113,12 @@ class RandomWalkthrough:
 
         for k in k_values:
             print(f'K = {k}')
-            progress_bar = Bar(runs * k * 3)
+            progress_bar = Bar(runs * k * len(self.config.link_algorithms))
             
             stats[k] = {}
             stats[k][R] = []
-            stats[k][BEST] = []
-            stats[k][FIRST] = []
-            stats[k][NO_LINK] = []
+            for alg_name in self.config.link_algorithms:
+                stats[k][alg_name] = []
 
             for _ in range(runs):
                 segments = choices(levels, k=k)
@@ -131,49 +126,64 @@ class RandomWalkthrough:
                     assert self.config.gram.sequence_is_possible(s)
                     assert self.config.get_percent_playable(s) == 1.0
 
+                # calculate average metrics for segments
+                bc_target = {}
+                for alg in self.config.feature_names:
+                    bc_target[alg] = []
+
+                for i in range(1, len(segments)):
+                    bc_0 = [alg(segments[i - 1]) for alg in self.config.feature_descriptors]
+                    bc_1 = [alg(segments[i]) for alg in self.config.feature_descriptors]
+                    for index, alg in enumerate(self.config.feature_names):
+                        bc_target[alg].append((bc_0[index] + bc_1[index]) / 2.0)
+
+                # build links for segments
                 data = {}
-                progress_bar.update(message=f'N')
-                links = [[] for _ in repeat(None, len(segments))]
-                bc = [[0 for __ in repeat(None, len(self.config.feature_names))] for _ in repeat(None, len(segments))]
-                level = list(chain(*segments))
-                no_link_percent_complete = self.config.get_percent_playable(level)
+                data[S] = segments
 
-                if no_link_percent_complete == 1.0:
-                    data[NO_LINK] = {}
-                    data[NO_LINK][L] = links
-                    data[NO_LINK][BC] = bc
-                    data[NO_LINK][C] = no_link_percent_complete
-                    data[NO_LINK][G] = self.config.gram.sequence_is_possible(level)
-                    stats[k][NO_LINK].append(data[NO_LINK][C] == 1.0)
+                for alg_name in self.config.link_algorithms:
+                    progress_bar.update(message=alg_name)
+                    bc_link = {}
+                    for alg in self.config.feature_names:
+                        bc_link[alg] = []
 
-                progress_bar.update(message=f'F')
-                level, links, bc, error = self.__combine(segments, exhaustive_link, True)
-                if error:
-                    progress_bar.update()
-                else:                
-                    data[S] = segments
-                    data[FIRST] = {}
-                    data[FIRST][L] = links
-                    data[FIRST][BC] = bc
-                    data[FIRST][C] = self.config.get_percent_playable(level)
-                    data[FIRST][G] = self.config.gram.sequence_is_possible(level)
-                    stats[k][FIRST].append(data[FIRST][C] == 1.0)
+                    links = []
+                    level = segments[0].copy()
+                    full_level_found = True
+                    for i in range(1, k):
+                        link = self.config.link_algorithms[alg_name](segments[i-1], segments[i])
+                        if link == None:
+                            full_level_found = False
+                            break
+                        
+                        links.append(link)
+                        level.extend(link)
+                        level.extend(segments[i].copy())
 
-                    progress_bar.update(message=f'A')
-                    level, links, bc,  error = self.__combine(segments, exhaustive_link, False)
+                        if len(link) == 0:
+                            # if the length of the link is 0, then there is no error in the target
+                            # BC and the found BC
+                            for alg in self.config.feature_names:
+                                bc_link[alg].append(bc_target[alg][-1])
+                        else:
+                            # otherwise, calculate BC for the link
+                            for bc, alg in zip(self.config.feature_descriptors, self.config.feature_names):
+                                bc_link[alg].append(bc(link))
 
-                    data[BEST] = {}
-                    data[BEST][L] = links
-                    data[BEST][BC] = bc
-                    data[BEST][C] = self.config.get_percent_playable(level)
-                    data[BEST][G]= self.config.gram.sequence_is_possible(level)
-                    stats[k][BEST].append(data[BEST][C] == 1.0)
+                    if not full_level_found:
+                        continue
+
+                    bc = [rmse(bc_target[alg], bc_link[alg]) for alg in self.config.feature_names]
+                    data[alg_name] = {}
+                    data[alg_name][L] = links
+                    data[alg_name][BC] = bc
+                    data[alg_name][C] = self.config.get_percent_playable(level)
+                    data[alg_name][G] = self.config.gram.sequence_is_possible(level)
+                    stats[k][alg_name].append(data[alg_name][C] == 1.0)
 
                 stats[k][R].append(data)
             progress_bar.done()
 
-
         print('Storing data...')
-        f = open(join(self.config.data_dir, 'random_walkthrough_results.json'), 'w')
-        dump(stats, f, indent=2)
-        f.close()
+        with open(join(self.config.data_dir, 'random_walkthrough_results.json'), 'w') as f:
+            dump(stats, f, indent=2)
