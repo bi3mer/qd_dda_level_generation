@@ -97,8 +97,8 @@ def filter_link_food(start, link, end):
 link_algorithms = {
     'null': lambda start, end: [] if get_percent_playable(start + end) == 1.0 else None,
     'shortest': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, True),
-    'preferred': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, False),
-    'preferred+f': lambda start, end: exhaustive_link(gram, start, end, [
+    'BC-match': lambda start, end: exhaustive_link(gram, start, end, [filter_percent_playable], feature_descriptors, False),
+    'BC-match-f': lambda start, end: exhaustive_link(gram, start, end, [
         filter_percent_playable,
         filter_link_food
     ], feature_descriptors, False),

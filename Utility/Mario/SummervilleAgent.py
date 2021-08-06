@@ -130,9 +130,6 @@ def percent_completable(subOptimal, src,levelStr):
                         
                     break
                 
-                if current_x + subOptimal <= furthest_x:
-                    continue
-
                 dist[next_node[1]] = next_node[0]
                 prev[next_node[1]] = node[1]
                 heappush(heap, next_node)

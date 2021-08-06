@@ -149,9 +149,9 @@ def get_and_print_stats(config):
 
 def plot_link_lengths(configs, lengths):
     colors = {
-        'preferred': '#38ba11',
+        'BC-match': '#38ba11',
         'shortest': '#9311ba',
-        'preferred+f': '#ba5211'
+        'BC-match-f': '#ba5211'
     }
 
     data_color = []
@@ -205,13 +205,13 @@ def plot_link_lengths(configs, lengths):
     # plt.show()
     plt.close(fig)
 
-def plot_bc(configs, bcs):
+def plot_bc_dual(configs, bcs):
     fig, ax = plt.subplots()
 
     colors = {
-        'preferred': '#38ba11',
+        'BC-match': '#38ba11',
         'shortest': '#9311ba',
-        'preferred+f': '#ba5211'
+        'BC-match-f': '#ba5211'
     }
 
     position = 1
@@ -267,6 +267,70 @@ def plot_bc(configs, bcs):
         pad_inches=0.3)
     plt.close(fig)
 
+def plot_bc_singular(configs, bcs):
+    fig, ax = plt.subplots()
+
+    colors = {
+        'BC-match': '#38ba11',
+        'shortest': '#9311ba',
+        'BC-match-f': '#ba5211'
+    }
+
+    position = 1
+    data_color = []
+    data = []
+    pos = []
+
+
+    for game, bc in zip(configs, bcs):
+        start = position
+        for alg_name in game.link_algorithms:
+            if alg_name == 'null':
+                    continue
+
+            alg_data = []
+            for bc_name in bc:
+                alg_data.extend(bc[bc_name][alg_name])
+
+            data_color.append(colors[alg_name])
+            data.append(alg_data)
+            pos.append(position)
+            position += 1
+
+
+        mid = (start + position - 1) / 2
+        ax.text(mid,-0.1, game.name, size=12, ha='center')
+        
+        position += 1
+
+    parts = ax.violinplot(data, pos, vert=True, showmedians=True)
+    for dc, b in zip(data_color, parts['bodies']):
+        b.set_facecolor(dc)
+    
+    # # build legend for plot by creating invisible objects
+    color_names = colors.keys()
+    ax.legend(
+        [mpatches.Patch(color=colors[name]) for name in color_names], 
+        color_names,
+        prop={'size': 16})
+
+
+    fig.set_size_inches(18.5, 10.5)
+    # fig.set_size_inches(9, 6)
+    ax.set_title(f'Behavioral Characteristic RMSE')
+    ax.set_ylabel('RMSE')
+    # plt.show()
+    plt.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom=False,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=False) # labels along the bottom edge are off
+        
+    plt.savefig('link_bc_singular.pdf', bbox_inches='tight',
+        pad_inches=0.3)
+    plt.close(fig)
+
 m_len, m_bc = get_and_print_stats(Mario)
 i_len, i_bc = get_and_print_stats(Icarus)
 d_len, d_bc = get_and_print_stats(DungeonGram)
@@ -275,5 +339,6 @@ plot_link_lengths(
     [Mario, Icarus, DungeonGram],
     [m_len, i_len, d_len])
 
-plot_bc([Mario, Icarus, DungeonGram,], [m_bc, i_bc, d_bc])
+plot_bc_dual([Mario, Icarus, DungeonGram,], [m_bc, i_bc, d_bc])
+plot_bc_singular([Mario, Icarus, DungeonGram,], [m_bc, i_bc, d_bc])
 
