@@ -48,8 +48,8 @@ if args.generate_corpus:
 # elif args.generate_graph_test:
 #    ggt = GenerateLevelGraphTest(config, args.seed)
 #    ggt.run()
-# elif args.generate_graph or args.generate_links:
-#     raise NotImplementedError('generate graph not implemented yet. Work has not shown which linking method is best')
+elif args.generate_links:
+    GenerateLinks(config, args.seed).run()
 elif args.walkthrough:
     raise NotImplementedError('walkthrough not implemented yet.')
 elif args.random_walkthrough:

@@ -68,13 +68,13 @@ title = ''
 
 max_path_length = 4
 
-def get_percent_playable(level, agent=None):
+def get_percent_playable(level, thorough=False, agent=None):
     # rows = columns_into_rows(level)
     # print('\n\n' + '\n'.join(rows))
     if agent == None:
         agent = FLAW_NO_FLAW
 
-    return percent_playable(columns_into_rows(level), False, True, agent)
+    return percent_playable(columns_into_rows(level), False, True, thorough, agent)
 
 def get_fitness(level, percent_playable, agent=None):
     bad_transitions = gram.count_bad_n_grams(level)

@@ -31,6 +31,7 @@ class GA:
         for e in range(epochs):
             index = 0
             while index < self.population_size:
+                raise SyntaxError('Choices does not guarantee selection of two unique elemetns! Fix this.')
                 parent_1, parent_2 = choices(old_population, weights=old_population_fitness, k=2)
                 strands = self.crossover(parent_1, parent_2)
                 for strand in strands:

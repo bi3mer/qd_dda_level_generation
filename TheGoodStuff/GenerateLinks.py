@@ -44,7 +44,6 @@ class GenerateLinks:
         #######################################################################
         print('Building and validating MAP-Elites directed DDA graph...')
         DIRECTIONS = ((0,0), (0,1), (0,-1), (1, 0), (-1, 0))
-        KEYS = ['bfs', 'mcts']
 
         dda_graph = {}
         keys = set(bins.keys())
@@ -52,12 +51,8 @@ class GenerateLinks:
         i = 0
         link_count = 0
 
-        print('WARNING: this will not work Mario right now if a simulation is used.')
-        successes = 0
-        failures  = 0
         for k in keys: # iterate through keys
-            if key == (6,16):
-                print('a')
+            update_progress(i/len(keys))
 
             f1_values = [val*(self.config.feature_dimensions[i][1] - self.config.feature_dimensions[i][0])/100 + self.config.feature_dimensions[i][0] for i, val in enumerate(k)]
             for entry_index, entry in enumerate(bins[k]): # iterate through elites
@@ -92,46 +87,42 @@ class GenerateLinks:
                             f2_values = [val*(self.config.feature_dimensions[i][1] - self.config.feature_dimensions[i][0])/100 + self.config.feature_dimensions[i][0] for i, val in enumerate(k)]
                             f_targets = [(f1_values[i] + f2_values[i])/2 for i in range(len(f2_values))]
 
-                            # TODO: log length, behavioral characteristics, and targets
                             dda_graph[str_entry_one][str_entry_two] = {
                                 'targets': f_targets
                             }
 
-                            bfs_link = generate_link_bfs(self.config.gram, start, end, 0)
-                            mcts_link = generate_link_mcts(self.config.gram, start, end, self.config.feature_descriptors, f_targets)
-                            dfs_link = None
-                            greedy_bfs = None
-                            if mcts_link == None:
-                                failures += 1
-                            else:
-                                successes += 1
+                            for KEY in self.config.LINKERS:
+                                link = self.config.LINKERS[KEY](start, end)
 
-                            for key, link in zip(KEYS, [bfs_link, mcts_link]):
+                                # case for when no link is found
                                 if link == None:
-                                    dda_graph[str_entry_one][str_entry_two][key] = {
+                                    dda_graph[str_entry_one][str_entry_two][KEY] = {
                                         'percent_playable': -1,
                                         'link': [],
                                         'behavioral_characteristics': []
                                     }
-                                elif link == []:
-                                    level = start + link + end
-                                    dda_graph[str_entry_one][str_entry_two][key] = {
-                                        'percent_playable': self.config.get_percent_playable(level),
+                                    continue
+
+                                level = start + link + end
+                                PERCENT_PLAYABLE = self.config.get_percent_playable(level)
+                                if link == []:
+                                    # link found is empty which means the behavioral characteristics
+                                    # are perfect
+                                    dda_graph[str_entry_one][str_entry_two][KEY] = {
+                                        'percent_playable': PERCENT_PLAYABLE,
                                         'link': link,
                                         'behavioral_characteristics': [-1 for _ in self.config.feature_descriptors]
                                     }
                                 else:
-                                    level = start + link + end
-                                    dda_graph[str_entry_one][str_entry_two][key] = {
-                                        'percent_playable': self.config.get_percent_playable(level),
+                                    # otherwise, test behavioral characteristics
+                                    dda_graph[str_entry_one][str_entry_two][KEY] = {
+                                        'percent_playable': PERCENT_PLAYABLE,
                                         'link': link,
                                         'behavioral_characteristics': [bc(link) for bc in self.config.feature_descriptors]
                                     }
 
             i += 1
-            update_progress(i/len(keys))
-                
-        print(f'MCTS Link Connections Found: {successes} / {successes + failures}')
+
         f = open(join(self.config.data_dir, 'dda_graph.json'), 'w')
         f.write(json.dumps(dda_graph, indent=1))
         f.close()

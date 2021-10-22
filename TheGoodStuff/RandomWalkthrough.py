@@ -125,6 +125,7 @@ class RandomWalkthrough:
                 stats[k][alg_name] = []
 
             for _ in range(runs):
+                raise SyntaxError('Choices does not guarantee selection of two unique elemetns! Fix this.')
                 segments = choices(levels, k=k)
                 for s in segments:
                     assert self.config.gram.sequence_is_possible(s)

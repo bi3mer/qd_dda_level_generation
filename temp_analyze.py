@@ -195,6 +195,7 @@ def plot_link_lengths(configs, lengths):
         loc='upper left',
         prop={'size': 12})
     
+    ax.set_ylabel('Length')
     ax.set_title(f'Link Lengths')
     fig.set_size_inches(9, 6)
     plt.savefig(
@@ -299,7 +300,7 @@ def plot_bc_singular(configs, bcs):
 
 
         mid = (start + position - 1) / 2
-        ax.text(mid,-0.1, game.name, size=12, ha='center')
+        ax.text(mid,-0.08, game.name, size=16, ha='center')
         
         position += 1
 
@@ -309,14 +310,15 @@ def plot_bc_singular(configs, bcs):
     
     # # build legend for plot by creating invisible objects
     color_names = colors.keys()
-    ax.legend(
+    legend = ax.legend(
         [mpatches.Patch(color=colors[name]) for name in color_names], 
         color_names,
-        prop={'size': 16})
+        bbox_to_anchor=(1.05, 1), 
+        loc='upper left',
+        prop={'size': 12})
 
 
-    fig.set_size_inches(18.5, 10.5)
-    # fig.set_size_inches(9, 6)
+    fig.set_size_inches(9, 6)
     ax.set_title(f'Behavioral Characteristic RMSE')
     ax.set_ylabel('RMSE')
     # plt.show()
@@ -327,7 +329,10 @@ def plot_bc_singular(configs, bcs):
         top=False,         # ticks along the top edge are off
         labelbottom=False) # labels along the bottom edge are off
         
-    plt.savefig('link_bc_singular.pdf', bbox_inches='tight',
+    plt.savefig(
+        'link_bc_singular.pdf',
+        bbox_extra_artists=(legend,),
+        bbox_inches='tight',
         pad_inches=0.3)
     plt.close(fig)
 

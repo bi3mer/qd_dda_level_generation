@@ -126,7 +126,7 @@ def percent_completable(src, levelStr):
             for yy, row in enumerate(levelStr):
                 for xx, tile in enumerate(row):
                     if (xx, yy) in path:
-                        sys.stdout.write('!')
+                        sys.stdout.write('*')
                     elif (xx, yy) in explored:
                         sys.stdout.write('.')
                     else:
