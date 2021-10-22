@@ -22,24 +22,18 @@ class GenerateLinks:
             print(f'{level_dir} is not made. Run --generate-corpus first.')
 
         bins = {}
-        f = open(f'{self.config.data_file}_generate_corpus_data.csv')
-        f.readline() # skip header
-        for line in f.readlines():
-            result = line.strip().split(',')
-            performance = float(result[-1])
-            if performance != 0.0:
-                continue
+        with open(join(self.config.data_dir, 'generate_corpus_info.json')) as f:
+            data = json.load(f)
+            for file_name in data['fitness']:
+                if data['fitness'][file_name] == 0.0:
+                    # remove the .txt extension and take all indices except the last one
+                    key = tuple([int(num) for num in file_name[:-4].split('_')][:-1])
 
-            key = tuple([int(num) for num in result[:-2]])
-            index = int(result[-2])
-            if key not in bins:
-                bins[key] = []
-
-            level_file = open(join(level_dir, f'{key[1]}_{key[0]}_{index}.txt'), 'r')
-            bins[key].append(rows_into_columns(level_file.readlines()))
-            level_file.close()
-
-        f.close()
+                    if key not in bins:
+                        bins[key] = []
+                    
+                    with open(join(level_dir, file_name), 'r') as level_file:
+                        bins[key].append(rows_into_columns(level_file.readlines()))
 
         #######################################################################
         print('Building and validating MAP-Elites directed DDA graph...')
