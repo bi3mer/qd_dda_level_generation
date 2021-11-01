@@ -45,6 +45,7 @@ class TestLinks:
         #######################################################################
         print('Testing links')
 
+        count = 0
         for src_str in graph:
             src, src_index = self.__string_to_key_and_index(src_str)
             for dst_str in graph[src_str]:
@@ -56,7 +57,6 @@ class TestLinks:
                     if graph[src_str][dst_str][linker]['link'] == None:
                         level = bins[src][src_index] + bins[dst][dst_index]
                     else:
-                        print(dst_str)
                         level = bins[src][src_index] + \
                                 graph[src_str][dst_str][linker]['link'] + \
                                 bins[dst][dst_index]
@@ -70,3 +70,8 @@ class TestLinks:
 
                         import sys
                         sys.exit(-1)
+
+                    count += 1
+
+
+        print(f'\n{count} links tested and no errors found!\n')
