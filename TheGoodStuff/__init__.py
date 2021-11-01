@@ -4,3 +4,4 @@ from .GenerateLinks import GenerateLinks
 from .GenerateGALevels import GenerateGALevels
 from .GenerateNGramLevels import GenerateNGramLevels
 from .RandomWalkthrough import RandomWalkthrough
+from .TestLinks import TestLinks

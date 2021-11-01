@@ -16,7 +16,7 @@ class GenerateLinks:
 
     def run(self):
         #######################################################################
-        print('loading bins...')
+        print('Loading bins...')
         level_dir =  join(self.config.data_dir, 'levels')
         if not exists(level_dir) or not isdir(level_dir):
             print(f'{level_dir} is not made. Run --generate-corpus first.')
@@ -27,13 +27,14 @@ class GenerateLinks:
             for file_name in data['fitness']:
                 if data['fitness'][file_name] == 0.0:
                     # remove the .txt extension and take all indices except the last one
-                    key = tuple([int(num) for num in file_name[:-4].split('_')][:-1])
+                    indices = [int(num) for num in file_name[:-4].split('_')]
+                    key = tuple(indices[:-1])
 
                     if key not in bins:
-                        bins[key] = []
+                        bins[key] = [None for _ in range(self.config.elites_per_bin)]
                     
                     with open(join(level_dir, file_name), 'r') as level_file:
-                        bins[key].append(rows_into_columns(level_file.readlines()))
+                        bins[key][indices[-1]] = rows_into_columns(level_file.readlines())
 
         #######################################################################
         print('Building and validating MAP-Elites directed DDA graph...')
@@ -45,11 +46,14 @@ class GenerateLinks:
         i = 0
         link_count = 0
 
-        for k in keys: # iterate through keys
+        for k in keys: 
             update_progress(i/len(keys))
 
             f1_values = [val*(self.config.feature_dimensions[i][1] - self.config.feature_dimensions[i][0])/100 + self.config.feature_dimensions[i][0] for i, val in enumerate(k)]
-            for entry_index, entry in enumerate(bins[k]): # iterate through elites
+            for entry_index, entry in enumerate(bins[k]):
+                if entry == None:
+                    continue
+
                 str_entry_one = f'{k[0]},{k[1]},{entry_index}'
                 if str_entry_one not in dda_graph:
                     dda_graph[str_entry_one] = {}
@@ -65,6 +69,9 @@ class GenerateLinks:
                     if neighbor in bins:
                         start = entry
                         for n_index, n_entry in enumerate(bins[neighbor]):
+                            if n_entry == None:
+                                continue
+
                             # we don't want the possibility for something to connect to itself.config.
                             if dir == (0,0) and n_index == entry_index:
                                 continue
@@ -73,7 +80,7 @@ class GenerateLinks:
                             end = n_entry
                             link_count += 1
 
-                            # this is how I i took the score and put it into the clamped range. 
+                            # this is how I took the score and put it into the clamped range. 
                             # So I just need to reverse the math and then I'm in business.
                             #
                             # score_in_range = (score - minimum) * 100 / (maximum - minimum) 

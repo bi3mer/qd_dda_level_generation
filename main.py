@@ -24,6 +24,7 @@ game_group.add_argument('--icarus', action='store_true', help='Run Icarus')
 type_group = parser.add_mutually_exclusive_group(required=True)
 type_group.add_argument('--generate-corpus', action='store_true', help='Generate a corpus')
 type_group.add_argument('--generate-links', action='store_true', help='Generate a graph with a corpus built from --corpus')
+type_group.add_argument('--test-links', action='store_true', help='Test a graph with a links built from --generate-links')
 type_group.add_argument('--walkthrough', action='store_true', help='Walkthrough a graph built with --generate-graph')
 type_group.add_argument('--random-walkthrough', action='store_true', help='Randomly combine segments with --generate-graph and test completability')
 type_group.add_argument('--average-generated', action='store_true', help='Generate a set of corpuses to get the average # levels generated.')
@@ -50,6 +51,8 @@ if args.generate_corpus:
 #    ggt.run()
 elif args.generate_links:
     GenerateLinks(config, args.seed).run()
+elif args.test_links:
+    TestLinks(config, args.seed).run()
 elif args.walkthrough:
     raise NotImplementedError('walkthrough not implemented yet.')
 elif args.random_walkthrough:
